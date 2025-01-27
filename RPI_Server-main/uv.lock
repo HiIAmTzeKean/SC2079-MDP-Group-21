@@ -67,6 +67,40 @@ wheels = [
 ]
 
 [[package]]
+name = "pybluez"
+version = "0.30"
+source = { git = "https://github.com/pybluez/pybluez.git#82cbba8a1ebd4c1e3442dfafd8581d58c50fa39e" }
+dependencies = [
+    { name = "pyobjc-core" },
+    { name = "pyobjc-framework-cocoa" },
+]
+
+[[package]]
+name = "pyobjc-core"
+version = "11.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/5c/94/a111239b98260869780a5767e5d74bfd3a8c13a40457f479c28dcd91f89d/pyobjc_core-11.0.tar.gz", hash = "sha256:63bced211cb8a8fb5c8ff46473603da30e51112861bd02c438fbbbc8578d9a70", size = 994931 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/56/ce/bf3ff9a9347721a398c3dfb83e29b43fb166b7ef590f3f7b7ddcd283df39/pyobjc_core-11.0-cp312-cp312-macosx_10_13_universal2.whl", hash = "sha256:a03061d4955c62ddd7754224a80cdadfdf17b6b5f60df1d9169a3b1b02923f0b", size = 739750 },
+    { url = "https://files.pythonhosted.org/packages/72/16/0c468e73dbecb821e3da8819236fe832dfc53eb5f66a11775b055a7589ea/pyobjc_core-11.0-cp313-cp313-macosx_10_13_universal2.whl", hash = "sha256:c338c1deb7ab2e9436d4175d1127da2eeed4a1b564b3d83b9f3ae4844ba97e86", size = 743900 },
+    { url = "https://files.pythonhosted.org/packages/f3/88/cecec88fd51f62a6cd7775cc4fb6bfde16652f97df88d28c84fb77ca0c18/pyobjc_core-11.0-cp313-cp313t-macosx_10_13_universal2.whl", hash = "sha256:b4e9dc4296110f251a4033ff3f40320b35873ea7f876bd29a1c9705bb5e08c59", size = 791905 },
+]
+
+[[package]]
+name = "pyobjc-framework-cocoa"
+version = "11.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyobjc-core" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c5/32/53809096ad5fc3e7a2c5ddea642590a5f2cb5b81d0ad6ea67fdb2263d9f9/pyobjc_framework_cocoa-11.0.tar.gz", hash = "sha256:00346a8cb81ad7b017b32ff7bf596000f9faa905807b1bd234644ebd47f692c5", size = 6173848 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5b/8d/0e2558447c26b3ba64f7c9776a5a6c9d2ae8abf9d34308b174ae0934402e/pyobjc_framework_Cocoa-11.0-cp312-cp312-macosx_10_13_universal2.whl", hash = "sha256:280a577b83c68175a28b2b7138d1d2d3111f2b2b66c30e86f81a19c2b02eae71", size = 385811 },
+    { url = "https://files.pythonhosted.org/packages/1d/a5/609281a7e89efefbef9db1d8fe66bc0458c3b4e74e2227c644f9c18926fa/pyobjc_framework_Cocoa-11.0-cp313-cp313-macosx_10_13_universal2.whl", hash = "sha256:15b2bd977ed340074f930f1330f03d42912d5882b697d78bd06f8ebe263ef92e", size = 385889 },
+    { url = "https://files.pythonhosted.org/packages/93/f6/2d5a863673ef7b85a3cba875c43e6c495fb1307427a6801001ae94bb5e54/pyobjc_framework_Cocoa-11.0-cp313-cp313t-macosx_10_13_universal2.whl", hash = "sha256:5750001db544e67f2b66f02067d8f0da96bb2ef71732bde104f01b8628f9d7ea", size = 389831 },
+]
+
+[[package]]
 name = "pyserial"
 version = "3.5"
 source = { registry = "https://pypi.org/simple" }
@@ -96,6 +130,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "colorzero" },
+    { name = "pybluez" },
     { name = "pyserial" },
     { name = "requests" },
 ]
@@ -108,6 +143,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "colorzero", specifier = ">=2.0" },
+    { name = "pybluez", git = "https://github.com/pybluez/pybluez.git" },
     { name = "pyserial", specifier = ">=3.5" },
     { name = "requests", specifier = ">=2.32.3" },
 ]

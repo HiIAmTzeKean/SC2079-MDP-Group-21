@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "colorzero>=2.0",
+    "pybluez",
     "pyserial>=3.5",
     "requests>=2.32.3",
 ]
@@ -14,3 +15,6 @@ dependencies = [
 dev = [
     "ruff>=0.9.3",
 ]
+
+[tool.uv.sources]
+pybluez = { git = "https://github.com/pybluez/pybluez.git" }
