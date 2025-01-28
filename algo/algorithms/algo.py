@@ -90,7 +90,7 @@ class MazeSolver:
             cur_view_positions = []
 
             for i in range(num_views):
-                # if the i-th bit is 1, then the robot will visit the i-th view position
+                # if the i-th bit is 1, then the robot will visit the view position at obstacle i
                 if bin_pos[i] == "1":
                     # add the view position to the current view positions
                     cur_view_positions.append(views[i])
