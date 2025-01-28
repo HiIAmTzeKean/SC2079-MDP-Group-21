@@ -1,0 +1,52 @@
+ExposureTime=8317
+AnalogueGain=8.000000
+ColourCorrectionMatrix=[ 0.340593, 0.842625, -0.183221, 0.340593, 0.842625, -0.183221, 0.340593, 0.842625, -0.183221 ]
+FrameDuration=47183
+Lux=155.282013
+AeLocked=true
+ColourGains=[ 1.883204, 1.361282 ]
+DigitalGain=1.001858
+ColourTemperature=6587
+SensorBlackLevels=[ 4096, 4096, 4096, 4096 ]
+ScalerCrop=(0, 0)/3280x2464
+SensorTimestamp=2314374006000
+
+ExposureTime=8317
+AnalogueGain=8.000000
+ColourCorrectionMatrix=[ 0.337869, 0.836399, -0.174270, 0.337869, 0.836399, -0.174270, 0.337869, 0.836399, -0.174270 ]
+FrameDuration=47183
+Lux=157.386810
+AeLocked=true
+ColourGains=[ 1.866044, 1.367993 ]
+DigitalGain=1.001858
+ColourTemperature=6481
+SensorBlackLevels=[ 4096, 4096, 4096, 4096 ]
+ScalerCrop=(0, 0)/3280x2464
+SensorTimestamp=2334379343000
+
+ExposureTime=8317
+AnalogueGain=8.000000
+ColourCorrectionMatrix=[ 0.356081, 0.878026, -0.234108, 0.356081, 0.878026, -0.234108, 0.356081, 0.878026, -0.234108 ]
+FrameDuration=47183
+Lux=174.202087
+AeLocked=true
+ColourGains=[ 1.987021, 1.324334 ]
+DigitalGain=1.001858
+ColourTemperature=7190
+SensorBlackLevels=[ 4096, 4096, 4096, 4096 ]
+ScalerCrop=(0, 0)/3280x2464
+SensorTimestamp=3016225827000
+
+ExposureTime=8317
+AnalogueGain=8.000000
+ColourCorrectionMatrix=[ 0.356581, 0.879171, -0.235754, 0.356581, 0.879171, -0.235754, 0.356581, 0.879171, -0.235754 ]
+FrameDuration=47183
+Lux=174.276779
+AeLocked=true
+ColourGains=[ 1.990586, 1.323175 ]
+DigitalGain=1.001858
+ColourTemperature=7210
+SensorBlackLevels=[ 4096, 4096, 4096, 4096 ]
+ScalerCrop=(0, 0)/3280x2464
+SensorTimestamp=3035711040000
+
