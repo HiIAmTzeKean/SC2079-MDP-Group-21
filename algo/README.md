@@ -5,15 +5,23 @@
 ---
 
 1. Clone the repository
-2. Open the terminal and navigate to the repository root
-3. Create a virtual environment using your python (Only tested with Python 3.8 at the moment)
+2. Open the terminal and navigate to `/algo` directory
+3. Create a python virtual environment
     ```bash
-    python3 -m venv mdp-venv
+    python -m venv .venv
     ```
-4. Activate the virtual environment
+4. Activate the virtual environment for the directory
+
+    Mac:
     ```bash
-    source mdp-venv/bin/activate
+    source .venv/bin/activate
     ```
+
+    Windows:
+    ```bash
+    .venv/Scripts/activate
+    ```
+
 5. Install the required packages
     ```bash
     pip install -r requirements.txt
@@ -25,10 +33,17 @@
 
 ---
 
-1. Navigate to the repository root  
-2. Activate the virtual environment for the project
+1. Navigate to `/algo` directory
+2. Activate the virtual environment for the directory
+
+    Mac:
     ```bash
-    source mdp-venv/bin/activate
+    source .venv/bin/activate
+    ```
+
+    Windows:
+    ```bash
+    .venv/Scripts/activate
     ```
 3. Optionally modify `main.py` to change the simulation parameters according to your simulation requirements. You can 
 refer to the Simulation class- it's functionality provided in `algorithms/simulation.py`.
@@ -40,4 +55,4 @@ refer to the Simulation class- it's functionality provided in `algorithms/simula
 the simulation will be saved in the `animations` directory. The gif will be named `optimal_path.gif`.
 
 Example of the simulation output:  
-![Simulation Output](https://github.com/MDP-grp-30-24-25/mdp-algo/blob/main/animations/optimal_path.gif)
+![Simulation Output](./animations/optimal_path.gif)
