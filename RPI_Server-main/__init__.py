@@ -1,7 +1,7 @@
 import logging
 
 
-log_format = logging.Formatter("%(asctime)s :: %(levelname)s :: %(message)s")
+log_format = logging.Formatter("%(asctime)s :: %(levelname)s :: %(name)%->%(funcName)% :: %(message)s")
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
