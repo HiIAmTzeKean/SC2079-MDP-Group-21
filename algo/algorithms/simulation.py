@@ -7,6 +7,7 @@ import random
 import logging
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+import time
 
 
 class MazeSolverSimulation:
@@ -107,18 +108,20 @@ class MazeSolverSimulation:
         num_points = 3 if self.maze_solver.big_turn == 1 else 2
         robot_state = self.maze_solver.robot.get_start_state()
         obstacles = self.maze_solver.grid.obstacles
+
+        start = time.time()
         print("Calculating optimal path...")
         optimal_path, cost = self.maze_solver.get_optimal_path(False)
+        print(
+            f"Time taken to find shortest path using A* search: {time.time() - start}s")
+        print(f"cost to travel: {cost} units")
+
         if testing:
             motions = self.maze_solver.optimal_path_to_motion_path(
                 optimal_path)
             commands = CommandGenerator(
                 straight_speed=60, turn_speed=40).generate_commands(motions)
-            print()
-            for command in commands:
-                print(command)
-                print("wait_receive()")
-            print()
+            print(commands)
         if verbose:
             print(f"Optimal path with cost = {cost} calculated: ")
             for grid_sq in optimal_path:
@@ -152,7 +155,7 @@ class MazeSolverSimulation:
         angle_y = [[], [], [], []]
         markers_angle = [45, 135, 225, 315]
         prev_cell = robot_state
-        time = 0
+        frame = 0
         for cell in optimal_path:
             # creating intermediate points for turns
             if abs(prev_cell.x - cell.x) > 1 or abs(prev_cell.y - cell.y) > 1:
@@ -173,20 +176,20 @@ class MazeSolverSimulation:
                 y_diff = cell.y - prev_cell.y
                 for i in range(1, 1 + num_points):
                     angle_x[angle_idx].append(
-                        (prev_cell.x + i * x_diff / (1 + num_points), time))
+                        (prev_cell.x + i * x_diff / (1 + num_points), frame))
                     angle_y[angle_idx].append(
-                        (prev_cell.y + i * y_diff / (1 + num_points), time))
-                    time += 1
+                        (prev_cell.y + i * y_diff / (1 + num_points), frame))
+                    frame += 1
 
             if cell.screenshot_id != -1:
-                screenshot_x.append((cell.x, time))
-                screenshot_y.append((cell.y, time))
+                screenshot_x.append((cell.x, frame))
+                screenshot_y.append((cell.y, frame))
 
             idx = markers.index(self._get_direction_symbol(cell.direction))
-            path_x[idx].append((cell.x, time))
-            path_y[idx].append((cell.y, time))
+            path_x[idx].append((cell.x, frame))
+            path_y[idx].append((cell.y, frame))
             prev_cell = cell
-            time += 1
+            frame += 1
 
         ax.set(xlim=(0, 20), ylim=(0, 20))
         ax.set_xticks(range(0, 21))
@@ -250,7 +253,7 @@ class MazeSolverSimulation:
             print("Animating optimal path...")
 
         ani = animation.FuncAnimation(
-            fig, update, frames=time + 5, interval=300)
+            fig, update, frames=frame + 5, interval=300)
         out_path = os.path.realpath(os.path.join(os.path.dirname(
             __file__), "../animations", "optimal_path.gif"))
 

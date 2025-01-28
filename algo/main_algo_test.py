@@ -33,19 +33,7 @@ sim.enable_debug(0)
 for ob in obstacles:
     sim.maze_solver.add_obstacle(ob["x"], ob["y"], ob["d"], ob["id"])
 
-start = time.time()
-optimal_path, cost = sim.maze_solver.get_optimal_path(retrying=False)
-print(
-    f"Time taken to find shortest path using A* search: {time.time() - start}s")
-print(f"cost to travel: {cost} units")
-
-motions = sim.maze_solver.optimal_path_to_motion_path(
-    optimal_path)
-command_generator = CommandGenerator()
-commands = command_generator.generate_commands(motions, testing=False)
-print(commands)
-
-sim.plot_optimal_path_animation(testing=False)
+sim.plot_optimal_path_animation(testing=True)
 
 
 # -------------------- TESTING ACTUAL ALGO --------------------
@@ -56,7 +44,6 @@ for ob in obstacles:
     maze_solver.add_obstacle(ob['x'], ob['y'], ob['d'], ob['id'])
 
 start = time.time()
-# optimal_path, distance = maze_solver.get_optimal_order_dp(retrying=retrying)
 optimal_path, cost = maze_solver.get_optimal_path(retrying=False)
 print(
     f"Time taken to find shortest path using A* search: {time.time() - start}s")
@@ -64,7 +51,7 @@ print(f"cost to travel: {cost} units")
 
 motions = maze_solver.optimal_path_to_motion_path(optimal_path)
 command_generator = CommandGenerator()
-commands = command_generator.generate_commands(motions, testing=False)
+commands = command_generator.generate_commands(motions)
 print(commands)
 
 path_results = [optimal_path[0].get_dict()]
