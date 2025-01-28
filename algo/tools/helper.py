@@ -123,9 +123,9 @@ class CommandGenerator:
         # add the last command
         if prev_motion == Motion.CAPTURE:
             commands.append(f"SNAP_C")
-        if testing:
-            cur_cmd = self._generate_testing_command(prev_motion, num_motions)
-            commands.extend(cur_cmd)
+        # if testing:
+        #     cur_cmd = self._generate_testing_command(prev_motion, num_motions)
+        #     commands.extend(cur_cmd)
 
         else:
             cur_cmd = self._generate_command(prev_motion, num_motions)
