@@ -1,11 +1,7 @@
 import heapq
 import math
-from audioop import reverse
-
 import numpy as np
-
 from python_tsp.exact import solve_tsp_dynamic_programming
-
 from entities.entity import CellState, Obstacle, Grid
 from entities.robot import Robot
 from tools.consts import (
@@ -34,7 +30,7 @@ class MazeSolver:
             robot_x: int = 1,
             robot_y: int = 1,
             robot_direction: Direction = Direction.NORTH,
-            big_turn= 0,
+            big_turn=0,
     ):
         """
 
@@ -48,7 +44,8 @@ class MazeSolver:
         """
         self.grid = Grid(size_x, size_y)
 
-        self.robot = robot if robot else Robot(robot_x, robot_y, robot_direction)
+        self.robot = robot if robot else Robot(
+            robot_x, robot_y, robot_direction)
 
         self.big_turn = big_turn
 
@@ -146,7 +143,8 @@ class MazeSolver:
                 cost_matrix[:, 0] = 0
 
                 # solve the TSP problem using dynamic programming
-                permutation, distance = solve_tsp_dynamic_programming(cost_matrix)
+                permutation, distance = solve_tsp_dynamic_programming(
+                    cost_matrix)
 
                 # if the distancd is more than the minimum distance, the path is irrelevant.
                 if distance + cost >= min_dist:
@@ -209,7 +207,8 @@ class MazeSolver:
         # initialize min heap with the start state
         # the heap is a list of tuples (h, x, y, direction) where h is the estimated distance from the current state to the end state
         heap = [
-            (self._estimate_distance(start, end), start.x, start.y, start.direction)
+            (self._estimate_distance(start, end),
+             start.x, start.y, start.direction)
         ]
 
         visited = set()
@@ -225,7 +224,8 @@ class MazeSolver:
 
             # if the terminal state is reached record the path and return
             if end.is_eq(x, y, direction):
-                self._record_path(start, end, parent_dict, g_dist[(x, y, direction)])
+                self._record_path(start, end, parent_dict,
+                                  g_dist[(x, y, direction)])
                 return
 
             # mark the node as visited
@@ -270,10 +270,11 @@ class MazeSolver:
 
                 # calculate the cost of robot rotation
                 rot_cost = (
-                        TURN_FACTOR * Direction.rotation_cost(direction, new_direction)
-                        + safe_cost
-                        + reverse_cost
-                        + 1
+                    TURN_FACTOR *
+                    Direction.rotation_cost(direction, new_direction)
+                    + safe_cost
+                    + reverse_cost
+                    + 1
                 )
                 # check if it is a half turn
                 if motion in [
@@ -293,25 +294,28 @@ class MazeSolver:
 
                 # total cost f = g + h = safe_cost + rot_cost + screenshot_cost + dist + h (estimated distance)
                 total_cost = (
-                        dist
-                        + rot_cost
-                        + screenshot_cost
-                        + self._estimate_distance(
-                    CellState(new_x, new_y, new_direction), end
-                )
+                    dist
+                    + rot_cost
+                    + screenshot_cost
+                    + self._estimate_distance(
+                        CellState(new_x, new_y, new_direction), end
+                    )
                 )
 
                 # update the g distance if the new state has not been visited or the new cost is less than the previous cost
                 if (new_x, new_y, new_direction) not in g_dist or g_dist[
                     (new_x, new_y, new_direction)
                 ] > dist + rot_cost:
-                    g_dist[(new_x, new_y, new_direction)] = dist + rot_cost + screenshot_cost
+                    g_dist[(new_x, new_y, new_direction)] = dist + \
+                        rot_cost + screenshot_cost
 
                     # add the new state to the heap
-                    heapq.heappush(heap, (total_cost, new_x, new_y, new_direction))
+                    heapq.heappush(
+                        heap, (total_cost, new_x, new_y, new_direction))
 
                     # update the parent dict
-                    parent_dict[(new_x, new_y, new_direction)] = (x, y, direction)
+                    parent_dict[(new_x, new_y, new_direction)] = (
+                        x, y, direction)
 
     def _get_neighboring_states(
             self, x, y, direction
@@ -353,57 +357,73 @@ class MazeSolver:
                 if direction == Direction.NORTH or direction == Direction.SOUTH:
                     # FORWARD_OFFSET_RIGHT
                     if self.grid.half_turn_reachable(x, y, x + delta_x, y + delta_y):
-                        safe_cost = self._calculate_safe_cost(x + delta_x, y + delta_y)
+                        safe_cost = self._calculate_safe_cost(
+                            x + delta_x, y + delta_y)
                         motion = Motion.FORWARD_OFFSET_RIGHT
-                        neighbors.append((x + delta_x, y + delta_y, md, safe_cost, motion))
+                        neighbors.append(
+                            (x + delta_x, y + delta_y, md, safe_cost, motion))
 
                     # FORWARD_OFFSET_LEFT
                     if self.grid.half_turn_reachable(x, y, x - delta_x, y + delta_y):
 
-                        safe_cost = self._calculate_safe_cost(x - delta_x, y + delta_y)
+                        safe_cost = self._calculate_safe_cost(
+                            x - delta_x, y + delta_y)
                         motion = Motion.FORWARD_OFFSET_LEFT
-                        neighbors.append((x - delta_x, y + delta_y, md, safe_cost, motion))
+                        neighbors.append(
+                            (x - delta_x, y + delta_y, md, safe_cost, motion))
                     # REVERSE_OFFSET_RIGHT
                     if self.grid.half_turn_reachable(x, y, x + delta_x, y - delta_y):
 
-                        safe_cost = self._calculate_safe_cost(x + delta_x, y - delta_y)
+                        safe_cost = self._calculate_safe_cost(
+                            x + delta_x, y - delta_y)
                         motion = Motion.REVERSE_OFFSET_RIGHT
-                        neighbors.append((x + delta_x, y - delta_y, md, safe_cost, motion))
+                        neighbors.append(
+                            (x + delta_x, y - delta_y, md, safe_cost, motion))
                     # REVERSE_OFFSET_LEFT
                     if self.grid.half_turn_reachable(x, y, x - delta_x, y - delta_y):
 
-                        safe_cost = self._calculate_safe_cost(x - delta_x, y - delta_y)
+                        safe_cost = self._calculate_safe_cost(
+                            x - delta_x, y - delta_y)
                         motion = Motion.REVERSE_OFFSET_LEFT
-                        neighbors.append((x - delta_x, y - delta_y, md, safe_cost, motion))
+                        neighbors.append(
+                            (x - delta_x, y - delta_y, md, safe_cost, motion))
                 else:
                     # EAST or WEST
                     # FORWARD_OFFSET_RIGHT
                     if self.grid.half_turn_reachable(x, y, x + delta_x, y - delta_y):
 
-                        safe_cost = self._calculate_safe_cost(x + delta_x, y - delta_y)
+                        safe_cost = self._calculate_safe_cost(
+                            x + delta_x, y - delta_y)
                         motion = Motion.FORWARD_OFFSET_RIGHT
-                        neighbors.append((x + delta_x, y - delta_y, md, safe_cost, motion))
+                        neighbors.append(
+                            (x + delta_x, y - delta_y, md, safe_cost, motion))
 
                     # FORWARD_OFFSET_LEFT
                     if self.grid.half_turn_reachable(x, y, x + delta_x, y + delta_y):
 
-                        safe_cost = self._calculate_safe_cost(x + delta_x, y + delta_y)
+                        safe_cost = self._calculate_safe_cost(
+                            x + delta_x, y + delta_y)
                         motion = Motion.FORWARD_OFFSET_LEFT
-                        neighbors.append((x + delta_x, y + delta_y, md, safe_cost, motion))
+                        neighbors.append(
+                            (x + delta_x, y + delta_y, md, safe_cost, motion))
 
                     # REVERSE_OFFSET_RIGHT
                     if self.grid.half_turn_reachable(x, y, x - delta_x, y - delta_y):
 
-                        safe_cost = self._calculate_safe_cost(x - delta_x, y - delta_y)
+                        safe_cost = self._calculate_safe_cost(
+                            x - delta_x, y - delta_y)
                         motion = Motion.REVERSE_OFFSET_RIGHT
-                        neighbors.append((x - delta_x, y - delta_y, md, safe_cost, motion))
+                        neighbors.append(
+                            (x - delta_x, y - delta_y, md, safe_cost, motion))
 
                     # REVERSE_OFFSET_LEFT
                     if self.grid.half_turn_reachable(x, y, x - delta_x, y + delta_y):
 
-                        safe_cost = self._calculate_safe_cost(x - delta_x, y + delta_y)
+                        safe_cost = self._calculate_safe_cost(
+                            x - delta_x, y + delta_y)
                         motion = Motion.REVERSE_OFFSET_LEFT
-                        neighbors.append((x - delta_x, y + delta_y, md, safe_cost, motion))
+                        neighbors.append(
+                            (x - delta_x, y + delta_y, md, safe_cost, motion))
 
             else:  # consider 8 cases
 
@@ -422,7 +442,8 @@ class MazeSolver:
                         )
                         motion = Motion.FORWARD_RIGHT_TURN
                         neighbors.append(
-                            (x + delta_big, y + delta_small, md, safe_cost + 10, motion)
+                            (x + delta_big, y + delta_small,
+                             md, safe_cost + 10, motion)
                         )
 
                     # REVERSE_LEFT_TURN
@@ -434,7 +455,8 @@ class MazeSolver:
                         )
                         motion = Motion.REVERSE_LEFT_TURN
                         neighbors.append(
-                            (x - delta_small, y - delta_big, md, safe_cost + 10, motion)
+                            (x - delta_small, y - delta_big,
+                             md, safe_cost + 10, motion)
                         )
 
                 # east -> north
@@ -448,7 +470,8 @@ class MazeSolver:
                         )
                         motion = Motion.FORWARD_LEFT_TURN
                         neighbors.append(
-                            (x + delta_small, y + delta_big, md, safe_cost + 10, motion)
+                            (x + delta_small, y + delta_big,
+                             md, safe_cost + 10, motion)
                         )
 
                     # REVERSE_RIGHT_TURN
@@ -460,7 +483,8 @@ class MazeSolver:
                         )
                         motion = Motion.REVERSE_RIGHT_TURN
                         neighbors.append(
-                            (x - delta_big, y - delta_small, md, safe_cost + 10, motion)
+                            (x - delta_big, y - delta_small,
+                             md, safe_cost + 10, motion)
                         )
 
                 # east -> south
@@ -474,7 +498,8 @@ class MazeSolver:
                         )
                         motion = Motion.FORWARD_RIGHT_TURN
                         neighbors.append(
-                            (x + delta_small, y - delta_big, md, safe_cost + 10, motion)
+                            (x + delta_small, y - delta_big,
+                             md, safe_cost + 10, motion)
                         )
 
                     # REVERSE_LEFT_TURN
@@ -486,7 +511,8 @@ class MazeSolver:
                         )
                         motion = Motion.REVERSE_LEFT_TURN
                         neighbors.append(
-                            (x - delta_big, y + delta_small, md, safe_cost + 10, motion)
+                            (x - delta_big, y + delta_small,
+                             md, safe_cost + 10, motion)
                         )
 
                 # south -> east
@@ -500,7 +526,8 @@ class MazeSolver:
                         )
                         motion = Motion.FORWARD_LEFT_TURN
                         neighbors.append(
-                            (x + delta_big, y - delta_small, md, safe_cost + 10, motion)
+                            (x + delta_big, y - delta_small,
+                             md, safe_cost + 10, motion)
                         )
 
                     # REVERSE_RIGHT_TURN
@@ -512,7 +539,8 @@ class MazeSolver:
                         )
                         motion = Motion.REVERSE_RIGHT_TURN
                         neighbors.append(
-                            (x - delta_small, y + delta_big, md, safe_cost + 10, motion)
+                            (x - delta_small, y + delta_big,
+                             md, safe_cost + 10, motion)
                         )
 
                 # south -> west
@@ -526,7 +554,8 @@ class MazeSolver:
                         )
                         motion = Motion.FORWARD_RIGHT_TURN
                         neighbors.append(
-                            (x - delta_big, y - delta_small, md, safe_cost + 10, motion)
+                            (x - delta_big, y - delta_small,
+                             md, safe_cost + 10, motion)
                         )
 
                     # REVERSE_LEFT_TURN
@@ -538,7 +567,8 @@ class MazeSolver:
                         )
                         motion = Motion.REVERSE_LEFT_TURN
                         neighbors.append(
-                            (x + delta_small, y + delta_big, md, safe_cost + 10, motion)
+                            (x + delta_small, y + delta_big,
+                             md, safe_cost + 10, motion)
                         )
 
                 # west -> south
@@ -552,7 +582,8 @@ class MazeSolver:
                         )
                         motion = Motion.FORWARD_LEFT_TURN
                         neighbors.append(
-                            (x - delta_small, y - delta_big, md, safe_cost + 10, motion)
+                            (x - delta_small, y - delta_big,
+                             md, safe_cost + 10, motion)
                         )
 
                     # REVERSE_RIGHT_TURN
@@ -564,7 +595,8 @@ class MazeSolver:
                         )
                         motion = Motion.REVERSE_RIGHT_TURN
                         neighbors.append(
-                            (x + delta_big, y + delta_small, md, safe_cost + 10, motion)
+                            (x + delta_big, y + delta_small,
+                             md, safe_cost + 10, motion)
                         )
 
                 # west -> north
@@ -578,7 +610,8 @@ class MazeSolver:
                         )
                         motion = Motion.FORWARD_RIGHT_TURN
                         neighbors.append(
-                            (x - delta_small, y + delta_big, md, safe_cost + 10, motion)
+                            (x - delta_small, y + delta_big,
+                             md, safe_cost + 10, motion)
                         )
 
                     # REVERSE_LEFT_TURN
@@ -590,7 +623,8 @@ class MazeSolver:
                         )
                         motion = Motion.REVERSE_LEFT_TURN
                         neighbors.append(
-                            (x + delta_big, y - delta_small, md, safe_cost + 10, motion)
+                            (x + delta_big, y - delta_small,
+                             md, safe_cost + 10, motion)
                         )
 
                 # north <-> west
@@ -604,7 +638,8 @@ class MazeSolver:
                         )
                         motion = Motion.FORWARD_LEFT_TURN
                         neighbors.append(
-                            (x - delta_big, y + delta_small, md, safe_cost + 10, motion)
+                            (x - delta_big, y + delta_small,
+                             md, safe_cost + 10, motion)
                         )
 
                     # REVERSE_RIGHT_TURN
@@ -616,7 +651,8 @@ class MazeSolver:
                         )
                         motion = Motion.REVERSE_RIGHT_TURN
                         neighbors.append(
-                            (x + delta_small, y - delta_big, md, safe_cost + 10, motion)
+                            (x + delta_small, y - delta_big,
+                             md, safe_cost + 10, motion)
                         )
 
         return neighbors
@@ -734,7 +770,8 @@ class MazeSolver:
             dx = -HALF_TURNS[0]
             dy = -HALF_TURNS[1]
         else:
-            raise ValueError(f"Invalid direction {direction}. This should never happen.")
+            raise ValueError(f"Invalid direction {
+                             direction}. This should never happen.")
         return dx, dy
 
     def optimal_path_to_motion_path(
@@ -761,7 +798,8 @@ class MazeSolver:
             else:
                 # if the motion is still not found, then the path is invalid
                 raise ValueError(
-                    f"Invalid path from {from_state} to {to_state}. This should never happen."
+                    f"Invalid path from {from_state} to {
+                        to_state}. This should never happen."
                 )
 
             motion_path.append(motion)

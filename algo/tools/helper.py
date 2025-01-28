@@ -1,6 +1,4 @@
-from pickle import TUPLE
-
-from tools.consts import WIDTH, HEIGHT, Direction, Motion
+from tools.consts import WIDTH, HEIGHT, Motion
 
 
 class CommandGenerator:
@@ -64,22 +62,31 @@ class CommandGenerator:
         # cannot combine with other motions
         elif motion == Motion.FORWARD_OFFSET_LEFT:
             # break it down into 2 steps
-            cmd1 = f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}-23{self.SEP}{45}{self.END}"
-            cmd2 = f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}23{self.SEP}{45}{self.END}"
+            cmd1 = f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{
+                self.SEP}-23{self.SEP}{45}{self.END}"
+            cmd2 = f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{
+                self.SEP}23{self.SEP}{45}{self.END}"
         elif motion == Motion.FORWARD_OFFSET_RIGHT:
             # break it down into 2 steps
-            cmd1 = f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}23{self.SEP}{45}{self.END}"
-            cmd2 = f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}-23{self.SEP}{45}{self.END}"
+            cmd1 = f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{
+                self.SEP}23{self.SEP}{45}{self.END}"
+            cmd2 = f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{
+                self.SEP}-23{self.SEP}{45}{self.END}"
         elif motion == Motion.REVERSE_OFFSET_LEFT:
             # break it down into 2 steps
-            cmd1 = f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}-25{self.SEP}{45}{self.END}"
-            cmd2 = f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}25{self.SEP}{45}{self.END}"
+            cmd1 = f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{
+                self.SEP}-25{self.SEP}{45}{self.END}"
+            cmd2 = f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{
+                self.SEP}25{self.SEP}{45}{self.END}"
         elif motion == Motion.REVERSE_OFFSET_RIGHT:
             # break it down into 2 steps
-            cmd1 = f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}25{self.SEP}{45}{self.END}"
-            cmd2 = f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}-25{self.SEP}{45}{self.END}"
+            cmd1 = f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{
+                self.SEP}25{self.SEP}{45}{self.END}"
+            cmd2 = f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{
+                self.SEP}-25{self.SEP}{45}{self.END}"
         else:
-            raise ValueError(f"Invalid motion {motion}. This should never happen.")
+            raise ValueError(f"Invalid motion {
+                             motion}. This should never happen.")
         return [cmd1, cmd2]
 
     def generate_commands(self, motions, testing=True):
@@ -104,7 +111,8 @@ class CommandGenerator:
                     prev_motion = motion
                     continue
                 if testing:
-                    cur_cmd = self._generate_testing_command(prev_motion, num_motions)
+                    cur_cmd = self._generate_testing_command(
+                        prev_motion, num_motions)
                 else:
                     cur_cmd = self._generate_command(prev_motion, num_motions)
                 commands.extend(cur_cmd)
@@ -152,22 +160,31 @@ class CommandGenerator:
         # cannot combine with other motions
         elif motion == Motion.FORWARD_OFFSET_LEFT:
             # break it down into 2 steps
-            func1 = f"send_cmd(\"{self.FORWARD_DIST_TARGET}\", {self.straight_speed}, -23, 45)"
-            func2 = f"send_cmd(\"{self.FORWARD_DIST_TARGET}\", {self.straight_speed}, 23, 45)"
+            func1 = f"send_cmd(\"{self.FORWARD_DIST_TARGET}\", {
+                self.straight_speed}, -23, 45)"
+            func2 = f"send_cmd(\"{self.FORWARD_DIST_TARGET}\", {
+                self.straight_speed}, 23, 45)"
         elif motion == Motion.FORWARD_OFFSET_RIGHT:
             # break it down into 2 steps
-            func1 = f"send_cmd(\"{self.FORWARD_DIST_TARGET}\", {self.straight_speed}, 23, 45)"
-            func2 = f"send_cmd(\"{self.FORWARD_DIST_TARGET}\", {self.straight_speed}, -23, 45)"
+            func1 = f"send_cmd(\"{self.FORWARD_DIST_TARGET}\", {
+                self.straight_speed}, 23, 45)"
+            func2 = f"send_cmd(\"{self.FORWARD_DIST_TARGET}\", {
+                self.straight_speed}, -23, 45)"
         elif motion == Motion.REVERSE_OFFSET_LEFT:
             # break it down into 2 steps
-            func1 = f"send_cmd(\"{self.BACKWARD_DIST_TARGET}\", {self.straight_speed}, -25, 45)"
-            func2 = f"send_cmd(\"{self.BACKWARD_DIST_TARGET}\", {self.straight_speed}, 25, 45)"
+            func1 = f"send_cmd(\"{self.BACKWARD_DIST_TARGET}\", {
+                self.straight_speed}, -25, 45)"
+            func2 = f"send_cmd(\"{self.BACKWARD_DIST_TARGET}\", {
+                self.straight_speed}, 25, 45)"
         elif motion == Motion.REVERSE_OFFSET_RIGHT:
             # break it down into 2 steps
-            func1 = f"send_cmd(\"{self.BACKWARD_DIST_TARGET}\", {self.straight_speed}, 25, 45)"
-            func2 = f"send_cmd(\"{self.BACKWARD_DIST_TARGET}\", {self.straight_speed}, -25, 45)"
+            func1 = f"send_cmd(\"{self.BACKWARD_DIST_TARGET}\", {
+                self.straight_speed}, 25, 45)"
+            func2 = f"send_cmd(\"{self.BACKWARD_DIST_TARGET}\", {
+                self.straight_speed}, -25, 45)"
         else:
-            raise ValueError(f"Invalid motion {motion}. This should never happen.")
+            raise ValueError(f"Invalid motion {
+                             motion}. This should never happen.")
         return [func1, func2]
 
 

@@ -1,5 +1,4 @@
 from typing import List
-from warnings import warn
 from tools.consts import Direction, EXPANDED_CELL, SCREENSHOT_COST
 from tools.helper import is_valid
 
@@ -102,7 +101,8 @@ class Obstacle(CellState):
 
             for idx, pos in enumerate(positions):
                 if is_valid(*pos):
-                    cells.append(CellState(*pos, Direction.SOUTH, self.obstacle_id, costs[idx]))
+                    cells.append(CellState(*pos, Direction.SOUTH,
+                                 self.obstacle_id, costs[idx]))
 
         # If obstacle is facing south, then robot's cell state must be facing north
         elif self.direction == Direction.SOUTH:
@@ -117,7 +117,8 @@ class Obstacle(CellState):
                 costs = [0, SCREENSHOT_COST, SCREENSHOT_COST, 5]
             for idx, pos in enumerate(positions):
                 if is_valid(*pos):
-                    cells.append(CellState(*pos, Direction.NORTH, self.obstacle_id, costs[idx]))
+                    cells.append(CellState(*pos, Direction.NORTH,
+                                 self.obstacle_id, costs[idx]))
 
         # If obstacle is facing east, then robot's cell state must be facing west
         elif self.direction == Direction.EAST:
@@ -132,7 +133,8 @@ class Obstacle(CellState):
 
             for idx, pos in enumerate(positions):
                 if is_valid(*pos):
-                    cells.append(CellState(*pos, Direction.WEST, self.obstacle_id, costs[idx]))
+                    cells.append(CellState(*pos, Direction.WEST,
+                                 self.obstacle_id, costs[idx]))
 
         # If obstacle is facing west, then robot's cell state must be facing east
         elif self.direction == Direction.WEST:
@@ -146,7 +148,8 @@ class Obstacle(CellState):
                 costs = [0, SCREENSHOT_COST, SCREENSHOT_COST, 5]
             for idx, pos in enumerate(position):
                 if is_valid(*pos):
-                    cells.append(CellState(*pos, Direction.EAST, self.obstacle_id, costs[idx]))
+                    cells.append(CellState(*pos, Direction.EAST,
+                                 self.obstacle_id, costs[idx]))
         return cells
 
     def get_obstacle_id(self):
