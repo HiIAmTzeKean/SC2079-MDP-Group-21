@@ -1,4 +1,3 @@
-from tools.consts import WIDTH, HEIGHT
 from tools.movement import Motion
 
 """
@@ -24,12 +23,13 @@ Generate commands in format requested by STM (refer to commands_FLAGS.h in STM r
 class CommandGenerator:
     # commented flags are unused
 
+    # FULL_STOP = 'S'                 # bring car to a complete stop
     SEP = "|"
     END = "\n"
     # RCV = 'r'
     FIN = 'FIN'
-    # INFO_MARKER = 'M'
-    # INFO_DIST = 'D'
+    # INFO_MARKER = 'M'              # signal command has been passed. (used for tracking)
+    # INFO_DIST = 'D'                # signal start/stop of accumulative distance tracking
 
     # Flags
     FORWARD_DIST_TARGET = "T"       # go forward for a target distance/angle.
@@ -148,18 +148,3 @@ class CommandGenerator:
         # add the final command
         commands.append(f"{self.FIN}")
         return commands
-
-
-def is_valid(center_x: int, center_y: int):
-    """Checks if given position is within bounds
-
-    Inputs
-    ------
-    center_x (int): x-coordinate
-    center_y (int): y-coordinate
-
-    Returns
-    -------
-    bool: True if valid, False otherwise
-    """
-    return 0 < center_x < WIDTH - 1 and 0 < center_y < HEIGHT - 1

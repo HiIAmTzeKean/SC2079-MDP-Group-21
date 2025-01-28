@@ -1,5 +1,5 @@
 from algorithms.algo import MazeSolver
-from tools.helper import CommandGenerator
+from tools.commands import CommandGenerator
 from tools.movement import Direction
 from algorithms.simulation import MazeSolverSimulation
 import time

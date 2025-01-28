@@ -1,6 +1,6 @@
 from algorithms.algo import MazeSolver
 from tools.movement import Direction
-from tools.helper import CommandGenerator
+from tools.commands import CommandGenerator
 import os
 import json
 import random

@@ -1,6 +1,5 @@
 from typing import List
-from tools.consts import EXPANDED_CELL, SCREENSHOT_COST
-from tools.helper import is_valid
+from tools.consts import EXPANDED_CELL, SCREENSHOT_COST, HEIGHT, WIDTH
 from tools.movement import Direction
 
 
@@ -101,7 +100,7 @@ class Obstacle(CellState):
                 costs = [0, SCREENSHOT_COST, SCREENSHOT_COST, 5]
 
             for idx, pos in enumerate(positions):
-                if is_valid(*pos):
+                if self.is_valid_position(*pos):
                     cells.append(CellState(*pos, Direction.SOUTH,
                                  self.obstacle_id, costs[idx]))
 
@@ -117,7 +116,7 @@ class Obstacle(CellState):
                              (self.x - 1, self.y - 2 - offset), (self.x, self.y - 2 - offset)]
                 costs = [0, SCREENSHOT_COST, SCREENSHOT_COST, 5]
             for idx, pos in enumerate(positions):
-                if is_valid(*pos):
+                if self.is_valid_position(*pos):
                     cells.append(CellState(*pos, Direction.NORTH,
                                  self.obstacle_id, costs[idx]))
 
@@ -133,7 +132,7 @@ class Obstacle(CellState):
                 costs = [0, SCREENSHOT_COST, SCREENSHOT_COST, 5]
 
             for idx, pos in enumerate(positions):
-                if is_valid(*pos):
+                if self.is_valid_position(*pos):
                     cells.append(CellState(*pos, Direction.WEST,
                                  self.obstacle_id, costs[idx]))
 
@@ -148,13 +147,27 @@ class Obstacle(CellState):
                             (self.x - 2 - offset, self.y - 1), (self.x - 2 - offset, self.y)]
                 costs = [0, SCREENSHOT_COST, SCREENSHOT_COST, 5]
             for idx, pos in enumerate(position):
-                if is_valid(*pos):
+                if self.is_valid_position(*pos):
                     cells.append(CellState(*pos, Direction.EAST,
                                  self.obstacle_id, costs[idx]))
         return cells
 
     def get_obstacle_id(self):
         return self.obstacle_id
+
+    def is_valid_position(self, center_x: int, center_y: int):
+        """Checks if given position is within bounds
+
+        Inputs
+        ------
+        center_x (int): x-coordinate
+        center_y (int): y-coordinate
+
+        Returns
+        -------
+        bool: True if valid, False otherwise
+        """
+        return 0 < center_x < WIDTH - 1 and 0 < center_y < HEIGHT - 1
 
 
 class Grid:

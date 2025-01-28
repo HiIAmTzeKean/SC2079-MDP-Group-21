@@ -1,8 +1,5 @@
 from algorithms.algo import MazeSolver
-from entities.entity import Obstacle
-from tools.helper import *
-from tools.consts import *
-from algorithms.simulation import MazeSolverSimulation
+from tools.commands import CommandGenerator
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
