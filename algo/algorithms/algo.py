@@ -94,10 +94,10 @@ class MazeSolver:
                 if bin_pos[i] == "1":
                     # add the view position to the current view positions
                     cur_view_positions.append(views[i])
-                    # add the view position to the visit states
+                    # add the view position to flattened list of all view states
                     visit_states.extend(views[i])
 
-            # for each visit state, generate paths and cost of the paths using A* search
+            # for each visit state, generate path to all other visit states and cost of the paths using A* search
             self._generate_paths(visit_states)
 
             # generate all possible combinations of the view positions
@@ -109,15 +109,18 @@ class MazeSolver:
             for combination in combinations:
                 visited = [0]
 
-                current_idx, cost = 1, 0
+                current_idx = 1  # idx 0 of visit_states: robot start state
+                cost = 0
 
-                # iterate over the views and calculate the cost of the path
+                # iterate over the views for each obstacle and calculate the cost of the path
                 for idx, view_pos in enumerate(cur_view_positions):
+                    # global index of selected view state in visit_states (flattened list of all view states)
                     visited.append(current_idx + combination[idx])
                     cost += view_pos[combination[idx]].penalty
+                    # move starting idx to next obstacle
                     current_idx += len(view_pos)
 
-                # initialize the cost matrix
+                # initialize the cost matrix to travel between each obstacle
                 cost_matrix = np.zeros((len(visited), len(visited)))
 
                 for start_idx in range(len(visited) - 1):
@@ -142,19 +145,19 @@ class MazeSolver:
                 # set the cost of travelling from each state to itself to 0
                 cost_matrix[:, 0] = 0
 
-                # solve the TSP problem using dynamic programming
+                # find Hamiltonian path with least cost for the selected combination of view states
                 permutation, distance = solve_tsp_dynamic_programming(
                     cost_matrix)
 
-                # if the distancd is more than the minimum distance, the path is irrelevant.
+                # if the distance is more than the minimum distance, the path is irrelevant
                 if distance + cost >= min_dist:
                     continue
 
-                # update the minimum distance and the optimal path
+                # update the minimum distance
                 min_dist = distance + cost
 
+                # update the optimal path
                 optimal_path = [visit_states[0]]
-                # generate the optimal path
                 for idx in range(len(permutation) - 1):
                     from_state = visit_states[visited[permutation[idx]]]
                     to_state = visit_states[visited[permutation[idx + 1]]]
@@ -197,7 +200,6 @@ class MazeSolver:
         h: Estimated distance from the current state to the end state
         """
         # check if the path has already been calculated
-
         if (start, end) in self.path_table:
             return
 
@@ -728,9 +730,11 @@ class MazeSolver:
             num_iters: int,
     ):
         """
-        Generate all possible combinations of the view positions
+        Generate all possible combinations of the view positions, where one view state is selected for each obstacle
+
+        :return: A list of lists, where each inner list is a unique combination of selected view states for all obstacles
         """
-        # if all the view positions have been visited, add the current combination to the result
+        # if all the view positions have been visited, add the current iteration's combination to the result
         if index == len(view_positions):
             result.append(current.copy())
             return result

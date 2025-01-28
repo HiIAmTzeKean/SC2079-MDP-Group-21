@@ -1,32 +1,53 @@
 from tools.consts import WIDTH, HEIGHT, Motion
 
+"""
+Generate commands in format requested by STM (refer to commands_FLAGS.h in STM repo): 
+    "{flag}{speed}|{angle}|{val}\n"
+
+    <speed>: 1-3 chars
+    - specify speed to drive, from 0 to 100 (integer).
+
+    <angle>: 1+ chars, in degrees
+    - specify angle to steer, from -25 to 25 (float).
+    - negative angle: steer left, positive angle: steer right.
+
+    <val>: 1+ chars, in cm
+    - specify distance to drive, from 0 to 500 (float).
+    - (ONLY FOR DIST_TARGET commands) when <angle> != 0: specify turn angle to complete, from 0 to 360 (float).
+
+        e.g., to drive forward at speed 50 for 30cm going straight: 'T50|0|30\n'
+        e.g., to drive backward at speed 20 until 5cm away while wheels are steering left 10 degrees: 'w20|-10|5\n'
+"""
+
 
 class CommandGenerator:
+    # commented flags are unused
+
     SEP = "|"
     END = "\n"
-    RCV = 'r'
+    # RCV = 'r'
     FIN = 'FIN'
-    INFO_MARKER = 'M'
-    INFO_DIST = 'D'
+    # INFO_MARKER = 'M'
+    # INFO_DIST = 'D'
 
     # Flags
-    FORWARD_DIST_TARGET = "T"
-    FORWARD_DIST_AWAY = "W"
-    BACKWARD_DIST_TARGET = "t"
-    BACKWARD_DIST_AWAY = "w"
+    FORWARD_DIST_TARGET = "T"       # go forward for a target distance/angle.
+    # FORWARD_DIST_AWAY = "W"         # go forward until within a certain distance.
+    BACKWARD_DIST_TARGET = "t"      # go backward for a target distance/angle.
+    # BACKWARD_DIST_AWAY = "w"        # go backward until a certain distance apart.
 
-    # IR Sensors based motion
-    FORWARD_IR_DIST_L = "L"
-    FORWARD_IR_DIST_R = "R"
-    BACKWARD_IR_DIST_L = "l"
-    BACKWARD_IR_DIST_R = "r"
+    # # IR Sensors based motion
+    # FORWARD_IR_DIST_L = "L"         # go forward until left IR sensor is greater than value provided.
+    # FORWARD_IR_DIST_R = "R"         # go forward until right IR sensor is greater than value provided.
+    # BACKWARD_IR_DIST_L = "l"        # go backward until left IR sensor is greater than value provided.
+    # BACKWARD_IR_DIST_R = "r"        # go backward until right IR sensor is greater than value provided.
 
     # unit distance
     UNIT_DIST = 10
 
-    # turn angles
-    FORWARD_TURN_ANGLE = 20
-    BACKWARD_TURN_ANGLE = 18
+    # # turn angles
+    # FORWARD_TURN_ANGLE = 20
+    # BACKWARD_TURN_ANGLE = 18
 
     def __init__(self, straight_speed: int = 50, turn_speed: int = 50):
         """
@@ -97,7 +118,6 @@ class CommandGenerator:
             return []
         commands = []
         prev_motion = motions[0]
-        # cur_cmd = self._generate_command(prev_motion)
         num_motions = 1
         for motion in motions[1:]:
             # if combinable motions
