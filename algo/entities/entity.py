@@ -1,6 +1,7 @@
 from typing import List
-from tools.consts import Direction, EXPANDED_CELL, SCREENSHOT_COST
+from tools.consts import EXPANDED_CELL, SCREENSHOT_COST
 from tools.helper import is_valid
+from tools.movement import Direction
 
 
 class CellState:

@@ -5,15 +5,17 @@ from python_tsp.exact import solve_tsp_dynamic_programming
 from entities.entity import CellState, Obstacle, Grid
 from entities.robot import Robot
 from tools.consts import (
-    Direction,
-    MOVE_DIRECTION,
     TURN_FACTOR,
     ITERATIONS,
-    TURN_RADIUS,
     SAFE_COST,
     TURN_WRT_BIG_TURNS,
     HALF_TURNS,
-    Motion, REVERSE_FACTOR,
+    REVERSE_FACTOR,
+)
+from tools.movement import (
+    Direction,
+    MOVE_DIRECTION,
+    Motion
 )
 
 

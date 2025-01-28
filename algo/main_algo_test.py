@@ -1,7 +1,6 @@
 from algorithms.algo import MazeSolver
-from entities.entity import Obstacle
-from tools.helper import *
-from tools.consts import *
+from tools.helper import CommandGenerator
+from tools.movement import Direction
 from algorithms.simulation import MazeSolverSimulation
 import time
 

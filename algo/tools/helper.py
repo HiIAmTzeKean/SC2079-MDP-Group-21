@@ -1,4 +1,5 @@
-from tools.consts import WIDTH, HEIGHT, Motion
+from tools.consts import WIDTH, HEIGHT
+from tools.movement import Motion
 
 """
 Generate commands in format requested by STM (refer to commands_FLAGS.h in STM repo): 

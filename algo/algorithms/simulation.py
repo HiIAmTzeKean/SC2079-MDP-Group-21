@@ -1,5 +1,5 @@
 from algorithms.algo import MazeSolver
-from tools.consts import Direction
+from tools.movement import Direction
 from tools.helper import CommandGenerator
 import os
 import json
