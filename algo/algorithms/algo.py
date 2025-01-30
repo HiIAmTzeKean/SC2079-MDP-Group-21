@@ -2,9 +2,9 @@ import heapq
 import math
 import numpy as np
 from python_tsp.exact import solve_tsp_dynamic_programming
-from entities.entity import CellState, Obstacle, Grid
-from entities.robot import Robot
-from tools.consts import (
+from algo.entities.entity import CellState, Obstacle, Grid
+from algo.entities.robot import Robot
+from algo.tools.consts import (
     TURN_FACTOR,
     ITERATIONS,
     SAFE_COST,
@@ -12,7 +12,7 @@ from tools.consts import (
     HALF_TURNS,
     REVERSE_FACTOR,
 )
-from tools.movement import (
+from algo.tools.movement import (
     Direction,
     MOVE_DIRECTION,
     Motion

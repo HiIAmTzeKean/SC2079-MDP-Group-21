@@ -1,6 +1,6 @@
 from typing import List
-from tools.consts import EXPANDED_CELL, SCREENSHOT_COST, HEIGHT, WIDTH
-from tools.movement import Direction
+from algo.tools.consts import EXPANDED_CELL, SCREENSHOT_COST, HEIGHT, WIDTH
+from algo.tools.movement import Direction
 
 
 class CellState:

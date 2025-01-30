@@ -1,4 +1,4 @@
-from tools.movement import Motion
+from algo.tools.movement import Motion
 
 """
 Generate commands in format requested by STM (refer to commands_FLAGS.h in STM repo): 
