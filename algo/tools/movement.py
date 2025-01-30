@@ -71,8 +71,8 @@ class Motion(int, Enum):
 
         opp_val = 10 - self.value
         if opp_val == 5 or opp_val < 0 or opp_val > 10:
-            raise ValueError(f"Invalid motion {
-                             self}. This should never happen.")
+            raise ValueError(
+                f"Invalid motion {self}. This should never happen.")
 
         return Motion(opp_val)
 

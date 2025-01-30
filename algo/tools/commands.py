@@ -84,31 +84,23 @@ class CommandGenerator:
         # cannot combine with other motions
         elif motion == Motion.FORWARD_OFFSET_LEFT:
             # break it down into 2 steps
-            cmd1 = f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{
-                self.SEP}-23{self.SEP}{45}{self.END}"
-            cmd2 = f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{
-                self.SEP}23{self.SEP}{45}{self.END}"
+            cmd1 = f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}-23{self.SEP}{45}{self.END}"
+            cmd2 = f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}23{self.SEP}{45}{self.END}"
         elif motion == Motion.FORWARD_OFFSET_RIGHT:
             # break it down into 2 steps
-            cmd1 = f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{
-                self.SEP}23{self.SEP}{45}{self.END}"
-            cmd2 = f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{
-                self.SEP}-23{self.SEP}{45}{self.END}"
+            cmd1 = f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}23{self.SEP}{45}{self.END}"
+            cmd2 = f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}-23{self.SEP}{45}{self.END}"
         elif motion == Motion.REVERSE_OFFSET_LEFT:
             # break it down into 2 steps
-            cmd1 = f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{
-                self.SEP}-25{self.SEP}{45}{self.END}"
-            cmd2 = f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{
-                self.SEP}25{self.SEP}{45}{self.END}"
+            cmd1 = f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}-25{self.SEP}{45}{self.END}"
+            cmd2 = f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}25{self.SEP}{45}{self.END}"
         elif motion == Motion.REVERSE_OFFSET_RIGHT:
             # break it down into 2 steps
-            cmd1 = f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{
-                self.SEP}25{self.SEP}{45}{self.END}"
-            cmd2 = f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{
-                self.SEP}-25{self.SEP}{45}{self.END}"
+            cmd1 = f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}25{self.SEP}{45}{self.END}"
+            cmd2 = f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}-25{self.SEP}{45}{self.END}"
         else:
-            raise ValueError(f"Invalid motion {
-                             motion}. This should never happen.")
+            raise ValueError(
+                f"Invalid motion {motion}. This should never happen.")
         return [cmd1, cmd2]
 
     def generate_commands(self, motions):

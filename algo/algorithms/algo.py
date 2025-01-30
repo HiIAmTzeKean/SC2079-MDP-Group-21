@@ -776,8 +776,8 @@ class MazeSolver:
             dx = -HALF_TURNS[0]
             dy = -HALF_TURNS[1]
         else:
-            raise ValueError(f"Invalid direction {
-                             direction}. This should never happen.")
+            raise ValueError(
+                f"Invalid direction {direction}. This should never happen.")
         return dx, dy
 
     def optimal_path_to_motion_path(
@@ -804,8 +804,7 @@ class MazeSolver:
             else:
                 # if the motion is still not found, then the path is invalid
                 raise ValueError(
-                    f"Invalid path from {from_state} to {
-                        to_state}. This should never happen."
+                    f"Invalid path from {from_state} to {to_state}. This should never happen."
                 )
 
             motion_path.append(motion)
