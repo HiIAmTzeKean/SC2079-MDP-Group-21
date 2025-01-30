@@ -61,12 +61,12 @@ class MazeSolverSimulation:
             obs_id = max_obs_num + i + 1
             obstacles.append((obs_x, obs_y, direction, obs_id))
             self.maze_solver.add_obstacle(obs_x, obs_y, direction, obs_id)
-            logging.info(f"Added obstacle at ({obs_x}, {obs_y}) with direction {
-                         direction} and id {obs_id}")
+            logging.info(
+                f"Added obstacle at ({obs_x}, {obs_y}) with direction {direction} and id {obs_id}")
 
         if self.debug:
-            print(f"Debug mode enabled. Storing obstacles to file {
-                  os.path.realpath(self.debug_file)}")
+            print(
+                f"Debug mode enabled. Storing obstacles to file {os.path.realpath(self.debug_file)}")
             # store the obstacles in a json file
             self._save_obstacles(obstacles, save_number=self.debug_save)
 
@@ -87,15 +87,15 @@ class MazeSolverSimulation:
             obstacles = self._load_obstacles(option=f"{load_option}")[
                 f"{load_option}"]
         else:
-            logging.error(f"Invalid load option {
-                          load_option}. It must be between 0 and 3.")
+            logging.error(
+                f"Invalid load option {load_option}. It must be between 0 and 3.")
             return
 
         for obs in obstacles:
             obs_x, obs_y, direction, obs_id = obs["x"], obs["y"], obs["direction"], obs["id"]
             self.maze_solver.add_obstacle(obs_x, obs_y, direction, obs_id)
-            logging.info(f"Added obstacle at ({obs_x}, {obs_y}) with direction {
-                         direction} and id {obs_id}")
+            logging.info(
+                f"Added obstacle at({obs_x}, {obs_y}) with direction {direction} and id {obs_id}")
         return obstacles
 
     def reset_obstacles(self):
@@ -126,11 +126,10 @@ class MazeSolverSimulation:
             print(f"Optimal path with cost = {cost} calculated: ")
             for grid_sq in optimal_path:
                 if grid_sq == optimal_path[-1]:
-                    print(f"({grid_sq.x}, {grid_sq.y}) {
-                          grid_sq.direction.name}")
+                    print(f"({grid_sq.x}, {grid_sq.y}) {grid_sq.direction.name}")
                 else:
-                    print(f"({grid_sq.x}, {grid_sq.y}) {
-                          grid_sq.direction.name}", end=" ->  ")
+                    print(
+                        f"({grid_sq.x}, {grid_sq.y}) {grid_sq.direction.name}", end=" -> ")
 
         print("Plotting optimal path animation")
         fig, ax = plt.subplots()
@@ -163,8 +162,7 @@ class MazeSolverSimulation:
                     prev_cell.direction, cell.direction)
                 if angle is None:
                     raise ValueError(f"Invalid turn from {prev_cell.direction} to {cell.direction}. "
-                                     f"The location of the robot is {
-                                         prev_cell.x}, {prev_cell.y}"
+                                     f"The location of the robot is {prev_cell.x}, {prev_cell.y}"
                                      f" and the location of the next cell is {cell.x}, {cell.y}")
                 elif angle == 0:
                     # half turn
@@ -294,8 +292,8 @@ class MazeSolverSimulation:
         elif save_number in [1, 2, 3]:
             old_obs[f"{save_number}"] = serialized_obstacles
         else:
-            logging.error(f"Invalid save number {
-                          save_number}. Its value must be between 0 and 3.")
+            logging.error(
+                f"Invalid save number {save_number}. Its value must be between 0 and 3.")
             return
 
         # save the obstacles to last by default

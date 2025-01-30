@@ -1,8 +1,14 @@
-from algorithms.algo import MazeSolver
-from tools.commands import CommandGenerator
-from tools.movement import Direction
-from algorithms.simulation import MazeSolverSimulation
+
 import time
+
+import os
+import sys
+# Allows Python to find packages
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from algo.algorithms.algo import MazeSolver  # nopep8
+from algo.tools.commands import CommandGenerator  # nopep8
+from algo.tools.movement import Direction  # nopep8
+from algo.algorithms.simulation import MazeSolverSimulation  # nopep8
 
 obstacles = [
     {"x": 0, "y": 17, "d": Direction.EAST, "id": 1},
@@ -52,7 +58,3 @@ motions = maze_solver.optimal_path_to_motion_path(optimal_path)
 command_generator = CommandGenerator()
 commands = command_generator.generate_commands(motions)
 print(commands)
-
-path_results = [optimal_path[0].get_dict()]
-for pos in optimal_path:
-    path_results.append(pos.get_dict())
