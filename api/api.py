@@ -1,9 +1,13 @@
-from algorithms.algo import MazeSolver
-from tools.commands import CommandGenerator
-
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import time
+
+import sys
+import os
+# Allows Python to find package from sibling directory
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from algo.algorithms.algo import MazeSolver  # nopep8
+from algo.tools.commands import CommandGenerator  # nopep8
 
 app = Flask(__name__)
 CORS(app)
@@ -37,17 +41,17 @@ def path_finding():
     robot_direction = int(content['robot_dir'])
 
     # Initialize MazeSolver object with robot size of 20x20, bottom left corner of robot at (1,1), facing north, and whether to use a big turn or not.
-    # maze_solver = MazeSolver(20, 20, robot_x, robot_y, robot_direction, big_turn=1)
-    maze_solver = MazeSolver(size_x=20, size_y=20, robot_x=robot_x, robot_y=robot_y, robot_direction=robot_direction, big_turn=1)
+    maze_solver = MazeSolver(size_x=20, size_y=20, robot_x=robot_x,
+                             robot_y=robot_y, robot_direction=robot_direction, big_turn=1)
     # Add each obstacle into the MazeSolver. Each obstacle is defined by its x,y positions, its direction, and its id
     for ob in obstacles:
         maze_solver.add_obstacle(ob['x'], ob['y'], ob['d'], ob['id'])
 
     start = time.time()
     # Get shortest path
-    # optimal_path, distance = maze_solver.get_optimal_order_dp(retrying=retrying)
     optimal_path, cost = maze_solver.get_optimal_path(retrying=retrying)
-    print(f"Time taken to find shortest path using A* search: {time.time() - start}s")
+    print(
+        f"Time taken to find shortest path using A* search: {time.time() - start}s")
     print(f"cost to travel: {cost} units")
 
     # Based on the shortest path, generate commands for the robot
