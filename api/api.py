@@ -1,8 +1,9 @@
 
 import time
-from flask_restx import Resource, Api, fields
+from flask_restx import Resource, Api
 from flask_cors import CORS
 from flask import Flask, request, jsonify
+from models.models import get_models
 
 import sys
 import os
@@ -12,7 +13,9 @@ from algo.algorithms.algo import MazeSolver  # nopep8
 from algo.tools.commands import CommandGenerator  # nopep8
 
 app = Flask(__name__)
+
 api = Api(app)
+restx_models = get_models(api)
 
 CORS(app)
 # model = load_model()
@@ -29,26 +32,9 @@ class Status(Resource):
         return jsonify({"result": "ok"})
 
 
-obstacle = api.model('Obstacle', {
-    'x': fields.Integer,
-    'y': fields.Integer,
-    'd': fields.Integer,
-    'id': fields.Integer
-})
-
-path_finding_request = api.model('PathFindingRequest', {
-    'obstacles': fields.List(fields.Nested(obstacle)),
-    'retrying': fields.Boolean,
-    'big_turn': fields.Integer,
-    'robot_dir': fields.Integer,
-    'robot_x': fields.Integer,
-    'robot_y': fields.Integer
-})
-
-
 @api.route('/path')
 class PathFinding(Resource):
-    @api.expect(path_finding_request)
+    @api.expect(restx_models["PathFindingRequest"])
     def post(self):
         """
         This is the main endpoint for the path finding algorithm
