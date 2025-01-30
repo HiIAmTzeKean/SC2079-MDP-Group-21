@@ -1,3 +1,5 @@
+# TODO Tune robot turning angles in CommandGenerator in <commands.py>
+
 # for both agent and obstacles.
 # a higher value will allow robot to have more space to move around obstacles at the cost of it being harder to find a shortest path
 EXPANDED_CELL = 1

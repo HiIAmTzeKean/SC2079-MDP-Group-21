@@ -28,7 +28,7 @@ class CommandGenerator:
     END = "\n"
     # RCV = 'r'
     FIN = 'FIN'
-    # INFO_MARKER = 'M'              # signal command has been passed. (used for tracking)
+    INFO_MARKER = 'M'               # signal command has been passed. (used for tracking)
     # INFO_DIST = 'D'                # signal start/stop of accumulative distance tracking
 
     # Flags
@@ -46,9 +46,18 @@ class CommandGenerator:
     # unit distance
     UNIT_DIST = 10
 
-    # # turn angles
-    # FORWARD_TURN_ANGLE = 20
-    # BACKWARD_TURN_ANGLE = 18
+    # TUNABLE VALUES
+    # sharpness of turn angles
+    FORWARD_TURN_ANGLE_LEFT = 25
+    FORWARD_TURN_ANGLE_RIGHT = 25
+    BACKWARD_TURN_ANGLE_LEFT = 25
+    BACKWARD_TURN_ANGLE_RIGHT = 25
+
+    # final turn angles
+    FORWARD_FINAL_ANGLE_LEFT = 90
+    FORWARD_FINAL_ANGLE_RIGHT = 90
+    BACKWARD_FINAL_ANGLE_LEFT = 90
+    BACKWARD_FINAL_ANGLE_RIGHT = 90
 
     def __init__(self, straight_speed: int = 50, turn_speed: int = 50):
         """
@@ -62,25 +71,27 @@ class CommandGenerator:
     def _generate_command(self, motion: Motion, num_motions: int = 1):
         if num_motions > 1:
             dist = num_motions * self.UNIT_DIST
-            angle = num_motions * 90
+            # angle = num_motions * 90 # useful when combining turns which has been disabled due to tuning
         else:
             dist = self.UNIT_DIST
-            angle = 90
+            # angle = 90 # useful when combining turns which has been disabled due to tuning
 
         if motion == Motion.FORWARD:
             return [f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}0{self.SEP}{dist}"]
         elif motion == Motion.REVERSE:
             return [f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}0{self.SEP}{dist}"]
 
+        # TODO add forward/reverse straight line distances to make end in middle of the cell
         elif motion == Motion.FORWARD_LEFT_TURN:
-            return [f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}-23{self.SEP}{angle}"]
+            return [f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}-{self.FORWARD_TURN_ANGLE_LEFT}{self.SEP}{self.FORWARD_FINAL_ANGLE_LEFT}"]
         elif motion == Motion.FORWARD_RIGHT_TURN:
-            return [f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}23{self.SEP}{angle}"]
+            return [f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{self.FORWARD_TURN_ANGLE_RIGHT}{self.SEP}{self.FORWARD_FINAL_ANGLE_RIGHT}"]
         elif motion == Motion.REVERSE_LEFT_TURN:
-            return [f"{self.BACKWARD_DIST_TARGET}{self.turn_speed}{self.SEP}-23{self.SEP}{angle}"]
+            return [f"{self.BACKWARD_DIST_TARGET}{self.turn_speed}{self.SEP}-{self.BACKWARD_TURN_ANGLE_LEFT}{self.SEP}{self.BACKWARD_FINAL_ANGLE_LEFT}"]
         elif motion == Motion.REVERSE_RIGHT_TURN:
-            return [f"{self.BACKWARD_DIST_TARGET}{self.turn_speed}{self.SEP}23{self.SEP}{angle}"]
+            return [f"{self.BACKWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{self.BACKWARD_TURN_ANGLE_RIGHT}{self.SEP}{self.BACKWARD_TURN_ANGLE_RIGHT}"]
 
+        # TODO tune
         # cannot combine with other motions
         elif motion == Motion.FORWARD_OFFSET_LEFT:
             # break it down into 2 steps
@@ -121,7 +132,7 @@ class CommandGenerator:
             # convert prev motion to command
             else:
                 if prev_motion == Motion.CAPTURE:
-                    commands.append(f"M0|0|0")
+                    commands.append(f"{self.INFO_MARKER}0|0|0")
                     commands.append(f"SNAP{obstacle_ids[snap_count]}")
                     snap_count += 1
                     prev_motion = motion
@@ -135,7 +146,7 @@ class CommandGenerator:
 
         # add the last command
         if prev_motion == Motion.CAPTURE:
-            commands.append(f"M0|0|0")
+            commands.append(f"{self.INFO_MARKER}0|0|0")
             commands.append(f"SNAP{obstacle_ids[snap_count]}")
         else:
             cur_cmd = self._generate_command(prev_motion, num_motions)

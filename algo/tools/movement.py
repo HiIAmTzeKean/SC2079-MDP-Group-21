@@ -40,7 +40,7 @@ class Motion(int, Enum):
     # the robot can move in 10 different ways from one cell to another
     # designed so that 10 - motion = opposite motion
     FORWARD_LEFT_TURN = 0
-    FORWARD_OFFSET_LEFT = 1
+    FORWARD_OFFSET_LEFT = 1  # moving forward while drifting left
     FORWARD = 2
     FORWARD_OFFSET_RIGHT = 3
     FORWARD_RIGHT_TURN = 4
@@ -79,7 +79,7 @@ class Motion(int, Enum):
     def is_combinable(self):
         if self == Motion.CAPTURE:
             return False
-        return self not in [Motion.FORWARD_OFFSET_LEFT, Motion.FORWARD_OFFSET_RIGHT, Motion.REVERSE_OFFSET_RIGHT, Motion.REVERSE_OFFSET_LEFT]
+        return self in [Motion.REVERSE, Motion.FORWARD]
 
     def reverse_cost(self):
         if self == Motion.CAPTURE:
