@@ -6,12 +6,12 @@ from algo.tools.movement import Direction
 class CellState:
     """Base class for all objects on the arena, such as cells, obstacles, etc"""
 
-    def __init__(self, x, y, direction: Direction = Direction.NORTH, screenshot_id=-1, penalty=0):
+    def __init__(self, x, y, direction: Direction = Direction.NORTH, screenshot_id=None, penalty=0):
         self.x = x
         self.y = y
         self.direction = direction
-        # If screenshot_id != -1, the snapshot is taken at that position is for the obstacle with id = screenshot_id
-        self.screenshot_id = screenshot_id
+        # If screenshot_id != None, the snapshot is taken at that position is for obstacle with obstacle_id = screenshot_id
+        self.screenshot_id = screenshot_id if screenshot_id else None
         self.penalty = penalty  # Penalty for the view point of taking picture
 
     def cmp_position(self, x, y) -> bool:
@@ -297,3 +297,12 @@ class Grid:
                                self.reachable(view_state.x, view_state.y)]
             optimal_positions.append(view_states)
         return optimal_positions
+
+    def find_obstacle_by_id(self, obstacle_id: int) -> Obstacle:
+        """
+        Return obstacle object by its id
+        """
+        for obstacle in self.obstacles:
+            if obstacle.obstacle_id == obstacle_id:
+                return obstacle
+        return None

@@ -68,42 +68,42 @@ class CommandGenerator:
             angle = 90
 
         if motion == Motion.FORWARD:
-            return [f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}0{self.SEP}{dist}{self.END}"]
+            return [f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}0{self.SEP}{dist}"]
         elif motion == Motion.REVERSE:
-            return [f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}0{self.SEP}{dist}{self.END}"]
+            return [f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}0{self.SEP}{dist}"]
 
         elif motion == Motion.FORWARD_LEFT_TURN:
-            return [f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}-23{self.SEP}{angle}{self.END}"]
+            return [f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}-23{self.SEP}{angle}"]
         elif motion == Motion.FORWARD_RIGHT_TURN:
-            return [f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}23{self.SEP}{angle}{self.END}"]
+            return [f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}23{self.SEP}{angle}"]
         elif motion == Motion.REVERSE_LEFT_TURN:
-            return [f"{self.BACKWARD_DIST_TARGET}{self.turn_speed}{self.SEP}-23{self.SEP}{angle}{self.END}"]
+            return [f"{self.BACKWARD_DIST_TARGET}{self.turn_speed}{self.SEP}-23{self.SEP}{angle}"]
         elif motion == Motion.REVERSE_RIGHT_TURN:
-            return [f"{self.BACKWARD_DIST_TARGET}{self.turn_speed}{self.SEP}23{self.SEP}{angle}{self.END}"]
+            return [f"{self.BACKWARD_DIST_TARGET}{self.turn_speed}{self.SEP}23{self.SEP}{angle}"]
 
         # cannot combine with other motions
         elif motion == Motion.FORWARD_OFFSET_LEFT:
             # break it down into 2 steps
-            cmd1 = f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}-23{self.SEP}{45}{self.END}"
-            cmd2 = f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}23{self.SEP}{45}{self.END}"
+            cmd1 = f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}-23{self.SEP}{45}"
+            cmd2 = f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}23{self.SEP}{45}"
         elif motion == Motion.FORWARD_OFFSET_RIGHT:
             # break it down into 2 steps
-            cmd1 = f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}23{self.SEP}{45}{self.END}"
-            cmd2 = f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}-23{self.SEP}{45}{self.END}"
+            cmd1 = f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}23{self.SEP}{45}"
+            cmd2 = f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}-23{self.SEP}{45}"
         elif motion == Motion.REVERSE_OFFSET_LEFT:
             # break it down into 2 steps
-            cmd1 = f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}-25{self.SEP}{45}{self.END}"
-            cmd2 = f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}25{self.SEP}{45}{self.END}"
+            cmd1 = f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}-25{self.SEP}{45}"
+            cmd2 = f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}25{self.SEP}{45}"
         elif motion == Motion.REVERSE_OFFSET_RIGHT:
             # break it down into 2 steps
-            cmd1 = f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}25{self.SEP}{45}{self.END}"
-            cmd2 = f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}-25{self.SEP}{45}{self.END}"
+            cmd1 = f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}25{self.SEP}{45}"
+            cmd2 = f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}-25{self.SEP}{45}"
         else:
             raise ValueError(
                 f"Invalid motion {motion}. This should never happen.")
         return [cmd1, cmd2]
 
-    def generate_commands(self, motions):
+    def generate_commands(self, motions, obstacle_ids):
         """
         Generate commands based on the list of motions
         """
@@ -112,6 +112,7 @@ class CommandGenerator:
         commands = []
         prev_motion = motions[0]
         num_motions = 1
+        snap_count = 0
         for motion in motions[1:]:
             # if combinable motions
             if motion == prev_motion and motion.is_combinable():
@@ -120,7 +121,9 @@ class CommandGenerator:
             # convert prev motion to command
             else:
                 if prev_motion == Motion.CAPTURE:
-                    commands.append(f"SNAP")
+                    commands.append(f"M0|0|0")
+                    commands.append(f"SNAP{obstacle_ids[snap_count]}")
+                    snap_count += 1
                     prev_motion = motion
                     continue
                 else:
@@ -132,7 +135,8 @@ class CommandGenerator:
 
         # add the last command
         if prev_motion == Motion.CAPTURE:
-            commands.append(f"SNAP_C")
+            commands.append(f"M0|0|0")
+            commands.append(f"SNAP{obstacle_ids[snap_count]}")
         else:
             cur_cmd = self._generate_command(prev_motion, num_motions)
             commands.extend(cur_cmd)

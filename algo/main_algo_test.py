@@ -54,7 +54,7 @@ print(
     f"Time taken to find shortest path using A* search: {time.time() - start}s")
 print(f"cost to travel: {cost} units")
 
-motions = maze_solver.optimal_path_to_motion_path(optimal_path)
+motions, obstacle_ids = maze_solver.optimal_path_to_motion_path(optimal_path)
 command_generator = CommandGenerator()
-commands = command_generator.generate_commands(motions)
+commands = command_generator.generate_commands(motions, obstacle_ids)
 print(commands)

@@ -64,9 +64,10 @@ class PathFinding(Resource):
         print(f"cost to travel: {cost} units")
 
         # Based on the shortest path, generate commands for the robot
-        motions = maze_solver.optimal_path_to_motion_path(optimal_path)
+        motions, obstacle_ids = maze_solver.optimal_path_to_motion_path(
+            optimal_path)
         command_generator = CommandGenerator()
-        commands = command_generator.generate_commands(motions)
+        commands = command_generator.generate_commands(motions, obstacle_ids)
 
         # Get the starting location and add it to path_results
         path_results = [optimal_path[0].get_dict()]

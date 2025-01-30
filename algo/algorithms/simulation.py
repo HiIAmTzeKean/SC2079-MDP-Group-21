@@ -117,10 +117,12 @@ class MazeSolverSimulation:
         print(f"cost to travel: {cost} units")
 
         if testing:
-            motions = self.maze_solver.optimal_path_to_motion_path(
+            motions, obstacle_ids = self.maze_solver.optimal_path_to_motion_path(
                 optimal_path)
-            commands = CommandGenerator(
-                straight_speed=60, turn_speed=40).generate_commands(motions)
+            command_generator = CommandGenerator(
+                straight_speed=60, turn_speed=40)
+            commands = command_generator.generate_commands(
+                motions, obstacle_ids)
             print(commands)
         if verbose:
             print(f"Optimal path with cost = {cost} calculated: ")
@@ -179,7 +181,7 @@ class MazeSolverSimulation:
                         (prev_cell.y + i * y_diff / (1 + num_points), frame))
                     frame += 1
 
-            if cell.screenshot_id != -1:
+            if cell.screenshot_id != None:
                 screenshot_x.append((cell.x, frame))
                 screenshot_y.append((cell.y, frame))
 

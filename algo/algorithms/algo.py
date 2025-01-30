@@ -176,7 +176,19 @@ class MazeSolver:
                             )
                         )
 
-                    optimal_path[-1].set_screenshot(to_state.screenshot_id)
+                    # check position of to_state wrt to obstacle to snap screenshot from center/left/right.
+                    obs = self.grid.find_obstacle_by_id(to_state.screenshot_id)
+                    if obs:
+                        pos = MazeSolver._get_capture_relative_position(
+                            optimal_path[-1], obs
+                        )
+                        formatted = f"{to_state.screenshot_id}_{pos}"
+
+                        optimal_path[-1].set_screenshot(formatted)
+                    else:
+                        raise ValueError(
+                            f"Obstacle with id {to_state.screenshot_id} not found"
+                        )
 
             # if the optimal path has been found, break the view positions loop
             if optimal_path:
@@ -431,7 +443,7 @@ class MazeSolver:
 
             else:  # consider 8 cases
 
-                # Turning displacement is either 4-2 or 3-1
+                # Turning displacement
                 delta_big = TURN_WRT_BIG_TURNS[self.big_turn][0]
                 delta_small = TURN_WRT_BIG_TURNS[self.big_turn][1]
 
@@ -780,6 +792,50 @@ class MazeSolver:
                 f"Invalid direction {direction}. This should never happen.")
         return dx, dy
 
+    @staticmethod
+    def _get_capture_relative_position(
+        cell_state: CellState, obstacle: Obstacle
+    ) -> str:
+        """
+        Determines the relative position of the obstacle (L, R, or C) with respect to the robot's orientation.
+        """
+        x, y, direction = cell_state.x, cell_state.y, cell_state.direction
+        x_obs, y_obs = obstacle.x, obstacle.y
+
+        # check relative position based on the robot's direction
+        if direction == Direction.NORTH:
+            if x_obs == x and y_obs > y:
+                return "C"
+            elif x_obs < x:
+                return "L"
+            else:
+                return "R"
+        elif direction == Direction.SOUTH:
+            if x_obs == x and y_obs < y:
+                return "C"
+            elif x_obs < x:
+                return "R"
+            else:
+                return "L"
+        elif direction == Direction.EAST:
+            if y_obs == y and x_obs > x:
+                return "C"
+            elif y_obs < y:
+                return "R"
+            else:
+                return "L"
+        elif direction == Direction.WEST:
+            if y_obs == y and x_obs < x:
+                return "C"
+            elif y_obs < y:
+                return "L"
+            else:
+                return "R"
+        else:
+            raise ValueError(
+                f"Invalid direction {direction}. This should never happen."
+            )
+
     def optimal_path_to_motion_path(
             self, optimal_path
     ):
@@ -788,6 +844,7 @@ class MazeSolver:
         """
         # requires the path table to be filled and the optimal path to be calculated
         motion_path = []
+        obstacle_ids = []
         for i in range(len(optimal_path) - 1):
             from_state = optimal_path[i]
             to_state = optimal_path[i + 1]
@@ -810,7 +867,8 @@ class MazeSolver:
             motion_path.append(motion)
 
             # check if the robot is taking a screenshot
-            if to_state.screenshot_id != -1:
+            if to_state.screenshot_id != None:
                 motion_path.append(Motion.CAPTURE)
+                obstacle_ids.append(to_state.screenshot_id)
 
-        return motion_path
+        return motion_path, obstacle_ids
