@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Represents a connected bluetooth client.
@@ -19,6 +20,8 @@ import java.nio.charset.Charset;
  * <p> Reference: <a href="https://developer.android.com/develop/connectivity/bluetooth/transfer-data">Transferring data over BT</a>
  */
 public class BluetoothConnection {
+    private static final String TAG = "BluetoothConnection";
+
     private final Context context;
     private final LocalBroadcastManager localBcMgr;
     private MessageThread messageThread;
@@ -91,6 +94,7 @@ public class BluetoothConnection {
                     for (String message : messages) {
                         Intent intent = BluetoothMessage.ofStringMessage(message).toIntent();
                         localBcMgr.sendBroadcast(intent);
+
                     }
                 }
             } catch (IOException e) {
@@ -103,8 +107,6 @@ public class BluetoothConnection {
         }
 
         public void write(byte[] bytes) {
-            String text = new String(bytes, Charset.defaultCharset());
-            Log.d(TAG, "write: Writing to output stream: " + text);
             try {
                 outStream.write(bytes);
             } catch (IOException e) {
@@ -122,4 +124,9 @@ public class BluetoothConnection {
             this.interrupt();
         }
     }
-}
+
+    public void sendMessage(String s) {
+        Log.d(TAG, "write: Writing to output stream: " + s);
+        messageThread.write(s.getBytes(StandardCharsets.UTF_8));
+    }
+ }

@@ -1,12 +1,16 @@
 package com.mdp25.forever21.bluetooth;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.util.Log;
 
@@ -19,7 +23,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * Class which creates bluetooth connections.
+ * Class which creates bluetooth connections. Assumes appropriate bluetooth permissions have been granted.
  *
  * <p> References: <a href = "https://developer.android.com/develop/connectivity/bluetooth/connect-bluetooth-devices#java">Connect BT devices</a>,
  * <a href = "https://developer.android.com/develop/connectivity/bluetooth/find-bluetooth-devices">Find BT devices</a>
@@ -39,6 +43,19 @@ public class BluetoothInterface {
     private Lock threadLock; // to lock acceptThread and connectThread read/write
     private Lock connectionLock; // to lock btConnection
 
+    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            onBroadcastReceived(context, intent);
+        }
+    };
+
+    private IntentFilter[] intentFilters = new IntentFilter[]{
+            new IntentFilter(BluetoothDevice.ACTION_FOUND), //discovered a device
+            new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED), // connected/disconnected
+            new IntentFilter(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED), //scan on/off
+            new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED), // bt on/off
+    }; //for broadcastReceiver
 
     public BluetoothInterface(Context context) {
         BluetoothManager btMgr = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
@@ -46,6 +63,7 @@ public class BluetoothInterface {
         this.context = context;
 
         threadLock = new ReentrantLock();
+        connectionLock = new ReentrantLock();
     }
 
     // this method runs when a connection is made
@@ -75,6 +93,17 @@ public class BluetoothInterface {
 
     public boolean isBluetoothEnabled() {
         return bluetoothAdapter.isEnabled();
+    }
+
+    public BroadcastReceiver getBroadcastReceiver() {
+        return broadcastReceiver;
+    }
+
+    /**
+     * For registering {@link #getBroadcastReceiver()}.
+     */
+    public IntentFilter[] getIntentFilters() {
+        return intentFilters;
     }
 
     /**
@@ -126,16 +155,16 @@ public class BluetoothInterface {
      * Scans for bluetooth devices
      * TODO decide how to return
      */
+    @SuppressLint("MissingPermission")
     public void scanForDevices() {
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-            Log.e(TAG, "No permissions granted for BLUETOOTH_SCAN");
-        }
         if (bluetoothAdapter.isDiscovering()) {
             bluetoothAdapter.cancelDiscovery();
             bluetoothAdapter.startDiscovery();
+            Log.d(TAG, "Starting Bluetooth discovery");
         }
         Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
         for (BluetoothDevice device : pairedDevices) {
+            Log.d(TAG, "Paired device : " + device.getName());
         }
     }
 
@@ -143,13 +172,12 @@ public class BluetoothInterface {
     private class AcceptThread extends Thread {
         private final BluetoothServerSocket serverSocket;
 
+        @SuppressLint("MissingPermission")
         public AcceptThread() {
             BluetoothServerSocket tmp = null;
             try {
-                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                    Log.e(TAG, "No permissions granted for BLUETOOTH_CONNECT");
-                }
                 tmp = bluetoothAdapter.listenUsingRfcommWithServiceRecord(BT_NAME, BT_UUID);
+//                tmp = bluetoothAdapter.listenUsingInsecureRfcommWithServiceRecord(BT_NAME, BT_UUID);
 
             } catch (IOException e) {
                 Log.e(TAG, "Socket's listen() method failed", e);
@@ -180,6 +208,7 @@ public class BluetoothInterface {
                 }
             }
         }
+
         // Closes the connect socket and causes the thread to finish.
         public void cancel() {
             try {
@@ -196,14 +225,12 @@ public class BluetoothInterface {
         private final BluetoothSocket socket;
         private final BluetoothDevice device;
 
+        @SuppressLint("MissingPermission")
         public ConnectThread(BluetoothDevice device) {
             BluetoothSocket tmp = null;
             this.device = device;
 
             try {
-                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                    Log.e(TAG, "No permissions granted for BLUETOOTH_CONNECT");
-                }
                 tmp = device.createRfcommSocketToServiceRecord(BT_UUID);
 
             } catch (IOException e) {
@@ -212,12 +239,10 @@ public class BluetoothInterface {
             this.socket = tmp;
         }
 
+        @SuppressLint("MissingPermission")
         @Override
         public void run() {
             Log.d(TAG, "ConnectThread: Running.");
-            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-                Log.e(TAG, "No permissions granted for BLUETOOTH_SCAN");
-            }
             // cancel discovery because it slows down the connection
             bluetoothAdapter.cancelDiscovery();
 
@@ -244,6 +269,25 @@ public class BluetoothInterface {
                 Log.e(TAG, "Could not close the ConnectThread socket", e);
             }
             this.interrupt();
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private void onBroadcastReceived(Context context, Intent intent) {
+        String action = intent.getAction();
+        switch (action) {
+            case BluetoothDevice.ACTION_FOUND -> {
+                // Discovery has found a device. Get the BluetoothDevice
+                // object and its info from the Intent.
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice.class);
+                String deviceName = device.getName();
+                String deviceHardwareAddress = device.getAddress(); // MAC address
+                Log.d(TAG, deviceName + ": " + deviceHardwareAddress);
+            }
+            //TODO
+            default -> {
+                Log.d(TAG, "Unknown action received in onBroadcastReceived.");
+            }
         }
     }
 }
