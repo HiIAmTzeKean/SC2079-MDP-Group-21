@@ -3,9 +3,9 @@ import math
 import numpy as np
 from functools import lru_cache
 from python_tsp.heuristics import solve_tsp_local_search
-from entities.entity import CellState, Obstacle, Grid
-from entities.robot import Robot
-from tools.consts import (
+from algo.entities.entity import CellState, Obstacle, Grid
+from algo.entities.robot import Robot
+from algo.tools.consts import (
     TURN_FACTOR,
     ITERATIONS,
     SAFE_COST,
@@ -13,7 +13,7 @@ from tools.consts import (
     HALF_TURNS,
     REVERSE_FACTOR,
 )
-from tools.movement import (
+from algo.tools.movement import (
     Direction,
     MOVE_DIRECTION,
     Motion
@@ -35,9 +35,8 @@ class MazeSolver:
             robot_direction: Direction = Direction.NORTH,
             big_turn=0,
     ):
-        self.neighbor_cache = {}
+        self.neighbor_cache = {}  # Store precomputed neighbors
         """
-
         :param size_x: size of the grid in x direction. Default is 20
         :param size_y: size of the grid in y direction. Default is 20
         :param robot: A robot object that contains the robot's path. Preferrentially used over robot_x, robot_y, robot_direction
@@ -152,7 +151,6 @@ class MazeSolver:
                 # find Hamiltonian path with least cost for the selected combination of view states
                 permutation, distance = solve_tsp_local_search(cost_matrix)
 
-
                 # if the distance is more than the minimum distance, the path is irrelevant
                 if distance + cost >= min_dist:
                     continue
@@ -178,7 +176,19 @@ class MazeSolver:
                             )
                         )
 
-                    optimal_path[-1].set_screenshot(to_state.screenshot_id)
+                    # check position of to_state wrt to obstacle to snap screenshot from center/left/right.
+                    obs = self.grid.find_obstacle_by_id(to_state.screenshot_id)
+                    if obs:
+                        pos = MazeSolver._get_capture_relative_position(
+                            optimal_path[-1], obs
+                        )
+                        formatted = f"{to_state.screenshot_id}_{pos}"
+
+                        optimal_path[-1].set_screenshot(formatted)
+                    else:
+                        raise ValueError(
+                            f"Obstacle with id {to_state.screenshot_id} not found"
+                        )
 
             # if the optimal path has been found, break the view positions loop
             if optimal_path:
@@ -209,14 +219,17 @@ class MazeSolver:
             return
 
         # initialize the actual distance dict with the start state
-        g_dist = { (start.x, start.y, start.direction.value): 0 }
+        g_dist = {(start.x, start.y, start.direction): 0}
+
+        visited = set()
+        parent_dict = {}
 
         # initialize min heap with the start state
         # the heap is a list of tuples (h, x, y, direction) where h is the estimated distance from the current state to the end state
         heap = [(self._estimate_distance(start, end), start.x, start.y, start.direction.value)]
 
-        visited = set()
-        parent_dict = {}
+
+       
 
         while heap:
             # get the node with the minimum estimated distance
@@ -434,7 +447,7 @@ class MazeSolver:
 
             else:  # consider 8 cases
 
-                # Turning displacement is either 4-2 or 3-1
+                # Turning displacement
                 delta_big = TURN_WRT_BIG_TURNS[self.big_turn][0]
                 delta_small = TURN_WRT_BIG_TURNS[self.big_turn][1]
 
@@ -754,7 +767,8 @@ class MazeSolver:
             return result
 
         # update the number of iterations
-        num_iters -= 1
+        num_iters = min(num_iters, len(view_positions))  # Limit recursion depth
+
 
         # iterate over the view positions and generate the combinations for the next view position
         for i in range(len(view_positions[index])):
@@ -784,9 +798,53 @@ class MazeSolver:
             dx = -HALF_TURNS[0]
             dy = -HALF_TURNS[1]
         else:
-            raise ValueError(f"Invalid direction {
-                             direction}. This should never happen.")
+            raise ValueError(
+                f"Invalid direction {direction}. This should never happen.")
         return dx, dy
+
+    @staticmethod
+    def _get_capture_relative_position(
+        cell_state: CellState, obstacle: Obstacle
+    ) -> str:
+        """
+        Determines the relative position of the obstacle (L, R, or C) with respect to the robot's orientation.
+        """
+        x, y, direction = cell_state.x, cell_state.y, cell_state.direction
+        x_obs, y_obs = obstacle.x, obstacle.y
+
+        # check relative position based on the robot's direction
+        if direction == Direction.NORTH:
+            if x_obs == x and y_obs > y:
+                return "C"
+            elif x_obs < x:
+                return "L"
+            else:
+                return "R"
+        elif direction == Direction.SOUTH:
+            if x_obs == x and y_obs < y:
+                return "C"
+            elif x_obs < x:
+                return "R"
+            else:
+                return "L"
+        elif direction == Direction.EAST:
+            if y_obs == y and x_obs > x:
+                return "C"
+            elif y_obs < y:
+                return "R"
+            else:
+                return "L"
+        elif direction == Direction.WEST:
+            if y_obs == y and x_obs < x:
+                return "C"
+            elif y_obs < y:
+                return "L"
+            else:
+                return "R"
+        else:
+            raise ValueError(
+                f"Invalid direction {direction}. This should never happen."
+            )
 
     def optimal_path_to_motion_path(
             self, optimal_path
@@ -796,6 +854,7 @@ class MazeSolver:
         """
         # requires the path table to be filled and the optimal path to be calculated
         motion_path = []
+        obstacle_ids = []
         for i in range(len(optimal_path) - 1):
             from_state = optimal_path[i]
             to_state = optimal_path[i + 1]
@@ -812,14 +871,14 @@ class MazeSolver:
             else:
                 # if the motion is still not found, then the path is invalid
                 raise ValueError(
-                    f"Invalid path from {from_state} to {
-                        to_state}. This should never happen."
+                    f"Invalid path from {from_state} to {to_state}. This should never happen."
                 )
 
             motion_path.append(motion)
 
             # check if the robot is taking a screenshot
-            if to_state.screenshot_id != -1:
+            if to_state.screenshot_id != None:
                 motion_path.append(Motion.CAPTURE)
+                obstacle_ids.append(to_state.screenshot_id)
 
-        return motion_path
+        return motion_path, obstacle_ids
