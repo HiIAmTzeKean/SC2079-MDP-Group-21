@@ -1,6 +1,7 @@
 import heapq
 import math
 import numpy as np
+from python_tsp.heuristics import solve_tsp_local_search
 from python_tsp.exact import solve_tsp_dynamic_programming
 from algo.entities.entity import CellState, Obstacle, Grid
 from algo.entities.robot import Robot
@@ -34,8 +35,8 @@ class MazeSolver:
             robot_direction: Direction = Direction.NORTH,
             big_turn=0,
     ):
+        self.neighbor_cache = {}  # Store precomputed neighbors
         """
-
         :param size_x: size of the grid in x direction. Default is 20
         :param size_y: size of the grid in y direction. Default is 20
         :param robot: A robot object that contains the robot's path. Preferrentially used over robot_x, robot_y, robot_direction
@@ -148,8 +149,11 @@ class MazeSolver:
                 cost_matrix[:, 0] = 0
 
                 # find Hamiltonian path with least cost for the selected combination of view states
-                permutation, distance = solve_tsp_dynamic_programming(
+                # TODO: experiment with different solvers
+                permutation, distance = solve_tsp_local_search(
                     cost_matrix)
+                # permutation, distance = solve_tsp_dynamic_programming(
+                #     cost_matrix)
 
                 # if the distance is more than the minimum distance, the path is irrelevant
                 if distance + cost >= min_dist:
@@ -220,15 +224,13 @@ class MazeSolver:
         # initialize the actual distance dict with the start state
         g_dist = {(start.x, start.y, start.direction): 0}
 
+        visited = set()
+        parent_dict = {}
+
         # initialize min heap with the start state
         # the heap is a list of tuples (h, x, y, direction) where h is the estimated distance from the current state to the end state
-        heap = [
-            (self._estimate_distance(start, end),
-             start.x, start.y, start.direction)
-        ]
-
-        visited = set()
-        parent_dict = dict()
+        heap = [(self._estimate_distance(start, end),
+                 start.x, start.y, start.direction)]
 
         while heap:
             # get the node with the minimum estimated distance
@@ -348,6 +350,8 @@ class MazeSolver:
         #   - Furthest distance must be at least 3 units away (x or y)
         # If it is exactly 2 units away in both x and y directions, safe cost = SAFECOST. Else, safe cost = 0
         """
+        if (x, y, direction) in self.neighbor_cache:
+            return self.neighbor_cache[(x, y, direction)]
         neighbors = []
 
         # Assume that after following this direction, the car direction is EXACTLY md
@@ -671,6 +675,7 @@ class MazeSolver:
                              md, safe_cost + 10, motion)
                         )
 
+        self.neighbor_cache[(x, y, direction)] = neighbors  # Store result
         return neighbors
 
     def _calculate_safe_cost(self, new_x: int, new_y: int) -> int:
