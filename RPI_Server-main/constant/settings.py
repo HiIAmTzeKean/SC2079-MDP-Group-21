@@ -3,7 +3,7 @@ SERIAL_PORT = "/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Cont
 BAUD_RATE = 115200
 
 # API DETAILS
-API_IP = "192.168.30.100"  # IP address of laptop
+API_IP = "192.168.21.22"  # IP address of laptop
 API_PORT = 5001
 
 # ROBOT SETTINGS
