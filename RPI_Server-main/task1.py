@@ -4,10 +4,12 @@ import queue
 from multiprocessing import Process
 from typing import Optional
 
+import requests
 from base_rpi import RaspberryPi
 from communication.android import AndroidMessage
 from communication.pi_action import PiAction
 from constant.consts import Category, manual_commands
+from constant.settings import API_IP, API_PORT
 
 
 logger = logging.getLogger(__name__)
@@ -61,16 +63,84 @@ class TaskOne(RaspberryPi):
             action = self.rpi_action_queue.get()
             logger.debug(f"PiAction retrieved from queue: {action.cat} {action.value}")
             ## obstacle ID
-            if action.cat == "obstacles":
-                for obs in action.value["obstacles"]:
+            if action.cat == Category.OBSTACLE.value:
+                for obs in action.value[Category.OBSTACLE.value]:
                     self.obstacles[obs["id"]] = obs
                 self.request_algo(action.value)
-            ## snap image
+
             elif action.cat == "snap":
-                self.recognise_image(obstacle_id_with_signal=action.value)
-            ## stitch
+                self.recognize_image(obstacle_id_with_signal=action.value)
+
             elif action.cat == "stitch":
                 self.request_stitch()
+
+    # TODO
+    def command_follower(self) -> None:
+        """
+        [Child Process]
+        """
+        while True:
+            # Retrieve next movement command
+            command: str = self.command_queue.get()
+            logger.debug(f"Command Dequeued: {command}")
+            # Wait for unpause event to be true [Main Trigger]
+            try:
+                logger.debug("wait for retrylock")
+                self.retrylock.acquire()
+                self.retrylock.release()
+            except Exception as e:
+                logger.debug(f"wait for unpause: {e}")
+                self.unpause.wait()
+            # Acquire lock first (needed for both moving, and snapping pictures)
+            logger.debug("Acquiring movement lock...")
+            self.movement_lock.acquire()
+            # STM32 Commands - Send straight to STM32
+            stm32_prefixes = ("T", "t", "w", "W", "D", "d")
+            logger.debug(f"Getting Prefix: {command}")
+
+            if command.startswith(stm32_prefixes):
+                strings = str(command)
+                # strings += "\n"
+                parts = strings.split("|")
+                first_part = parts[0]
+                flag = first_part[0]
+                speed = int(first_part[1:])
+                angle = int(parts[1])
+                val = int(parts[2])
+
+                self.stm_link.send_cmd(flag, speed, angle, val)
+                logger.debug(f"Sending to STM32: {command}")
+
+            # Snap command
+            elif command.startswith("SNAP"):
+                obstacle_id_with_signal = command.replace("SNAP", "")
+
+                self.rpi_action_queue.put(PiAction(cat="snap", value=obstacle_id_with_signal))
+                time.sleep(1)
+                try:
+                    self.movement_lock.release()
+                    self.retrylock.release()
+                    logger.debug(f"In recognise_image: movement_lock and retrylock released")
+                except:
+                    pass
+
+            # End of path (TBD)
+            elif command == "FIN":
+                logger.info(f"At FIN, self.failed_obstacles: {self.failed_obstacles}")
+                logger.info(f"At FIN, self.current_location: {self.current_location}")
+                self.unpause.clear()
+                logger.debug(f"unpause cleared")
+                try:
+                    logger.debug(f"releasing movement_lock.")
+                    self.movement_lock.release()
+                except:
+                    pass
+                logger.info("Commands queue finished.")
+                self.android_queue.put(AndroidMessage("info", "Commands queue finished."))
+                self.android_queue.put(AndroidMessage("status", "finished"))
+                self.rpi_action_queue.put(PiAction(cat="stitch", value=""))
+            else:
+                raise Exception(f"Unknown command: {command}")
 
     def reconnect_android(self) -> None:
         """Handles the reconnection to Android in the event of a lost connection."""
@@ -227,3 +297,86 @@ class TaskOne(RaspberryPi):
                         self.android_queue.put(
                             AndroidMessage("error", "Command queue is empty, did you set obstacles?")
                         )
+
+    # TODO fix this section
+    def recognize_image(self, obstacle_id_with_signal: str) -> None:
+        """
+        RPi snaps an image and calls the API for image-rec.
+        The response is then forwarded back to the android
+
+        :param obstacle_id_with_signal: eg: SNAP<obstacle_id>_<C/L/R>
+        """
+        obstacle_id, signal = obstacle_id_with_signal.split("_")
+        logger.info(f"Capturing image for obstacle id: {obstacle_id}")
+        self.android_queue.put(AndroidMessage("info", f"Capturing image for obstacle id: {obstacle_id}"))
+        url = f"http://{API_IP}:{API_PORT}/image"
+
+        filename = f"/home/pi/cam/{int(time.time())}_{obstacle_id}_{signal}.jpg"
+        filename_send = f"{int(time.time())}_{obstacle_id}_{signal}.jpg"
+        results = snap_using_libcamera(self, obstacle_id, signal, filename, filename_send, url, False)
+        self.android_queue.put(AndroidMessage("image-rec", results))
+
+    def request_algo(self, data, robot_x=1, robot_y=1, robot_dir=0, retrying=False) -> None:
+        """
+        Requests for a series of commands and the path from the Algo API.
+        The received commands and path are then queued in the respective queues
+        """
+        logger.info("Requesting path from algo...")
+        # TODO check if line below is needed
+        self.android_queue.put(AndroidMessage(cat=Category.INFO.value, value="Requesting path from algo..."))
+        
+        logger.info(f"data: {data}")
+        body = {
+            **data,
+            "big_turn": "0",
+            "robot_x": robot_x,
+            "robot_y": robot_y,
+            "robot_dir": robot_dir,
+            "retrying": retrying,
+        }
+
+        response = requests.post(url=f"http://{API_IP}:{API_PORT}/path", json=body)
+
+        # TODO if the response fails, we should retry
+        if response.status_code != 200:
+            self.android_queue.put(AndroidMessage("error", "Error when requesting path from Algo API."))
+            logger.error("Error when requesting path from Algo API.")
+            return
+
+        # Parse response
+        result = json.loads(response.content)["data"]
+        commands = result["commands"]
+        path = result["path"]
+
+        # Log commands received
+        logger.debug(f"Commands received from API: {commands}")
+
+        # Put commands and paths into respective queues
+        self.clear_queues()
+        for c in commands:
+            self.command_queue.put(c)
+        for p in path[1:]:  # ignore first element as it is the starting position of the robot
+            self.path_queue.put(p)
+
+        self.android_queue.put(
+            AndroidMessage(
+                cat=Category.INFO.value,
+                value="Commands and path received Algo API. Robot is ready to move.",
+            )
+        )
+        logger.info("Commands and path received Algo API. Robot is ready to move.")
+
+    def request_stitch(self) -> None:
+        """Sends stitch request to the image recognition API to stitch the different images together
+
+        if the API is down, an error message is sent to the Android
+        """
+        response = requests.get(f"http://{API_IP}:{API_PORT}/stitch")
+
+        if response.status_code != 200:
+            self.android_queue.put(AndroidMessage(Category.ERROR.value, "Error when requesting stitch from the API."))
+            logger.error("Error when requesting stitch from the API.")
+            return
+
+        logger.info("Images stitched!")
+        self.android_queue.put(AndroidMessage("info", "Images stitched!"))
