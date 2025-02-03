@@ -33,7 +33,7 @@ class RaspberryPi(ABC):
         self.rpi_action_queue : Queue[PiAction] = self.manager.Queue()
         """Messages that need to be processed by RPi"""
         self.command_queue = self.manager.Queue()
-        """Messages that need to be processed by STM32, as well as snap commands"""
+        """Commands that need to be exec by STM32 & snap from ALGO"""
         self.path_queue = self.manager.Queue()
         """X,Y,D coordinates of the robot passed from the command_queue"""
 
