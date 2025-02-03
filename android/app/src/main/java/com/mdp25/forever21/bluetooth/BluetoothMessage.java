@@ -10,86 +10,32 @@ import androidx.annotation.NonNull;
 import java.util.Objects;
 
 /**
- * Represents a bluetooth message sent to/from the robot.
+ * Represents a bluetooth message sent FROM the robot.
+ * <p> Essentially wraps around a raw message string and provides the parsed info as getters.
  * <p> Use {@code ofXXX()} to create the subclassed record.
- * TODO not yet used
  */
-public sealed interface BluetoothMessage extends Parcelable permits BluetoothMessage.CustomMessage, BluetoothMessage.StatusMessage, BluetoothMessage.StringMessage {
+public sealed interface BluetoothMessage permits BluetoothMessage.CustomMessage, BluetoothMessage.PlainStringMessage, BluetoothMessage.RobotPositionMessage, BluetoothMessage.RobotStatusMessage, BluetoothMessage.TargetFoundMessage {
     // this class uses the sealed..permit feature as a usage example, not strictly necessary
 
-    public final static int BUFFER_SIZE = 1024;
-    public final static String INTENT_ACTION = "BluetoothMessage";
-    public final static String INTENT_EXTRA_NAME = "msg";
-
-    @Override
-    public default int describeContents() {
-        return 0;
+    public record RobotStatusMessage(String rawMsg, String status) implements BluetoothMessage {}
+    public static BluetoothMessage ofRobotStatusMessage(String rawMsg, String status) {
+        return new RobotStatusMessage(rawMsg, status);
     }
 
-    /**
-     * Use this method to quickly create an Intent with {@link Intent#putExtra(String, Parcelable)} on this.
-     */
-    public default Intent toIntent() {
-        Intent ret = new Intent(INTENT_ACTION);
-        ret.putExtra(INTENT_EXTRA_NAME, this);
-        return ret;
+    public record TargetFoundMessage(String rawMsg, int obstacleId, int targetId) implements BluetoothMessage {}
+    public static BluetoothMessage ofTargetFoundMessage(String rawMsg, int obstacleId, int targetId) {
+        return new TargetFoundMessage(rawMsg, obstacleId, targetId);
     }
 
-    /**
-     * Sister method to {@link #toIntent()}.
-     * @param intent from {@link #toIntent()}
-     */
-    public static BluetoothMessage fromIntent(Intent intent) {
-        if (!Objects.equals(intent.getAction(), INTENT_ACTION)) {
-            throw new IllegalArgumentException("This intent's action does not match. Is this intent from BluetoothMessage.toIntent?");
-        }
-        return intent.getParcelableExtra(INTENT_EXTRA_NAME, BluetoothMessage.class);
+    public record RobotPositionMessage(String rawMsg, int x, int y, int direction) implements BluetoothMessage {}
+    public static BluetoothMessage ofRobotPositionMessage(String rawMsg, int x, int y, int direction) {
+        return new RobotPositionMessage(rawMsg, x, y, direction);
     }
 
-    //TODO, add more based on reqs
-
-    public static BluetoothMessage ofConnectionStatusMessage(boolean connected, BluetoothDevice device) {
-        return new StatusMessage(connected, device);
+    public record PlainStringMessage(String rawMsg) implements BluetoothMessage {}
+    public static BluetoothMessage ofPlainStringMessage(String rawMsg) {
+        return new PlainStringMessage(rawMsg);
     }
-
-    public static BluetoothMessage ofStringMessage(String str) {
-        return new StringMessage(str);
-    }
-
-    public static record StatusMessage(boolean connected, BluetoothDevice device) implements BluetoothMessage {
-        public static final Parcelable.Creator<StatusMessage> CREATOR = new Parcelable.Creator<>() {
-            public StatusMessage createFromParcel(Parcel in) {
-                return new StatusMessage(in.readBoolean(), in.readParcelable(BluetoothDevice.class.getClassLoader(), BluetoothDevice.class));
-            }
-
-            public StatusMessage[] newArray(int size) {
-                return new StatusMessage[size];
-            }
-        };
-        @Override
-        public void writeToParcel(@NonNull Parcel parcel, int flags) {
-            parcel.writeBoolean(connected);
-            parcel.writeParcelable(device, flags);
-        }
-    }
-
-    public static record StringMessage(String str) implements BluetoothMessage {
-        public static final Parcelable.Creator<StringMessage> CREATOR = new Parcelable.Creator<>() {
-            public StringMessage createFromParcel(Parcel in) {
-                return new StringMessage(in.readString());
-            }
-
-            public StringMessage[] newArray(int size) {
-                return new StringMessage[size];
-            }
-        };
-        @Override
-        public void writeToParcel(@NonNull Parcel parcel, int flags) {
-            parcel.writeString(str);
-        }
-    }
-
-
 
     /**
      * This non-sealed class is provided for future extension.

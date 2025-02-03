@@ -2,37 +2,40 @@ package com.mdp25.forever21;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
+import com.mdp25.forever21.bluetooth.BluetoothMessageReceiver;
+
 /**
- * Initial launched activity. Holds the main context, such as the static {@link AppContext}.
+ * Initial launched activity. Only entered once. Doesn't do anything at the moment.
  */
 public class InitActivity extends AppCompatActivity {
     private final String TAG = "InitActivity";
-    private static AppContext appContext = null;
-
-    private final Class<?> NEXT_ACITIVTY = BluetoothActivity.class;
+    private static boolean entered = false;
+    private final long DELAY_TIME_MS = 1000;
+    private final Class<?> NEXT_ACTIVITY = BluetoothActivity.class;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        if (entered) {
+            Log.e(TAG, "Entered activity twice, is this intentional?");
+            return;
+        }
+        entered = true;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_init);
-        appContext = new AppContext(); //init static var here
 
-        // TODO pass app context to other activities
-        // Change to bluetooth activity
-        Log.d(TAG, "Created AppContext, starting activity " + NEXT_ACITIVTY.getName());
-        Intent intent = new Intent(this, NEXT_ACITIVTY);
-        startActivity(intent);
-    }
-
-    public static AppContext getAppContext() {
-        if (appContext == null) {
-            // not yet created, should not be possible
-            throw new RuntimeException("App Context is not yet created. Please only call in Activity.onCreate()");
-        }
-        return appContext;
+        // wait for a tiny amount of time then change to activity
+        Log.d(TAG, String.format("Loading starting activity %s in %d", NEXT_ACTIVITY.getName(), DELAY_TIME_MS));
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.postDelayed(() -> {
+            startActivity(new Intent(this, NEXT_ACTIVITY));
+        }, DELAY_TIME_MS);
     }
 }

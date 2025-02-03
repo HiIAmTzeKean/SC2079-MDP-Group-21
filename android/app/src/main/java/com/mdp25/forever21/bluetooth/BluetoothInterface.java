@@ -1,20 +1,13 @@
 package com.mdp25.forever21.bluetooth;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.util.Log;
-
-import androidx.core.app.ActivityCompat;
 
 import java.io.IOException;
 import java.util.Set;
@@ -69,7 +62,9 @@ public class BluetoothInterface {
 
         connectionLock.lock();
         try {
-            this.btConnection = new BluetoothConnection(context, socket, device);
+            if (btConnection != null)
+                btConnection.cancel();
+            btConnection = new BluetoothConnection(context, socket, device);
             btConnection.start();
         } finally {
             connectionLock.unlock();
@@ -83,7 +78,7 @@ public class BluetoothInterface {
     /**
      * Use this getter to retrieve a {@link BluetoothConnection} to send messages etc.
      */
-    public BluetoothConnection getBluetoothChannel() {
+    public BluetoothConnection getBluetoothConnection() {
         return btConnection;
     }
 

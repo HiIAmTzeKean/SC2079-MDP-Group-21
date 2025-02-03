@@ -5,7 +5,6 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -29,25 +28,21 @@ import android.widget.Toast;
 import com.google.android.material.textfield.TextInputEditText;
 import com.mdp25.forever21.bluetooth.BluetoothDeviceAdapter;
 import com.mdp25.forever21.bluetooth.BluetoothDeviceModel;
-import com.mdp25.forever21.bluetooth.BluetoothInterface;
 import com.mdp25.forever21.bluetooth.BluetoothMessage;
 import com.mdp25.forever21.bluetooth.BluetoothMessageParser;
+import com.mdp25.forever21.bluetooth.BluetoothMessageReceiver;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 
 public class BluetoothActivity extends AppCompatActivity {
 
     private static final String TAG = "BluetoothActivity";
     private static final int BLUETOOTH_PERMISSIONS_REQUEST_CODE = 96;
     private static final int DISCOVERABLE_DURATION = 300;
-    private BluetoothInterface bluetoothInterface;
-    private BluetoothMessageParser parser;
-    private BroadcastReceiver broadcastReceiver;
+    private MyApplication myApp; // my context for "static" vars
+    private BroadcastReceiver broadcastReceiver; //main receiver for all bt intents
+    private BluetoothMessageReceiver msgReceiver; //receive bluetooth messages
     private BluetoothDeviceAdapter bluetoothDeviceAdapter; // to inflate recycler view
-    private BluetoothDeviceModel selectedDevice = null;
 
     // UI variables below
     private TextView receivedMsgView;
@@ -60,16 +55,14 @@ public class BluetoothActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_bluetooth);
 
+        // retrieve bluetooth adapter
+        myApp = (MyApplication) getApplication();
+
         //TODO disable back button from gg back to InitActivity...
         //getOnBackPressedDispatcher().addCallback(callback -> {} );
 
-        parser = BluetoothMessageParser.ofDefault();
-
-        // retrieve bluetooth adapter
-        bluetoothInterface = new BluetoothInterface(this);
-
         // first ensure bluetooth is enabled
-        if (!bluetoothInterface.isBluetoothEnabled()) {
+        if (!myApp.btInterface().isBluetoothEnabled()) {
             Toast.makeText(this, "This app requires Bluetooth to function.", Toast.LENGTH_SHORT).show();
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             ActivityResultLauncher<Intent> requestEnableBluetooth = registerForActivityResult(
@@ -91,67 +84,69 @@ public class BluetoothActivity extends AppCompatActivity {
         requestPermissions(permissions, BLUETOOTH_PERMISSIONS_REQUEST_CODE);
 
         // make device discoverable
-        //enableDeviceDiscovery(DISCOVERABLE_DURATION);
+        enableDeviceDiscovery();
 
-        // register broadcast receivers
-        IntentFilter[] intentFilters = new IntentFilter[]{
-                new IntentFilter(BluetoothDevice.ACTION_FOUND), //discovered a device
-                new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED), // connected/disconnected
-                new IntentFilter(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED), //scan on/off
-                new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED), // bt on/off
-        }; //for broadcastReceiver
+        // find all views and bind them appropriately
+        bindUI();
+
+        // register broadcast receivers for bluetooth context
         this.broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 onBroadcastReceived(context, intent);
             }
         };
+        IntentFilter[] intentFilters = new IntentFilter[]{
+                new IntentFilter(BluetoothDevice.ACTION_FOUND), //discovered a device
+                new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED), // connected/disconnected
+                new IntentFilter(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED), //scan on/off
+                new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED), // bt on/off
+//                new IntentFilter(BluetoothConnection.ACTION_CONNECTION_STATE), // connected/disconnected, not rlly needed
+        }; //for broadcastReceiver
         for (IntentFilter intentFilter : intentFilters) {
-            registerReceiver(broadcastReceiver, intentFilter);
+            getApplicationContext().registerReceiver(broadcastReceiver, intentFilter);
         }
 
-        // register a local receiver to handle messages
-        LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(this);
-        BroadcastReceiver msgReciever = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                onMsgRecieved(context, intent);
-            }
-        };
-        localBroadcastManager.registerReceiver(msgReciever, new IntentFilter(BluetoothMessage.INTENT_ACTION));
+        // register message receiver
+        msgReceiver = new BluetoothMessageReceiver(BluetoothMessageParser.ofDefault(), this::onMsgReceived);
+        getApplicationContext().registerReceiver(msgReceiver, new IntentFilter(BluetoothMessageReceiver.ACTION_MSG_READ));
+    }
 
-
+    private void bindUI() {
         // bind UI to methods
         RecyclerView recyclerView = findViewById(R.id.btDeviceList);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         bluetoothDeviceAdapter = new BluetoothDeviceAdapter(this, new ArrayList<>(), device -> {
             Toast.makeText(this, "Clicked: " + device.name(), Toast.LENGTH_SHORT).show();
-            selectedDevice = device;
-            // todo handle connection
-            // bluetoothInterface.connectAsClient(device);
+            myApp.btInterface().connectAsClient(device.btDevice());
         });
         recyclerView.setAdapter(bluetoothDeviceAdapter);
-        findViewById(R.id.btnScan).setOnClickListener(view -> bluetoothInterface.scanForDevices());
+        findViewById(R.id.btnScan).setOnClickListener(view -> myApp.btInterface().scanForDevices());
 
         // these should be moved to CanvasActivity eventually
-        msgInput = findViewById(R.id.msgInput);
         receivedMsgView = findViewById(R.id.textRecievedMsg);
-        statusView = findViewById(R.id.textStatus);
         receivedMsgView.setText("Received Messages:\n");
-        findViewById(R.id.btnSend).setOnClickListener(view -> bluetoothInterface.getBluetoothChannel().sendMessage(msgInput.getText().toString()));
-
-        // this code below should be moved to RobotBluetoothComm eventually
-        findViewById(R.id.btnRobotForward).setOnClickListener(view -> bluetoothInterface.getBluetoothChannel().sendMessage("f"));
-        findViewById(R.id.btnRobotBackward).setOnClickListener(view -> bluetoothInterface.getBluetoothChannel().sendMessage("r"));
-        findViewById(R.id.btnRobotRight).setOnClickListener(view -> bluetoothInterface.getBluetoothChannel().sendMessage("tr"));
-        findViewById(R.id.btnRobotLeft).setOnClickListener(view -> bluetoothInterface.getBluetoothChannel().sendMessage("tl"));
+        statusView = findViewById(R.id.textStatus);
+        msgInput = findViewById(R.id.msgInput);
+        findViewById(R.id.btnSend).setOnClickListener(view -> {
+            if (msgInput.getText() != null) {
+                String s = msgInput.getText().toString();
+                if (!s.isEmpty()) {
+                    myApp.btConnection().sendMessage(msgInput.getText().toString());
+                }
+            }
+        });
+        findViewById(R.id.btnRobotForward).setOnClickListener(view -> myApp.btConnection().sendMessage("f"));
+        findViewById(R.id.btnRobotBackward).setOnClickListener(view -> myApp.btConnection().sendMessage("r"));
+        findViewById(R.id.btnRobotRight).setOnClickListener(view -> myApp.btConnection().sendMessage("tr"));
+        findViewById(R.id.btnRobotLeft).setOnClickListener(view -> myApp.btConnection().sendMessage("tl"));
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // unregister all recievers
-        unregisterReceiver(broadcastReceiver);
+        getApplicationContext().unregisterReceiver(broadcastReceiver);
+        getApplicationContext().unregisterReceiver(msgReceiver);
     }
 
     @Override
@@ -165,7 +160,6 @@ public class BluetoothActivity extends AppCompatActivity {
                     break;
                 }
             }
-
             if (allPermissionsGranted) {
                 // permission all good, init bluetooth
                 startBluetooth();
@@ -176,14 +170,14 @@ public class BluetoothActivity extends AppCompatActivity {
         }
     }
 
-    private void enableDeviceDiscovery(int duration) {
+    private void enableDeviceDiscovery() {
         Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-        discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, duration);
+        discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, DISCOVERABLE_DURATION);
         ActivityResultLauncher<Intent> requestDiscoverable = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     if (result.getResultCode() == Activity.RESULT_OK) {
-                        Log.d(TAG, "Bluetooth Discovery on for " + duration + "s");
+                        Log.d(TAG, "Bluetooth Discovery on for " + DISCOVERABLE_DURATION + "s");
                     }
                 });
         requestDiscoverable.launch(discoverableIntent);
@@ -192,11 +186,11 @@ public class BluetoothActivity extends AppCompatActivity {
 
     // starts scanning / connecting to devices
     private void startBluetooth() {
-        if (bluetoothInterface.isBluetoothEnabled()) {
+        if (myApp.btInterface().isBluetoothEnabled()) {
             // add all paired devices to device list
-            bluetoothDeviceAdapter.initPairedDevices(bluetoothInterface.getBondedDevices());
+            bluetoothDeviceAdapter.initPairedDevices(myApp.btInterface().getBondedDevices());
             // accept any incoming bt connections
-            bluetoothInterface.acceptIncomingConnection();
+            myApp.btInterface().acceptIncomingConnection();
         }
     }
 
@@ -216,6 +210,7 @@ public class BluetoothActivity extends AppCompatActivity {
 
     @SuppressLint("MissingPermission")
     private void onBroadcastReceived(Context context, Intent intent) {
+        Log.d(TAG, "Received broadcast: " + intent.getAction());
         String action = intent.getAction();
         if (action == null)
             return;
@@ -236,7 +231,8 @@ public class BluetoothActivity extends AppCompatActivity {
                     switch (device.getBondState()) {
                         case BluetoothDevice.BOND_NONE -> {
                             Toast.makeText(this, String.format("%s disconnected, trying to reconnect...", device.getName()), Toast.LENGTH_SHORT).show();
-
+                            myApp.btInterface().acceptIncomingConnection();
+                            enableDeviceDiscovery();
                             // TODO try to reconnect?
                         }
                         case BluetoothDevice.BOND_BONDED ->
@@ -271,15 +267,14 @@ public class BluetoothActivity extends AppCompatActivity {
         }
     }
 
-    private void onMsgRecieved(Context context, Intent intent) {
-        if (!Objects.equals(intent.getAction(), BluetoothMessage.INTENT_ACTION)) {
-            return;
-        }
-        BluetoothMessage msg = intent.getParcelableExtra(BluetoothMessage.INTENT_EXTRA_NAME, BluetoothMessage.class);
-        if (msg instanceof BluetoothMessage.StringMessage strMsg) {
-            // TODO parse?
-            receivedMsgView.append(strMsg.str());
-        } else if (msg instanceof BluetoothMessage.StatusMessage statusMsg) {
+    private void onMsgReceived(BluetoothMessage btMsg) {
+        if (btMsg instanceof BluetoothMessage.PlainStringMessage m) {
+            receivedMsgView.append(m.rawMsg() + "\n");
+        } else if (btMsg instanceof BluetoothMessage.RobotStatusMessage m) {
+            statusView.setText(m.status());
+        } else if (btMsg instanceof BluetoothMessage.TargetFoundMessage m) {
+            //TODO
+        } else if (btMsg instanceof BluetoothMessage.RobotPositionMessage m) {
             //TODO
         }
     }

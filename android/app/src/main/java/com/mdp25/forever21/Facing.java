@@ -22,4 +22,15 @@ public enum Facing {
     public int getMappedCode() {
         return mappedCode;
     }
+
+    public static Facing getFacingFromCode(int code) {
+        return switch (code) {
+            case 0 -> NORTH;
+            case 2 -> EAST;
+            case 4 -> SOUTH;
+            case 6 -> WEST;
+            case 8 -> SKIP;
+            default -> NORTH;
+        };
+    }
 }
