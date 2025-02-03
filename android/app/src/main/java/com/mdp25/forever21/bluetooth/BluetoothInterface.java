@@ -23,7 +23,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * Class which creates bluetooth connections. Assumes appropriate bluetooth permissions have been granted.
+ * Class which creates the threads to accept bluetooth connections. Assumes appropriate bluetooth permissions have been granted.
  *
  * <p> References: <a href = "https://developer.android.com/develop/connectivity/bluetooth/connect-bluetooth-devices#java">Connect BT devices</a>,
  * <a href = "https://developer.android.com/develop/connectivity/bluetooth/find-bluetooth-devices">Find BT devices</a>
@@ -34,7 +34,7 @@ public class BluetoothInterface {
     private static final UUID BT_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); // standard SerialPortServiceClass UUID?
 
     private final Context context; //read-only, used by child threads
-    private final BluetoothAdapter bluetoothAdapter; //read-only, used by child threads
+    private final BluetoothAdapter bluetoothAdapter; // ignore synchronization
 
     private AcceptThread acceptThread = null; // thread that accepts and incoming bt connection
     private ConnectThread connectThread = null; // thread that scans for devices to connect to
@@ -42,21 +42,6 @@ public class BluetoothInterface {
 
     private Lock threadLock; // to lock acceptThread and connectThread read/write
     private Lock connectionLock; // to lock btConnection
-
-    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            onBroadcastReceived(context, intent);
-        }
-    };
-
-    private IntentFilter[] intentFilters = new IntentFilter[]{
-            new IntentFilter(BluetoothDevice.ACTION_FOUND), //discovered a device
-            new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED), // connected/disconnected
-            new IntentFilter(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED), //scan on/off
-            new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED), // bt on/off
-    }; //for broadcastReceiver
-
     public BluetoothInterface(Context context) {
         BluetoothManager btMgr = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
         this.bluetoothAdapter = btMgr.getAdapter();
@@ -93,17 +78,6 @@ public class BluetoothInterface {
 
     public boolean isBluetoothEnabled() {
         return bluetoothAdapter.isEnabled();
-    }
-
-    public BroadcastReceiver getBroadcastReceiver() {
-        return broadcastReceiver;
-    }
-
-    /**
-     * For registering {@link #getBroadcastReceiver()}.
-     */
-    public IntentFilter[] getIntentFilters() {
-        return intentFilters;
     }
 
     /**
@@ -162,10 +136,11 @@ public class BluetoothInterface {
             bluetoothAdapter.startDiscovery();
             Log.d(TAG, "Starting Bluetooth discovery");
         }
-        Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
-        for (BluetoothDevice device : pairedDevices) {
-            Log.d(TAG, "Paired device : " + device.getName());
-        }
+    }
+
+    @SuppressLint("MissingPermission")
+    public Set<BluetoothDevice> getBondedDevices() {
+        return bluetoothAdapter.getBondedDevices();
     }
 
     // code from android docs
@@ -269,25 +244,6 @@ public class BluetoothInterface {
                 Log.e(TAG, "Could not close the ConnectThread socket", e);
             }
             this.interrupt();
-        }
-    }
-
-    @SuppressLint("MissingPermission")
-    private void onBroadcastReceived(Context context, Intent intent) {
-        String action = intent.getAction();
-        switch (action) {
-            case BluetoothDevice.ACTION_FOUND -> {
-                // Discovery has found a device. Get the BluetoothDevice
-                // object and its info from the Intent.
-                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice.class);
-                String deviceName = device.getName();
-                String deviceHardwareAddress = device.getAddress(); // MAC address
-                Log.d(TAG, deviceName + ": " + deviceHardwareAddress);
-            }
-            //TODO
-            default -> {
-                Log.d(TAG, "Unknown action received in onBroadcastReceived.");
-            }
         }
     }
 }

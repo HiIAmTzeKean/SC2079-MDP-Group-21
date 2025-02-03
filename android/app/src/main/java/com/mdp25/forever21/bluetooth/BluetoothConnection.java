@@ -15,8 +15,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Represents a connected bluetooth client.
- * <p> This class mainly retrieves the messages from a bluetooth device.
+ * Class responsible for the thread handling incoming/outgoing messages.
  * <p> Reference: <a href="https://developer.android.com/develop/connectivity/bluetooth/transfer-data">Transferring data over BT</a>
  */
 public class BluetoothConnection {
