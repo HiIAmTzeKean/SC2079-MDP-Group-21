@@ -1,5 +1,5 @@
+from enum import Enum
 import logging
-from encodings.punycode import T
 from typing import Optional
 
 import serial
@@ -8,6 +8,23 @@ from constant.settings import BAUD_RATE, SERIAL_PORT
 
 
 logger = logging.getLogger(__name__)
+
+class PathMode(Enum):
+    """Enum class for Path mode commands"""
+    FW = "FW0x"
+    BW = "BW0x"
+    FL = "FL00"
+    FR = "FR00"
+    BL = "BL00"
+    BR = "BR00"
+
+class ManualMode(Enum):
+    """Enum class for Manual mode commands"""
+    FW_I = "FW--" # Move forward indefinitely
+    BW_I = "BW--" # Move backward indefinitely
+    TL_I = "TL--" # Steer left indefinitely
+    TR_I = "TR--" # Steer right indefinitely
+    STOP = "STOP" # Stop all servos
 
 
 class STMLink(Link):
@@ -35,10 +52,9 @@ class STMLink(Link):
     ### STM32 to RPi
     After every command received on the STM32, an acknowledgement (string: `ACK`) must be sent back to the RPi.
     This signals to the RPi that the STM32 has completed the command, and is ready for the next command.
-
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Constructor for STMLink.
         """
@@ -66,8 +82,8 @@ class STMLink(Link):
     def send(self, message: str) -> None:
         """Send a message to STM32, utf-8 encoded
 
-        Args:
-            message (str): message to send
+        :param message: message to send
+        :type message: str
         """
         self.serial_link.write(f"{message}\n".encode("utf-8"))
         logger.debug(f"Sent to STM32: {message}")
@@ -79,7 +95,7 @@ class STMLink(Link):
         :rtype: Optional[str]
         """
         message = self.serial_link.readline().strip().decode("utf-8")
-        logger.debug(f"Message Received: {message}")
+        logger.debug(f"Receive from STM: {message}")
         return message
 
     def wait_receive(self) -> Optional[str]:

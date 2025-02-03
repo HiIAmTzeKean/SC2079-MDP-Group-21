@@ -1,12 +1,14 @@
 from typing import Any
 
+from ..constant.consts import Category
+
 
 class PiAction:
     """
-    Class that represents an action that the RPi needs to take.    
+    Class that represents an action that the RPi needs to take.
     """
 
-    def __init__(self, cat:str, value:str|list) -> None:
+    def __init__(self, cat: Category, value: str | list) -> None:
         """
         :param cat: The category of the action. Can be 'info', 'mode', 'path', 'snap', 'obstacle', 'location', 'failed', 'success'
         :param value: The value of the action. Can be a string, a list of coordinates, or a list of obstacles.
@@ -16,7 +18,7 @@ class PiAction:
 
     @property
     def cat(self) -> str:
-        return self._cat
+        return self._cat.value
 
     @property
     def value(self) -> str | list[Any]:

@@ -15,7 +15,7 @@ class AndroidMessage:
     Android message sent over Bluetooth connection.
     """
 
-    def __init__(self, cat: str, value: str) -> None:
+    def __init__(self, cat: str, value: str | dict[str,int]) -> None:
         self._cat = cat
         self._value = value
 
@@ -33,6 +33,8 @@ class AndroidMessage:
         Returns the message as a string.
         :return: String representation of the message.
         """
+        if isinstance(self._value, dict):
+            raise ValueError("Value is a dictionary, use jsonify instead.")
         return self._value
 
     @property
@@ -124,7 +126,7 @@ class AndroidLink(Link):
     """Class for communicating with Android tablet over Bluetooth connection.
 
     ## General Format
-    Messages between the Android app and Raspi will be in the following format:
+    Messages between the Android app and RPi will be in the following format:
     ```json
     {"cat": "xxx", "value": "xxx"}
     ```
@@ -141,20 +143,24 @@ class AndroidLink(Link):
     ## Android to RPi
 
     #### Set Obstacles
-    The contents of `obstacles` together with the configured turning radius (`settings.py`) will be passed to the Algorithm API.
+    The contents of `obstacles` together with the configured turning radius
+    (`settings.py`) will be passed to the Algorithm API.
+    
     ```json
     {
-    "cat": "obstacles",
-    "value": {
-        "obstacles": [{"x": 5, "y": 10, "id": 1, "d": 2}],
-        "mode": "0"
-    }
+        "cat": "obstacles",
+        "value": {
+            "obstacles": [{"x": 5, "y": 10, "id": 1, "d": 2}],
+            "mode": "0"
+        }
     }
     ```
     RPi will store the received commands and path and make a call to the Algorithm API
-
-    ### Start
-    Signals to the robot to start dispatching the commands (when obstacles were set).
+    
+    ### RPi to STM
+    
+    ####  Start
+    Signals to the robot to start dispatching the commands (when obstacles are set).
     ```json
     {"cat": "control", "value": "start"}
     ```
@@ -164,19 +170,29 @@ class AndroidLink(Link):
     {"cat": "error", "value": "Command queue is empty, did you set obstacles?"}
     ```
 
-    ### Image Recognition
+    ### RPi to Android
 
-    #### RPi to Android
+    #### Image Recognition
+    
     ```json
     {"cat": "image-rec", "value": {"image_id": "A", "obstacle_id":  "1"}}
     ```
 
-    ### Location Updates (RPi to Android)
+    #### Location Updates
+    
     In Path mode, the robot will periodically notify Android with the updated location of the robot.
     ```json
     {"cat": "location", "value": {"x": 1, "y": 1, "d": 0}}
     ```
     where `x`, `y` is the location of the robot, and `d` is its direction.
+    the direction for `d` being defined as
+    ```
+        NORTH = 0
+        EAST = 2
+        SOUTH = 4
+        WEST = 6
+        SKIP = 8
+    ```
     """
 
     def __init__(self) -> None:
@@ -208,7 +224,7 @@ class AndroidLink(Link):
             # Advertise
             bluetooth.advertise_service(
                 self.server_sock,
-                "MDP-Group2-RPi",
+                "MDP-Group21-RPi",
                 service_id=uuid,
                 service_classes=[uuid, bluetooth.SERIAL_PORT_CLASS],
                 profiles=[bluetooth.SERIAL_PORT_PROFILE],
@@ -223,7 +239,7 @@ class AndroidLink(Link):
             self.server_sock.close()
             self.client_sock.close()
 
-    def disconnect(self):
+    def disconnect(self) -> None:
         """Disconnect from Android Bluetooth connection and shutdown all the sockets established"""
         try:
             logger.debug("Disconnecting Bluetooth link")
@@ -237,7 +253,7 @@ class AndroidLink(Link):
         except Exception as e:
             logger.error(f"Failed to disconnect Bluetooth link: {e}")
 
-    def send(self, message: AndroidMessage):
+    def send(self, message: AndroidMessage) -> None:
         """Send message to Android"""
         try:
             self.client_sock.send(f"{message.jsonify}\n".encode("utf-8"))
