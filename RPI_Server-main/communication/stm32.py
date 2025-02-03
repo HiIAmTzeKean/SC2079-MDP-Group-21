@@ -1,4 +1,3 @@
-from enum import Enum
 import logging
 from typing import Optional
 
@@ -9,45 +8,12 @@ from constant.settings import BAUD_RATE, SERIAL_PORT
 
 logger = logging.getLogger(__name__)
 
-class PathMode(Enum):
-    """Enum class for Path mode commands"""
-    FW = "FW0x"
-    BW = "BW0x"
-    FL = "FL00"
-    FR = "FR00"
-    BL = "BL00"
-    BR = "BR00"
-
-class ManualMode(Enum):
-    """Enum class for Manual mode commands"""
-    FW_I = "FW--" # Move forward indefinitely
-    BW_I = "BW--" # Move backward indefinitely
-    TL_I = "TL--" # Steer left indefinitely
-    TR_I = "TR--" # Steer right indefinitely
-    STOP = "STOP" # Stop all servos
-
 
 class STMLink(Link):
     """Class for communicating with STM32 microcontroller over UART serial connection.
 
     ### RPi to STM32
     RPi sends the following commands to the STM32.
-
-    #### Path mode commands
-    High speed forward/backward, with turning radius of `3x1`
-    - `FW0x`: Move forward `x` units
-    - `BW0x`: Move backward `x` units
-    - `FL00`: Move to the forward-left location
-    - `FR00`: Move to the forward-right location
-    - `BL00`: Move to the backward-left location
-    - `BR00`: Move to the backward-right location
-
-    #### Manual mode commands
-    - `FW--`: Move forward indefinitely
-    - `BW--`: Move backward indefinitely
-    - `TL--`: Steer left indefinitely
-    - `TR--`: Steer right indefinitely
-    - `STOP`: Stop all servos
 
     ### STM32 to RPi
     After every command received on the STM32, an acknowledgement (string: `ACK`) must be sent back to the RPi.
@@ -79,6 +45,7 @@ class STMLink(Link):
         del self.serial_link
         logger.info("Disconnected from STM32")
 
+    # TODO deprecate this method since send cmd is the one used
     def send(self, message: str) -> None:
         """Send a message to STM32, utf-8 encoded
 
@@ -115,4 +82,5 @@ class STMLink(Link):
         cmd = flag
         if flag not in ["S", "D", "M"]:
             cmd += f"{speed}|{round(angle, 2)}|{round(val, 2)}" + "\n"
-        self.send(cmd)
+        self.serial_link.write(f"{cmd}\n".encode("utf-8"))
+        logger.debug(f"Sent to STM32: {cmd}")
