@@ -1,4 +1,4 @@
-const serverDomainUrl = "http://127.0.0.1:8000";
+const serverDomainUrl = "http://192.168.10.224:5000";
 
 // Helper functions
 const handleResponse = async (response: Response) => {
@@ -19,7 +19,6 @@ const useFetch = () => {
   const get = async (url: string) => {
     const requestOptions: RequestInit = {
       method: "GET",
-      credentials: "include",
     };
     const response = await fetch(serverDomainUrl + url, requestOptions);
     return handleResponse(response);
@@ -29,7 +28,6 @@ const useFetch = () => {
     const requestOptions: RequestInit = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      credentials: "include",
       body: JSON.stringify(body),
     };
     const response = await fetch(serverDomainUrl + url, requestOptions);
@@ -40,7 +38,6 @@ const useFetch = () => {
     const requestOptions: RequestInit = {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      credentials: "include",
       body: JSON.stringify(body),
     };
     const response = await fetch(serverDomainUrl + url, requestOptions);
@@ -51,32 +48,12 @@ const useFetch = () => {
   const _delete = async (url: string) => {
     const requestOptions: RequestInit = {
       method: "DELETE",
-      credentials: "include",
     };
     const response = await fetch(serverDomainUrl + url, requestOptions);
     return handleResponse(response);
   };
 
-  const retrieve_image = async (file_path: string) => {
-    const requestOptions: RequestInit = {
-      method: "POST",
-      credentials: "include",
-    };
-    const response = await fetch(
-      serverDomainUrl + `/file/retrieve?file_path=${file_path}`,
-      requestOptions
-    );
-    if (response.ok) {
-      const imageBlob = await response.blob();
-      const imageUrl = URL.createObjectURL(imageBlob);
-      return imageUrl;
-    }
-
-    // Status not ok
-    return Promise.reject(response.status);
-  };
-
-  return { get, post, put, _delete, retrieve_image };
+  return { get, post, put, _delete };
 };
 
 export default useFetch;

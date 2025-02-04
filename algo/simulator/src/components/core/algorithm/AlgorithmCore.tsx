@@ -85,7 +85,7 @@ export const AlgorithmCore = () => {
     };
     try {
       const algoOutput: AlgoOutput = await fetch.post(
-        "/algo/simulator",
+        "/path",
         algoInput
       );
       console.log(algoOutput);

@@ -10,7 +10,7 @@ export const ServerStatus = () => {
 
   const checkServerOnlineStatus = async () => {
     try {
-      const isServerOnline = await fetch.get("/");
+      const isServerOnline = await fetch.get("/status");
 
       if (isServerOnline) {
         setIsServerOnline(true);
@@ -31,11 +31,10 @@ export const ServerStatus = () => {
     <div className="mt-2 mb-4 flex justify-center items-center">
       <Button
         title="Check Server Status"
-        className={`${
-          isServerOnline
-            ? "!text-green-500 hover:!text-green-600"
-            : "!text-rose-500 hover:!text-rose-600"
-        }`}
+        className={`${isServerOnline
+          ? "!text-green-500 hover:!text-green-600"
+          : "!text-rose-500 hover:!text-rose-600"
+          }`}
         onClick={checkServerOnlineStatus}
       >
         <span>Server Status - {isServerOnline ? "Online" : "Offline"}</span>
