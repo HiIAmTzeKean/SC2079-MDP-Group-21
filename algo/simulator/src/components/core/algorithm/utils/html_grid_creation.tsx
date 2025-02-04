@@ -34,10 +34,10 @@ export const createHTMLGrid = (
             y,
             x ===
               robotPosition.x +
-                convertRobotThetaToCameraOffsetBlock(robotPosition.theta)[0] &&
+              convertRobotThetaToCameraOffsetBlock(robotPosition.theta)[0] &&
               y ===
-                robotPosition.y +
-                  convertRobotThetaToCameraOffsetBlock(robotPosition.theta)[1]
+              robotPosition.y +
+              convertRobotThetaToCameraOffsetBlock(robotPosition.theta)[1]
               ? "camera"
               : "body"
           )
@@ -109,9 +109,8 @@ const createHTMLGridCellRobot = (
   return (
     <td
       id={`cell-${x}-${y}`}
-      className={`border-2 border-orange-900 w-8 h-8 align-middle text-center ${
-        type === "body" ? "bg-green-300" : "bg-blue-400"
-      }`}
+      className={`border-2 border-orange-900 w-8 h-8 align-middle text-center ${type === "body" ? "bg-green-300" : "bg-blue-400"
+        }`}
     />
   );
 };
@@ -129,16 +128,16 @@ const createHTMLGridCellObstacle = (
 ) => {
   let imageFaceBorderClassName = "";
   switch (direction) {
-    case ObstacleDirection.N:
+    case ObstacleDirection.NORTH:
       imageFaceBorderClassName = "border-t-4 border-t-red-700";
       break;
-    case ObstacleDirection.S:
+    case ObstacleDirection.SOUTH:
       imageFaceBorderClassName = "border-b-4 border-b-red-700";
       break;
-    case ObstacleDirection.E:
+    case ObstacleDirection.EAST:
       imageFaceBorderClassName = "border-r-4 border-r-red-700";
       break;
-    case ObstacleDirection.W:
+    case ObstacleDirection.WEST:
       imageFaceBorderClassName = "border-l-4 border-l-red-700";
       break;
   }

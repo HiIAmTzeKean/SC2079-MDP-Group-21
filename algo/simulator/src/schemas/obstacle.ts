@@ -1,9 +1,11 @@
 /** The direction an Obstacle's image is facing */
 export enum ObstacleDirection {
-  N = 1,
-  S = 2,
-  E = 3,
-  W = 4,
+  NORTH = 0,
+  EAST = 2,
+  SOUTH = 4,
+  WEST = 6,
+  SKIP = 8,
+
 }
 
 /** Obstacle with it's (x, y) co-ordinates, image face direction, and id */
@@ -15,8 +17,9 @@ export interface Obstacle {
 }
 
 export const ObstacleDirectionStringMapping = {
-  [ObstacleDirection.N]: "North",
-  [ObstacleDirection.S]: "South",
-  [ObstacleDirection.E]: "East",
-  [ObstacleDirection.W]: "West",
+  [ObstacleDirection.NORTH]: "North",
+  [ObstacleDirection.SOUTH]: "South",
+  [ObstacleDirection.EAST]: "East",
+  [ObstacleDirection.WEST]: "West",
+  [ObstacleDirection.SKIP]: "Skip",
 };

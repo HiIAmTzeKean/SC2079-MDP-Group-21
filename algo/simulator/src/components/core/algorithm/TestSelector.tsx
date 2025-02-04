@@ -47,7 +47,7 @@ export const TestSelector = (props: TestSelectorProps) => {
   const [customObstacle_X, setCustomObstacle_X] = useState<number>(0);
   const [customObstacle_Y, setCustomObstacle_Y] = useState<number>(0);
   const [customObstacle_Direction, setCustomObstacle_Direction] =
-    useState<ObstacleDirection>(ObstacleDirection.N);
+    useState<ObstacleDirection>(ObstacleDirection.NORTH);
   const handleAddCustomObstacle = () => {
     // Check that cell is not occupied by Robot
     if (
@@ -163,45 +163,41 @@ export const TestSelector = (props: TestSelectorProps) => {
               <div className="flex gap-2 items-center mb-4">
                 <label className="font-bold">Direction: </label>
                 <Button
-                  className={`${
-                    customObstacle_Direction === ObstacleDirection.N &&
+                  className={`${customObstacle_Direction === ObstacleDirection.NORTH &&
                     "!text-orange-300"
-                  }`}
+                    }`}
                   onClick={() =>
-                    setCustomObstacle_Direction(ObstacleDirection.N)
+                    setCustomObstacle_Direction(ObstacleDirection.NORTH)
                   }
                 >
                   N
                 </Button>
                 <Button
-                  className={`${
-                    customObstacle_Direction === ObstacleDirection.S &&
+                  className={`${customObstacle_Direction === ObstacleDirection.SOUTH &&
                     "!text-orange-300"
-                  }`}
+                    }`}
                   onClick={() =>
-                    setCustomObstacle_Direction(ObstacleDirection.S)
+                    setCustomObstacle_Direction(ObstacleDirection.SOUTH)
                   }
                 >
                   S
                 </Button>
                 <Button
-                  className={`${
-                    customObstacle_Direction === ObstacleDirection.E &&
+                  className={`${customObstacle_Direction === ObstacleDirection.EAST &&
                     "!text-orange-300"
-                  }`}
+                    }`}
                   onClick={() =>
-                    setCustomObstacle_Direction(ObstacleDirection.E)
+                    setCustomObstacle_Direction(ObstacleDirection.EAST)
                   }
                 >
                   E
                 </Button>
                 <Button
-                  className={`${
-                    customObstacle_Direction === ObstacleDirection.W &&
+                  className={`${customObstacle_Direction === ObstacleDirection.WEST &&
                     "!text-orange-300"
-                  }`}
+                    }`}
                   onClick={() =>
-                    setCustomObstacle_Direction(ObstacleDirection.W)
+                    setCustomObstacle_Direction(ObstacleDirection.WEST)
                   }
                 >
                   W

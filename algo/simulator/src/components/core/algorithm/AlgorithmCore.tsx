@@ -28,6 +28,7 @@ import { ServerStatus } from "./ServerStatus";
 import useFetch from "../../../hooks/useFetch";
 import { AlgoInput } from "../../../schemas/algo_input";
 import { AlgoOutput } from "../../../schemas/algo_output";
+import { ObstacleDirection } from "../../../schemas/obstacle";
 
 export const AlgorithmCore = () => {
   const fetch = useFetch();
@@ -68,19 +69,19 @@ export const AlgorithmCore = () => {
     setAlgoRuntime("");
 
     const algoInput: AlgoInput = {
-      cat: "obstacles",
-      value: {
-        mode: 0,
-        obstacles: selectedTest.obstacles.map((o) => {
-          return {
-            id: o.id,
-            x: o.x * ALGO_GRID_BLOCK_SIZE_MULTIPLIER,
-            y: o.y * ALGO_GRID_BLOCK_SIZE_MULTIPLIER,
-            d: o.d,
-          };
-        }),
-      },
-      server_mode: "simulator",
+      obstacles: selectedTest.obstacles.map((o) => {
+        return {
+          id: o.id,
+          x: o.x,
+          y: o.y,
+          d: o.d,
+        };
+      }),
+      retrying: false,
+      big_turn: 0,
+      robot_dir: ObstacleDirection.NORTH,
+      robot_x: 1,
+      robot_y: 1
     };
     try {
       const algoOutput: AlgoOutput = await fetch.post(
