@@ -26,9 +26,8 @@ import toast from "react-hot-toast";
 import { TestSelector } from "./TestSelector";
 import { ServerStatus } from "./ServerStatus";
 import useFetch from "../../../hooks/useFetch";
-import { AlgoInput, AlgoType } from "../../../schemas/algo_input";
+import { AlgoInput } from "../../../schemas/algo_input";
 import { AlgoOutput } from "../../../schemas/algo_output";
-import { AlgorithmSelector } from "./AlgorithmSelector";
 
 export const AlgorithmCore = () => {
   const fetch = useFetch();
@@ -36,11 +35,6 @@ export const AlgorithmCore = () => {
   // Robot's Positions
   const [robotPositions, setRobotPositions] = useState<Position[]>();
   const totalSteps = robotPositions?.length ?? 0;
-
-  // Select Algorithm
-  const [selectedAlgoTypeEnum, setSelectedAlgoTypeEnum] = useState<AlgoType>(
-    AlgoType.EXHAUSTIVE_ASTAR
-  );
 
   // Algorithm Runtime
   const [algoRuntime, setAlgoRuntime] = useState<string>("");
@@ -87,7 +81,6 @@ export const AlgorithmCore = () => {
         }),
       },
       server_mode: "simulator",
-      algo_type: selectedAlgoTypeEnum,
     };
     try {
       const algoOutput: AlgoOutput = await fetch.post(
@@ -176,14 +169,6 @@ export const AlgorithmCore = () => {
         setAlgoRuntime={setAlgoRuntime}
       />
 
-      {/* Select ALgorithm */}
-      <AlgorithmSelector
-        selectedAlgoTypeEnum={selectedAlgoTypeEnum}
-        setSelectedAlgoTypeEnum={setSelectedAlgoTypeEnum}
-        setAlgoRuntime={setAlgoRuntime}
-        setRobotPositions={setRobotPositions}
-      />
-
       {/* Run Algo */}
       <div className="mb-4 flex justify-center">
         <Button onClick={handleRunAlgorithm}>
@@ -200,8 +185,7 @@ export const AlgorithmCore = () => {
       {algoRuntime && (
         <div className="mb-4 flex justify-center">
           Algorithm Runtime:&nbsp;
-          <span className="font-bold">{algoRuntime}</span>&nbsp;(
-          {selectedAlgoTypeEnum})
+          <span className="font-bold">{algoRuntime}</span>&nbsp;
         </div>
       )}
 

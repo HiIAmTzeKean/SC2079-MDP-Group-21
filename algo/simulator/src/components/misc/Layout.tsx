@@ -1,5 +1,4 @@
 import React from "react";
-import { PageFooter } from "./PageFooter";
 import { PageHeader } from "./PageHeader";
 import { Toaster } from "react-hot-toast";
 
@@ -19,9 +18,6 @@ export const Layout = (props: LayoutProps) => {
 
         {/* Body */}
         <main className="flex-1">{children}</main>
-
-        {/* Footer */}
-        <PageFooter />
       </div>
     </>
   );
