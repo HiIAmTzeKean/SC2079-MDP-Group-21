@@ -5,8 +5,7 @@ import {
   ROBOT_GRID_WIDTH,
 } from "../../../../constants";
 import { Obstacle, ObstacleDirection } from "../../../../schemas/obstacle";
-import { Direction, Position, RobotPosition, RobotDirection } from "../../../../schemas/robot";
-import { convertThetaToDirection } from "./conversions";
+import { Direction, RobotPosition } from "../../../../schemas/robot";
 
 /**
  * Creates a HTML Grid.
@@ -184,36 +183,10 @@ export const addHTMLGridLables = (grid: React.ReactNode[][]) => {
 };
 
 // ---------- Helper Functions - Calculations ---------- //
-/**
- * @deprecated Fixed Bottom Left (x, y) area occupied by Robot as Robot's current position regardless of Robot's facing.
- * Converts a Robot's Theta rotation to the associated Camera Offset on the grid
- * @returns (x, y) offset of the robot's camera from the bottom left corner of the robot
- */
-export const _convertRobotThetaToCameraOffsetBlock = (theta: number) => {
-  const robotDirection = convertThetaToDirection(theta);
-  // East
-  if (robotDirection === RobotDirection.E) {
-    return [2, 1];
-  }
-  // North
-  else if (robotDirection === RobotDirection.N) {
-    return [1, 2];
-  }
-  // West
-  else if (robotDirection === RobotDirection.W) {
-    return [0, 1];
-  }
-  // South
-  else if (robotDirection === RobotDirection.S) {
-    return [1, 0];
-  }
-  return [0, 0];
-};
 
 /**
- * Used Bottom Left of Robot's Body as Robot's current (x, y) position.
- * Converts a Robot's Theta rotation to the associated Camera Offset on the grid
- * @returns (x, y) offset of the robot's camera from the bottom left corner of the robot
+ * Used Center of Robot's Body as Robot's current (x, y) position.
+ * @returns (x, y) offset of the robot's camera from the center of the robot
  */
 export const convertRobotThetaToCameraOffsetBlock = (direction: Direction) => {
   // East

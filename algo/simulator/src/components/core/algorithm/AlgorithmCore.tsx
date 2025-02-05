@@ -3,7 +3,6 @@ import { NavigationGrid } from "./NavigationGrid";
 import { CoreContainter } from "../CoreContainter";
 import { RobotPosition } from "../../../schemas/robot";
 import {
-  ALGO_GRID_BLOCK_SIZE_MULTIPLIER,
   GRID_ANIMATION_SPEED,
   ROBOT_INITIAL_POSITION,
 } from "../../../constants";

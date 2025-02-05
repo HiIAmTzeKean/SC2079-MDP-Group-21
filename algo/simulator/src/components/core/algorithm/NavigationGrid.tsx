@@ -1,5 +1,5 @@
 import React from "react";
-import { RobotPosition, Position } from "../../../schemas/robot";
+import { RobotPosition } from "../../../schemas/robot";
 import { Obstacle } from "../../../schemas/obstacle";
 import { addHTMLGridLables, createHTMLGrid } from "./utils/html_grid_creation";
 import { AlgoTestDataInterface } from "../../../tests/algorithm";
