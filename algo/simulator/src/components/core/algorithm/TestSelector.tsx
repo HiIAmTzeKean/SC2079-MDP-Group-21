@@ -16,9 +16,9 @@ import {
 } from "../../../tests/algorithm";
 import {
   Obstacle,
-  ObstacleDirection,
-  ObstacleDirectionStringMapping,
-} from "../../../schemas/obstacle";
+  Direction,
+  DirectionStringMapping,
+} from "../../../schemas/entity";
 import toast from "react-hot-toast";
 import { ROBOT_GRID_HEIGHT, ROBOT_GRID_WIDTH } from "../../../constants";
 
@@ -47,7 +47,7 @@ export const TestSelector = (props: TestSelectorProps) => {
   const [customObstacle_X, setCustomObstacle_X] = useState<number>(0);
   const [customObstacle_Y, setCustomObstacle_Y] = useState<number>(0);
   const [customObstacle_Direction, setCustomObstacle_Direction] =
-    useState<ObstacleDirection>(ObstacleDirection.NORTH);
+    useState<Direction>(Direction.NORTH);
   const handleAddCustomObstacle = () => {
     // Check that cell is not occupied by Robot
     if (
@@ -163,41 +163,41 @@ export const TestSelector = (props: TestSelectorProps) => {
               <div className="flex gap-2 items-center mb-4">
                 <label className="font-bold">Direction: </label>
                 <Button
-                  className={`${customObstacle_Direction === ObstacleDirection.NORTH &&
+                  className={`${customObstacle_Direction === Direction.NORTH &&
                     "!text-orange-300"
                     }`}
                   onClick={() =>
-                    setCustomObstacle_Direction(ObstacleDirection.NORTH)
+                    setCustomObstacle_Direction(Direction.NORTH)
                   }
                 >
                   N
                 </Button>
                 <Button
-                  className={`${customObstacle_Direction === ObstacleDirection.SOUTH &&
+                  className={`${customObstacle_Direction === Direction.SOUTH &&
                     "!text-orange-300"
                     }`}
                   onClick={() =>
-                    setCustomObstacle_Direction(ObstacleDirection.SOUTH)
+                    setCustomObstacle_Direction(Direction.SOUTH)
                   }
                 >
                   S
                 </Button>
                 <Button
-                  className={`${customObstacle_Direction === ObstacleDirection.EAST &&
+                  className={`${customObstacle_Direction === Direction.EAST &&
                     "!text-orange-300"
                     }`}
                   onClick={() =>
-                    setCustomObstacle_Direction(ObstacleDirection.EAST)
+                    setCustomObstacle_Direction(Direction.EAST)
                   }
                 >
                   E
                 </Button>
                 <Button
-                  className={`${customObstacle_Direction === ObstacleDirection.WEST &&
+                  className={`${customObstacle_Direction === Direction.WEST &&
                     "!text-orange-300"
                     }`}
                   onClick={() =>
-                    setCustomObstacle_Direction(ObstacleDirection.WEST)
+                    setCustomObstacle_Direction(Direction.WEST)
                   }
                 >
                   W
@@ -304,7 +304,7 @@ const CustomObstacleItem = (props: CustomObstacleItemProps) => {
       <FaCircle className="text-[8px]" />
       <span>X: {x},</span>
       <span>Y: {y},</span>
-      <span>Face: {ObstacleDirectionStringMapping[d]}</span>
+      <span>Face: {DirectionStringMapping[d]}</span>
       <MdDelete
         title="Remove"
         className="text-[20px] hover:text-red-600 cursor-pointer"

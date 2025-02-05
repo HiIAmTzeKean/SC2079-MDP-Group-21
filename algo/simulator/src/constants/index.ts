@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { Direction, RobotPosition } from "../schemas/robot";
+import { Direction, Position } from "../schemas/entity";
 
 // Robot's Environment - Grid Format
 const WIDTH_CM = 200;
@@ -24,7 +24,7 @@ const ROBOT_HEIGHT_CM = 30;
 export const ROBOT_GRID_WIDTH = ROBOT_WIDTH_CM / GRID_BLOCK_SIZE_CM; // 3
 export const ROBOT_GRID_HEIGHT = ROBOT_HEIGHT_CM / GRID_BLOCK_SIZE_CM; // 3
 
-export const ROBOT_INITIAL_POSITION: RobotPosition = {
+export const ROBOT_INITIAL_POSITION: Position = {
   x: 1,
   y: 1,
   d: Direction.NORTH,

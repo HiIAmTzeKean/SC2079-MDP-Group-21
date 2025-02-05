@@ -1,11 +1,10 @@
 import React from "react";
-import { RobotPosition } from "../../../schemas/robot";
-import { Obstacle } from "../../../schemas/obstacle";
+import { Obstacle, Position } from "../../../schemas/entity";
 import { addHTMLGridLables, createHTMLGrid } from "./utils/html_grid_creation";
 import { AlgoTestDataInterface } from "../../../tests/algorithm";
 
 interface NavigationGridProps {
-  robotPosition: RobotPosition;
+  robotPosition: Position;
   obstacles: Obstacle[];
   canAddObstacle: boolean;
   setSelectedTest: React.Dispatch<React.SetStateAction<AlgoTestDataInterface>>;
@@ -30,7 +29,7 @@ export const NavigationGrid = (props: NavigationGridProps) => {
       return updated;
     });
   };
-  const handleChangeObstacleDirection = (
+  const handleChangeDirection = (
     x: number,
     y: number,
     new_d: number
@@ -62,7 +61,7 @@ export const NavigationGrid = (props: NavigationGridProps) => {
     obstacles,
     canAddObstacle,
     handleAddObstacle,
-    handleChangeObstacleDirection
+    handleChangeDirection
   );
   addHTMLGridLables(grid);
 

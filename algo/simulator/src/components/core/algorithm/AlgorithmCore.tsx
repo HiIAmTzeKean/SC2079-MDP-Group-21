@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { NavigationGrid } from "./NavigationGrid";
 import { CoreContainter } from "../CoreContainter";
-import { RobotPosition } from "../../../schemas/robot";
+import { Position } from "../../../schemas/entity";
 import {
   GRID_ANIMATION_SPEED,
   ROBOT_INITIAL_POSITION,
@@ -14,7 +14,6 @@ import {
   FaSitemap,
   FaSpinner,
 } from "react-icons/fa";
-// import { convertAlgoOutputToStepwisePosition } from "./utils/path_animation";
 import {
   AlgoTestDataInterface,
   AlgoTestEnum,
@@ -25,15 +24,13 @@ import toast from "react-hot-toast";
 import { TestSelector } from "./TestSelector";
 import { ServerStatus } from "./ServerStatus";
 import useFetch from "../../../hooks/useFetch";
-import { AlgoInput } from "../../../schemas/algo_input";
-import { AlgoOutput } from "../../../schemas/algo_output";
-import { ObstacleDirection } from "../../../schemas/obstacle";
+import { AlgoInput, AlgoOutput } from "../../../schemas/request";
 
 export const AlgorithmCore = () => {
   const fetch = useFetch();
 
   // Robot's Positions
-  const [robotPositions, setRobotPositions] = useState<RobotPosition[]>();
+  const [robotPositions, setRobotPositions] = useState<Position[]>();
   const totalSteps = robotPositions?.length ?? 0;
 
   // Algorithm Runtime
@@ -103,7 +100,7 @@ export const AlgorithmCore = () => {
   const [isManualAnimation, setIsManualAnimation] = useState(false);
   const [startAnimation, setStartAnimation] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [currentRobotPosition, setCurrentRobotPosition] = useState<RobotPosition>();
+  const [currentRobotPosition, setCurrentRobotPosition] = useState<Position>();
 
   // Animation
   useEffect(() => {

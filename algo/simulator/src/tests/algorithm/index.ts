@@ -1,4 +1,4 @@
-import { Obstacle } from "../../schemas/obstacle";
+import { Obstacle } from "../../schemas/entity";
 import { AlgoTestBasicMock } from "./basic_mock";
 import { AlgoTestBasicUTurn } from "./basic_u_turn";
 import { AlgoTestCorners } from "./corners";

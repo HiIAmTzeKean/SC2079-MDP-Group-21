@@ -1,5 +1,5 @@
 import { AlgoTestDataInterface } from ".";
-import { Obstacle } from "../../schemas/obstacle";
+import { Obstacle } from "../../schemas/entity";
 
 const obstacles: Obstacle[] = [];
 
