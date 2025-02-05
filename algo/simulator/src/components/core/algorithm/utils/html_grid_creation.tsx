@@ -89,7 +89,7 @@ const createHTMLGridCellEmpty = (
     <td
       id={`cell-${x}-${y}`}
       className="border border-orange-900 w-8 h-8 cursor-pointer hover:bg-amber-400 hover:border-t-4 hover:border-t-red-700"
-      onClick={() => handleAddObstacle(x, y, 1)} // Default North Facing
+      onClick={() => handleAddObstacle(x, y, Direction.NORTH)} // Default North Facing
       title="Add obstacle"
     />
   );
@@ -155,7 +155,7 @@ const createHTMLGridCellObstacle = (
       className={`border border-orange-900 w-8 h-8 align-middle text-center bg-amber-400 ${imageFaceBorderClassName} cursor-pointer hover:bg-amber-500`}
       title="Change obstacle direction"
       onClick={() =>
-        handleChangeDirection(x, y, (direction.valueOf() % 4) + 1)
+        handleChangeDirection(x, y, direction)
       }
     />
   );

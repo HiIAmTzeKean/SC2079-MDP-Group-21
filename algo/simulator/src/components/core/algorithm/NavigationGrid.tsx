@@ -1,5 +1,5 @@
 import React from "react";
-import { Obstacle, Position } from "../../../schemas/entity";
+import { Direction, Obstacle, Position } from "../../../schemas/entity";
 import { addHTMLGridLables, createHTMLGrid } from "./utils/html_grid_creation";
 import { AlgoTestDataInterface } from "../../../tests/algorithm";
 
@@ -32,9 +32,12 @@ export const NavigationGrid = (props: NavigationGridProps) => {
   const handleChangeDirection = (
     x: number,
     y: number,
-    new_d: number
+    d: number
   ) => {
     setSelectedTest((prev) => {
+      const directions = [Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST, Direction.SKIP];
+      const new_d = directions[(directions.indexOf(d) + 1) % directions.length]
+
       const obstacleToChange = prev.obstacles.filter(
         (o) => o.x === x && o.y === y
       )[0];
