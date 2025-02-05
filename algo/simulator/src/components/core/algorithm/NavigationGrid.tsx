@@ -45,7 +45,7 @@ export const NavigationGrid = (props: NavigationGridProps) => {
         obstacles: [
           ...prev.obstacles,
           {
-            id: prev.obstacles.length,
+            id: prev.obstacles.length + 1,
             x: x,
             y: y,
             d: d,

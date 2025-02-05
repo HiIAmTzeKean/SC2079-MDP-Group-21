@@ -291,7 +291,8 @@ const CustomObstacleItem = (props: CustomObstacleItemProps) => {
     setSelectedTest((prev) => {
       const cleanedObstacles = prev.obstacles.filter(
         (o) => !(o.x === obstacle.x && o.y === obstacle.y)
-      );
+      )
+        .map((o, index) => ({ ...o, id: index + 1 })); // reassign IDs starting from 1
 
       return {
         obstacles: cleanedObstacles,
