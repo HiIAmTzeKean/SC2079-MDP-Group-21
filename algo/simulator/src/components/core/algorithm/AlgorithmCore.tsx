@@ -32,6 +32,7 @@ export const AlgorithmCore = () => {
   // Robot's Positions
   const [robotPositions, setRobotPositions] = useState<Position[]>();
   const totalSteps = robotPositions?.length ?? 0;
+  const [robotCommands, setRobotCommands] = useState<string[]>();
 
   // Algorithm Runtime
   const [algoRuntime, setAlgoRuntime] = useState<string>("");
@@ -52,6 +53,7 @@ export const AlgorithmCore = () => {
     setCurrentStep(0);
     setCurrentRobotPosition(ROBOT_INITIAL_POSITION);
     setRobotPositions(undefined);
+    setRobotCommands(undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTestEnum]);
 
@@ -85,6 +87,7 @@ export const AlgorithmCore = () => {
         algoInput
       );
       setRobotPositions(algoOutput.data.path);
+      setRobotCommands(algoOutput.data.commands);
       setCurrentStep(0);
 
       setAlgoRuntime("TODO"); // TODO
@@ -247,6 +250,16 @@ export const AlgorithmCore = () => {
         canAddObstacle={selectedTestEnum === AlgoTestEnum.Custom}
         setSelectedTest={setSelectedTest}
       />
+
+      {robotCommands &&
+        <div className="flex justify-center">
+          <div className="w-[500px] text-center">
+            <span className="font-bold">Commands:</span>
+            {robotCommands?.map((command, index) => (
+              <span key={index} className="block">{index + 1}. {command}</span>
+            ))}
+          </div>
+        </div>}
     </CoreContainter>
   );
 };
