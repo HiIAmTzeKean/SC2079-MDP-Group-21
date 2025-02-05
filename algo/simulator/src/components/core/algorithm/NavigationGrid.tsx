@@ -4,13 +4,14 @@ import { AlgoTestDataInterface } from "../../../tests/algorithm";
 
 interface NavigationGridProps {
   robotPosition: Position;
+  robotPath: Position[] | undefined;
   obstacles: Obstacle[];
   canAddObstacle: boolean;
   setSelectedTest: React.Dispatch<React.SetStateAction<AlgoTestDataInterface>>;
 }
 
 export const NavigationGrid = (props: NavigationGridProps) => {
-  const { robotPosition, obstacles, canAddObstacle, setSelectedTest } = props;
+  const { robotPosition, robotPath, obstacles, canAddObstacle, setSelectedTest } = props;
 
   const cellSize = 40;
   const offset = 40; // offset due to spacing taken up by axis labels
@@ -75,6 +76,10 @@ export const NavigationGrid = (props: NavigationGridProps) => {
     });
   };
 
+  const getSVGCoords = (pos: Position) => ({
+    x: robotCenterX + (pos.x - robotPosition.x + 1) * cellSize,
+    y: robotCenterY - (pos.y - robotPosition.y - 1) * cellSize,
+  });
 
   return (
     <svg width={GRID_TOTAL_WIDTH * cellSize + offset} height={GRID_TOTAL_HEIGHT * cellSize + offset}>
@@ -184,6 +189,27 @@ export const NavigationGrid = (props: NavigationGridProps) => {
             : undefined
         } // rotate around rect center depending on direction
       />
+
+      {/* Draw the path taken so far by the robot */}
+      {robotPath &&
+        robotPath.map((pos, index) => {
+          if (index === 0) return null;
+          const { x: x1, y: y1 } = getSVGCoords(robotPath[index - 1]);
+          const { x: x2, y: y2 } = getSVGCoords(robotPath[index]);
+
+          return (
+            <line
+              key={index}
+              x1={x1}
+              y1={y1}
+              x2={x2}
+              y2={y2}
+              stroke="blue"
+              strokeWidth="3"
+              strokeOpacity={0.5}
+            />
+          );
+        })}
     </svg>
   );
 };
