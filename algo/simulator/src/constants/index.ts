@@ -13,6 +13,7 @@ export const GRID_TOTAL_HEIGHT = HEIGHT_CM / GRID_BLOCK_SIZE_CM; // 20
 // Obstacles
 const OBSTACLE_WIDTH_CM = 10;
 const OBSTACLE_HEIGHT_CM = 10;
+export const OBSTACLE_GRID_PADDING = 2; // safe padding around each obstacle when generating random obstacles
 
 export const OBSTACLE_GRID_WIDTH = OBSTACLE_WIDTH_CM / GRID_BLOCK_SIZE_CM; // 1
 export const OBSTACLE_GRID_HEIGHT = OBSTACLE_HEIGHT_CM / GRID_BLOCK_SIZE_CM; // 1

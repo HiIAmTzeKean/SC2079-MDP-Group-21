@@ -6,7 +6,9 @@ import {
   FaCheckSquare,
   FaCircle,
   FaPlus,
+  FaRecycle,
   FaSquare,
+  FaTrash,
 } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import {
@@ -20,7 +22,7 @@ import {
   DirectionStringMapping,
 } from "../../../schemas/entity";
 import toast from "react-hot-toast";
-import { ROBOT_GRID_HEIGHT, ROBOT_GRID_WIDTH } from "../../../constants";
+import { GRID_TOTAL_HEIGHT, GRID_TOTAL_WIDTH, OBSTACLE_GRID_PADDING, ROBOT_GRID_HEIGHT, ROBOT_GRID_WIDTH, ROBOT_INITIAL_POSITION } from "../../../constants";
 
 interface TestSelectorProps {
   selectedTestEnum: AlgoTestEnum;
@@ -81,6 +83,52 @@ export const TestSelector = (props: TestSelectorProps) => {
     setSelectedTest(updated);
   };
 
+  const handleClearAllObstacles = () => {
+    setSelectedTest({ obstacles: [] });
+  }
+
+  // ensure obstacles are not placed too close to each other or the boundaries
+  const getForbiddenCells = (obstacleCell: { x: number, y: number }) => {
+    const forbiddenArea = new Set<{ x: number, y: number }>();
+    for (let i = -OBSTACLE_GRID_PADDING; i <= OBSTACLE_GRID_PADDING; i++) {
+      for (let j = -OBSTACLE_GRID_PADDING; j <= OBSTACLE_GRID_PADDING; j++) {
+        const x = obstacleCell.x + i;
+        const y = obstacleCell.y + j;
+        if (0 <= x && x < GRID_TOTAL_WIDTH && 0 <= y && y < GRID_TOTAL_HEIGHT) {
+          forbiddenArea.add({ x, y })
+        }
+      }
+    }
+    return forbiddenArea;
+  }
+
+  const [numberOfRandomObstacles, setNumberOfRandomObstacles] = useState<number>(1)
+  // NOTE: some unreachable obstacles may still be generated especially since we do not account for direction
+  const handleGenerateRandomObstacles = () => {
+    const directions = [Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST];
+
+    const forbiddenCells: Set<{ x: number, y: number }> = getForbiddenCells(
+      { x: ROBOT_INITIAL_POSITION.x, y: ROBOT_INITIAL_POSITION.y }
+    );
+
+    const obstacles: Obstacle[] = Array.from({ length: numberOfRandomObstacles }, (_, i) => {
+      let x: number, y: number;
+
+      do {
+        // random int in the range [padding, GRID_TOTAL_WIDTH - padding - 1] inclusive
+        x = Math.floor(Math.random() * (GRID_TOTAL_WIDTH - 2 * OBSTACLE_GRID_PADDING));
+        y = Math.floor(Math.random() * (GRID_TOTAL_HEIGHT - 2 * OBSTACLE_GRID_PADDING));
+      } while (Array.from(forbiddenCells).some((cell) => cell.x === x && cell.y === y));
+      // create forbidden area for new obstacle
+      getForbiddenCells({ x, y }).forEach(cell => forbiddenCells.add(cell))
+
+      const d = directions[Math.floor(Math.random() * directions.length)];
+      return { x, y, id: i + 1, d };
+    });
+
+    setSelectedTest({ obstacles })
+  }
+
   return (
     <div className="mt-2 mb-4 flex justify-center items-center gap-2">
       {/* Button */}
@@ -103,6 +151,32 @@ export const TestSelector = (props: TestSelectorProps) => {
           title="Manage Obstacles"
           onClose={() => setIsManageObstaclesModalOpen(false)}
         >
+          {/* Generate Random Obstacles */}
+
+          <div className="flex gap-2 mb-4 align-center justify-center">
+            <Button
+              onClick={() => handleGenerateRandomObstacles()}>
+              <span>Generate Random Obstacles</span>
+              <FaRecycle />
+            </Button>
+            <input
+              id="steps-range"
+              type="range"
+              min={1}
+              max={8}
+              value={numberOfRandomObstacles}
+              onChange={(e) => {
+                setNumberOfRandomObstacles(Number(e.target.value));
+              }}
+              step={1}
+              className="h-2 w-10 bg-gray-900 rounded-lg appearance-none cursor-pointer self-center"
+            />
+            <label className="self-center font-bold">
+              {numberOfRandomObstacles}
+            </label>
+          </div>
+
+
           <div className="flex flex-col justify-center items-start">
             {/* Obstacles List with Delete */}
             {selectedTest.obstacles.map((obstacle) => (
@@ -204,11 +278,19 @@ export const TestSelector = (props: TestSelectorProps) => {
                 </Button>
               </div>
 
-              {/* Add Obstacle Button */}
-              <Button onClick={handleAddCustomObstacle}>
-                <span>Add</span>
-                <FaPlus />
-              </Button>
+              <div className="flex flex-col gap-4 items-center">
+                {/* Add Obstacle Button */}
+                <Button onClick={handleAddCustomObstacle}>
+                  <span>Add</span>
+                  <FaPlus />
+                </Button>
+
+                {/* Add Obstacle Button */}
+                <Button className="bg-red-600" onClick={handleClearAllObstacles}>
+                  <span>Clear All</span>
+                  <FaTrash />
+                </Button>
+              </div>
             </div>
           </div>
         </ModalContainer>
@@ -301,16 +383,18 @@ const CustomObstacleItem = (props: CustomObstacleItemProps) => {
   };
 
   return (
-    <div className="flex items-center justify-center gap-2 font-bold">
+    <div className="flex items-center w-full gap-2 font-bold">
       <FaCircle className="text-[8px]" />
       <span>X: {x},</span>
       <span>Y: {y},</span>
       <span>Face: {DirectionStringMapping[d]}</span>
-      <MdDelete
-        title="Remove"
-        className="text-[20px] hover:text-red-600 cursor-pointer"
-        onClick={handleRemoveObstacle}
-      />
+      <div className="flex-1 flex justify-end">
+        <MdDelete
+          title="Remove"
+          className="text-[20px] hover:text-red-600 cursor-pointer"
+          onClick={handleRemoveObstacle}
+        />
+      </div>
     </div>
   );
 };
