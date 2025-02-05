@@ -1,8 +1,23 @@
-/** Position of Robot on the navigational area */
+/** @deprecated Position of Robot on the navigational area */
 export interface Position {
   x: number;
   y: number;
   theta: number; // in Radian; 0 = West; 1.37 = North; -1.37 = South;
+}
+
+export interface RobotPosition {
+  s: number | null; // screenshot_id
+  x: number;
+  y: number;
+  d: Direction;
+}
+
+export enum Direction {
+  NORTH = 0,
+  EAST = 2,
+  SOUTH = 4,
+  WEST = 6,
+  SKIP = 8,
 }
 
 /** Simplified direction (instead of theta) that the Robot is facing. */

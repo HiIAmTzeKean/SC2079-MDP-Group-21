@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { NavigationGrid } from "./NavigationGrid";
 import { CoreContainter } from "../CoreContainter";
-import { Position } from "../../../schemas/robot";
+import { RobotPosition } from "../../../schemas/robot";
 import {
   ALGO_GRID_BLOCK_SIZE_MULTIPLIER,
   GRID_ANIMATION_SPEED,
@@ -15,7 +15,7 @@ import {
   FaSitemap,
   FaSpinner,
 } from "react-icons/fa";
-import { convertAlgoOutputToStepwisePosition } from "./utils/path_animation";
+// import { convertAlgoOutputToStepwisePosition } from "./utils/path_animation";
 import {
   AlgoTestDataInterface,
   AlgoTestEnum,
@@ -34,7 +34,7 @@ export const AlgorithmCore = () => {
   const fetch = useFetch();
 
   // Robot's Positions
-  const [robotPositions, setRobotPositions] = useState<Position[]>();
+  const [robotPositions, setRobotPositions] = useState<RobotPosition[]>();
   const totalSteps = robotPositions?.length ?? 0;
 
   // Algorithm Runtime
@@ -77,25 +77,21 @@ export const AlgorithmCore = () => {
           d: o.d,
         };
       }),
-      retrying: false,
-      big_turn: 0,
-      robot_dir: ObstacleDirection.NORTH,
-      robot_x: 1,
-      robot_y: 1
+      retrying: false, // TODO: add setting
+      big_turn: 1, // TODO: add setting
+      robot_dir: ROBOT_INITIAL_POSITION.d,
+      robot_x: ROBOT_INITIAL_POSITION.x,
+      robot_y: ROBOT_INITIAL_POSITION.y
     };
     try {
       const algoOutput: AlgoOutput = await fetch.post(
         "/path",
         algoInput
       );
-      console.log(algoOutput);
-      console.log(convertAlgoOutputToStepwisePosition(algoOutput.positions));
-      setRobotPositions(
-        convertAlgoOutputToStepwisePosition(algoOutput.positions)
-      );
+      setRobotPositions(algoOutput.data.path);
       setCurrentStep(0);
 
-      setAlgoRuntime(algoOutput.runtime);
+      setAlgoRuntime("TODO"); // TODO
       toast.success("Algorithm ran successfully.");
     } catch (e) {
       toast.error("Failed to run algorithm. Server Error: " + e);
@@ -108,7 +104,7 @@ export const AlgorithmCore = () => {
   const [isManualAnimation, setIsManualAnimation] = useState(false);
   const [startAnimation, setStartAnimation] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [currentRobotPosition, setCurrentRobotPosition] = useState<Position>();
+  const [currentRobotPosition, setCurrentRobotPosition] = useState<RobotPosition>();
 
   // Animation
   useEffect(() => {
@@ -118,16 +114,10 @@ export const AlgorithmCore = () => {
         setCurrentStep(nextStep);
 
         // Handle Scan Animation
-        if (
-          robotPositions[nextStep].x === -1 &&
-          robotPositions[nextStep].y === -1
-        ) {
-          if (robotPositions[nextStep].theta === -1)
-            toast.success("Image Scanned!");
-          else toast("Scanning image...");
-        } else {
-          setCurrentRobotPosition(robotPositions[nextStep]);
-        }
+        if (robotPositions[nextStep].s)
+          toast.success("Image Scanned!");
+
+        setCurrentRobotPosition(robotPositions[nextStep]);
 
         // Stop Animation at the last step
         if (nextStep === totalSteps - 1) {
@@ -142,16 +132,11 @@ export const AlgorithmCore = () => {
     ) {
       // User manually click through the steps
       // Handle Scan Animation
-      if (
-        robotPositions[currentStep].x === -1 &&
-        robotPositions[currentStep].y === -1
-      ) {
-        if (robotPositions[currentStep].theta === -1)
-          toast.success("Image Scanned!");
-        else toast("Scanning image...");
-      } else {
-        setCurrentRobotPosition(robotPositions[currentStep]);
-      }
+      if (robotPositions[currentStep].s)
+        toast.success("Image Scanned!");
+
+      setCurrentRobotPosition(robotPositions[currentStep]);
+
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep, totalSteps, startAnimation, isManualAnimation]);

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { Position, RobotDirection } from "../schemas/robot";
+import { Direction, Position, RobotPosition, RobotDirection } from "../schemas/robot";
 
 // Robot's Environment - Grid Format
 const WIDTH_CM = 200;
@@ -31,11 +31,11 @@ const ROBOT_HEIGHT_CM = 30;
 export const ROBOT_GRID_WIDTH = ROBOT_WIDTH_CM / GRID_BLOCK_SIZE_CM; // 3
 export const ROBOT_GRID_HEIGHT = ROBOT_HEIGHT_CM / GRID_BLOCK_SIZE_CM; // 3
 
-export const ROBOT_INITIAL_DIRECTION = Math.PI / 2;
-export const ROBOT_INITIAL_POSITION: Position = {
-  x: 0,
-  y: 0,
-  theta: ROBOT_INITIAL_DIRECTION,
+export const ROBOT_INITIAL_POSITION: RobotPosition = {
+  x: 1,
+  y: 1,
+  d: Direction.NORTH,
+  s: null
 };
 
 /** @deprecated  Robot Turning Movement */
@@ -44,73 +44,73 @@ export const ROBOT_GRID_TURNING_RADIUS =
   ROBOT_TURNING_RADIUS_CM / GRID_BLOCK_SIZE_CM; // 6
 
 /** @deprecated */
-interface turnOffsetInterface {
-  [RobotDirection.N]: {
-    [RobotDirection.N]: [number, number];
-    [RobotDirection.S]: [number, number];
-    [RobotDirection.E]: [number, number];
-    [RobotDirection.W]: [number, number];
-  };
-  [RobotDirection.S]: {
-    [RobotDirection.N]: [number, number];
-    [RobotDirection.S]: [number, number];
-    [RobotDirection.E]: [number, number];
-    [RobotDirection.W]: [number, number];
-  };
-  [RobotDirection.E]: {
-    [RobotDirection.N]: [number, number];
-    [RobotDirection.S]: [number, number];
-    [RobotDirection.E]: [number, number];
-    [RobotDirection.W]: [number, number];
-  };
-  [RobotDirection.W]: {
-    [RobotDirection.N]: [number, number];
-    [RobotDirection.S]: [number, number];
-    [RobotDirection.E]: [number, number];
-    [RobotDirection.W]: [number, number];
-  };
-}
+// interface turnOffsetInterface {
+//   [RobotDirection.N]: {
+//     [RobotDirection.N]: [number, number];
+//     [RobotDirection.S]: [number, number];
+//     [RobotDirection.E]: [number, number];
+//     [RobotDirection.W]: [number, number];
+//   };
+//   [RobotDirection.S]: {
+//     [RobotDirection.N]: [number, number];
+//     [RobotDirection.S]: [number, number];
+//     [RobotDirection.E]: [number, number];
+//     [RobotDirection.W]: [number, number];
+//   };
+//   [RobotDirection.E]: {
+//     [RobotDirection.N]: [number, number];
+//     [RobotDirection.S]: [number, number];
+//     [RobotDirection.E]: [number, number];
+//     [RobotDirection.W]: [number, number];
+//   };
+//   [RobotDirection.W]: {
+//     [RobotDirection.N]: [number, number];
+//     [RobotDirection.S]: [number, number];
+//     [RobotDirection.E]: [number, number];
+//     [RobotDirection.W]: [number, number];
+//   };
+// }
 
 /**
  * @deprecated Maps offsets between two robot direction configuration
  * @key [RobotDirection.FROM]: { [RobotDirection.TO]: [x, y] }
  * @returns [x, y] offsets
  * */
-export const clockwiseOffsets: turnOffsetInterface = {
-  [RobotDirection.N]: {
-    [RobotDirection.E]: [ROBOT_GRID_TURNING_RADIUS, ROBOT_GRID_TURNING_RADIUS],
-    [RobotDirection.S]: [0, -ROBOT_GRID_TURNING_RADIUS * 2],
-    [RobotDirection.W]: [
-      -ROBOT_GRID_TURNING_RADIUS,
-      -ROBOT_GRID_TURNING_RADIUS,
-    ],
-    [RobotDirection.N]: [0, 0],
-  },
-  [RobotDirection.E]: {
-    [RobotDirection.S]: [ROBOT_GRID_TURNING_RADIUS, -ROBOT_GRID_TURNING_RADIUS],
-    [RobotDirection.W]: [0, -ROBOT_GRID_TURNING_RADIUS * 2],
-    [RobotDirection.N]: [
-      -ROBOT_GRID_TURNING_RADIUS,
-      -ROBOT_GRID_TURNING_RADIUS,
-    ],
-    [RobotDirection.E]: [0, 0],
-  },
-  [RobotDirection.S]: {
-    [RobotDirection.W]: [
-      -ROBOT_GRID_TURNING_RADIUS,
-      -ROBOT_GRID_TURNING_RADIUS,
-    ],
-    [RobotDirection.N]: [-ROBOT_GRID_TURNING_RADIUS * 2, 0],
-    [RobotDirection.E]: [-ROBOT_GRID_TURNING_RADIUS, ROBOT_GRID_TURNING_RADIUS],
-    [RobotDirection.S]: [0, 0],
-  },
-  [RobotDirection.W]: {
-    [RobotDirection.N]: [-ROBOT_GRID_TURNING_RADIUS, ROBOT_GRID_TURNING_RADIUS],
-    [RobotDirection.E]: [0, ROBOT_GRID_TURNING_RADIUS * 2],
-    [RobotDirection.S]: [ROBOT_GRID_TURNING_RADIUS, ROBOT_GRID_TURNING_RADIUS],
-    [RobotDirection.W]: [0, 0],
-  },
-};
+// export const clockwiseOffsets: turnOffsetInterface = {
+//   [RobotDirection.N]: {
+//     [RobotDirection.E]: [ROBOT_GRID_TURNING_RADIUS, ROBOT_GRID_TURNING_RADIUS],
+//     [RobotDirection.S]: [0, -ROBOT_GRID_TURNING_RADIUS * 2],
+//     [RobotDirection.W]: [
+//       -ROBOT_GRID_TURNING_RADIUS,
+//       -ROBOT_GRID_TURNING_RADIUS,
+//     ],
+//     [RobotDirection.N]: [0, 0],
+//   },
+//   [RobotDirection.E]: {
+//     [RobotDirection.S]: [ROBOT_GRID_TURNING_RADIUS, -ROBOT_GRID_TURNING_RADIUS],
+//     [RobotDirection.W]: [0, -ROBOT_GRID_TURNING_RADIUS * 2],
+//     [RobotDirection.N]: [
+//       -ROBOT_GRID_TURNING_RADIUS,
+//       -ROBOT_GRID_TURNING_RADIUS,
+//     ],
+//     [RobotDirection.E]: [0, 0],
+//   },
+//   [RobotDirection.S]: {
+//     [RobotDirection.W]: [
+//       -ROBOT_GRID_TURNING_RADIUS,
+//       -ROBOT_GRID_TURNING_RADIUS,
+//     ],
+//     [RobotDirection.N]: [-ROBOT_GRID_TURNING_RADIUS * 2, 0],
+//     [RobotDirection.E]: [-ROBOT_GRID_TURNING_RADIUS, ROBOT_GRID_TURNING_RADIUS],
+//     [RobotDirection.S]: [0, 0],
+//   },
+//   [RobotDirection.W]: {
+//     [RobotDirection.N]: [-ROBOT_GRID_TURNING_RADIUS, ROBOT_GRID_TURNING_RADIUS],
+//     [RobotDirection.E]: [0, ROBOT_GRID_TURNING_RADIUS * 2],
+//     [RobotDirection.S]: [ROBOT_GRID_TURNING_RADIUS, ROBOT_GRID_TURNING_RADIUS],
+//     [RobotDirection.W]: [0, 0],
+//   },
+// };
 export const antiClockwiseOffsets = {
   [RobotDirection.N]: {
     [RobotDirection.W]: [

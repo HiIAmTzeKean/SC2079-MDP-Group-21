@@ -1,18 +1,13 @@
 import { Obstacle } from "./obstacle";
-import { Position, RobotAction } from "./robot";
+import { Position, RobotPosition, RobotAction } from "./robot";
 
-/** Positions that the Robot will take
- * @param x in 5cm increment
- * @param y in 5cm increment
- * @param theta in radian (positive) from 0 to 2 PI (in NSEW direction) where East = 0 radian
- */
 export interface AlgoOutput {
-  positions: {
-    x: number; // in cm (5cm increment)
-    y: number; // in cm (5cm increment)
-    theta: number; // in radian (positive from 0 to 2 PI; in NSEW direction)
-  }[];
-  runtime: string; // in seconds
+  data: {
+    commands: string[],
+    distance: number,
+    path: RobotPosition[],
+  },
+  error: string | null;
 }
 
 /** @deprecated Paths that the robot should take in the navigational area according to the algorithm used */

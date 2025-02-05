@@ -5,7 +5,7 @@ import {
   ROBOT_GRID_WIDTH,
 } from "../../../../constants";
 import { Obstacle, ObstacleDirection } from "../../../../schemas/obstacle";
-import { Position, RobotDirection } from "../../../../schemas/robot";
+import { Direction, Position, RobotPosition, RobotDirection } from "../../../../schemas/robot";
 import { convertThetaToDirection } from "./conversions";
 
 /**
@@ -14,7 +14,7 @@ import { convertThetaToDirection } from "./conversions";
  * @returns React.ReactNode[][] - `<td />[][]`
  * */
 export const createHTMLGrid = (
-  robotPosition: Position,
+  robotPosition: RobotPosition,
   obstacles: Obstacle[],
   canAddObstacle: boolean,
   handleAddObstacle: (x: number, y: number, d: number) => void,
@@ -34,10 +34,10 @@ export const createHTMLGrid = (
             y,
             x ===
               robotPosition.x +
-              convertRobotThetaToCameraOffsetBlock(robotPosition.theta)[0] &&
+              convertRobotThetaToCameraOffsetBlock(robotPosition.d)[0] &&
               y ===
               robotPosition.y +
-              convertRobotThetaToCameraOffsetBlock(robotPosition.theta)[1]
+              convertRobotThetaToCameraOffsetBlock(robotPosition.d)[1]
               ? "camera"
               : "body"
           )
@@ -215,23 +215,22 @@ export const _convertRobotThetaToCameraOffsetBlock = (theta: number) => {
  * Converts a Robot's Theta rotation to the associated Camera Offset on the grid
  * @returns (x, y) offset of the robot's camera from the bottom left corner of the robot
  */
-export const convertRobotThetaToCameraOffsetBlock = (theta: number) => {
-  const robotDirection = convertThetaToDirection(theta);
+export const convertRobotThetaToCameraOffsetBlock = (direction: Direction) => {
   // East
-  if (robotDirection === RobotDirection.E) {
-    return [2, -1];
+  if (direction === Direction.EAST) {
+    return [1, 0];
   }
   // North
-  else if (robotDirection === RobotDirection.N) {
-    return [1, 2];
+  else if (direction === Direction.NORTH) {
+    return [0, 1];
   }
   // West
-  else if (robotDirection === RobotDirection.W) {
-    return [-2, 1];
+  else if (direction === Direction.WEST) {
+    return [-1, 0];
   }
   // South
-  else if (robotDirection === RobotDirection.S) {
-    return [-1, -2];
+  else if (direction === Direction.SOUTH) {
+    return [0, -1];
   }
   return [0, 0];
 };
@@ -241,60 +240,14 @@ export const convertRobotThetaToCameraOffsetBlock = (theta: number) => {
  * @location
  */
 export const isRobotCell = (
-  robotPosition: Position,
+  robotPosition: RobotPosition,
   cell_x: number,
   cell_y: number
 ) => {
-  const robotDirection: RobotDirection = convertThetaToDirection(
-    robotPosition.theta
-  );
-
-  switch (robotDirection) {
-    case RobotDirection.N:
-      if (
-        robotPosition.x <= cell_x &&
-        cell_x <= robotPosition.x + (ROBOT_GRID_WIDTH - 1) &&
-        robotPosition.y <= cell_y &&
-        cell_y <= robotPosition.y + (ROBOT_GRID_HEIGHT - 1)
-      ) {
-        return true;
-      } else {
-        return false;
-      }
-    case RobotDirection.S:
-      if (
-        robotPosition.x - (ROBOT_GRID_WIDTH - 1) <= cell_x &&
-        cell_x <= robotPosition.x &&
-        robotPosition.y - (ROBOT_GRID_HEIGHT - 1) <= cell_y &&
-        cell_y <= robotPosition.y
-      ) {
-        return true;
-      } else {
-        return false;
-      }
-    case RobotDirection.E:
-      if (
-        robotPosition.x <= cell_x &&
-        cell_x <= robotPosition.x + (ROBOT_GRID_WIDTH - 1) &&
-        robotPosition.y - (ROBOT_GRID_HEIGHT - 1) <= cell_y &&
-        cell_y <= robotPosition.y
-      ) {
-        return true;
-      } else {
-        return false;
-      }
-    case RobotDirection.W:
-      if (
-        robotPosition.x - (ROBOT_GRID_WIDTH - 1) <= cell_x &&
-        cell_x <= robotPosition.x &&
-        robotPosition.y <= cell_y &&
-        cell_y <= robotPosition.y + (ROBOT_GRID_HEIGHT - 1)
-      ) {
-        return true;
-      } else {
-        return false;
-      }
-    default:
-      return false;
-  }
+  return (
+    robotPosition.x - (ROBOT_GRID_WIDTH - 1) / 2 <= cell_x &&
+    cell_x <= robotPosition.x + (ROBOT_GRID_WIDTH - 1) / 2 &&
+    robotPosition.y - (ROBOT_GRID_HEIGHT - 1) / 2 <= cell_y &&
+    cell_y <= robotPosition.y + (ROBOT_GRID_HEIGHT - 1) / 2
+  )
 };
