@@ -1,12 +1,5 @@
 # Algorithm Simulator (Web)
 
-**Table of Contents**
-
-- [Algorithm Simulator (Web)](#algorithm-simulator-web)
-  - [Setup Instructions](#setup-instructions)
-
-<img src="/public/simulator.png" />
-
 ## Setup Instructions
 
 \*Please ensure that you have `yarn` installed.

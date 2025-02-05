@@ -19,7 +19,7 @@ export const ModalContainer = (props: ModalContainerProps) => {
       />
 
       {/* Modal */}
-      <div className="relative flex flex-col items-center bg-orange-200 w-full max-w-[350px] p-[24px] rounded-[8px] shadow-card overflow-auto z-50">
+      <div className="relative flex flex-col items-center bg-gray-200 w-full max-w-[350px] p-[24px] rounded-[8px] shadow-card overflow-auto z-50">
         {/* Close Icon */}
         <FaTimes
           className="absolute right-4 top-4 size-5 text-brand-text cursor-pointer"
@@ -27,7 +27,7 @@ export const ModalContainer = (props: ModalContainerProps) => {
         />
 
         {/* Title */}
-        <div className="w-full text-center font-rationale font-bold underline text-[24px] mb-4">
+        <div className="w-full text-center font-bold underline text-[24px] mb-4">
           {title}
         </div>
 

@@ -12,7 +12,7 @@ export const Layout = (props: LayoutProps) => {
   return (
     <>
       <Toaster />
-      <div className="p-4 min-h-[100vh] bg-gradient-to-b from-orange-100 to-orange-200 text-orange-900 flex flex-col">
+      <div className="p-4 min-h-[100vh] bg-gray-200 text-gray-900 flex flex-col">
         {/* Header */}
         <PageHeader />
 

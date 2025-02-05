@@ -237,7 +237,7 @@ export const AlgorithmCore = () => {
             }}
             onPointerUp={() => setIsManualAnimation(false)}
             step={1}
-            className="w-1/2 h-2 bg-orange-900 rounded-lg appearance-none cursor-pointer"
+            className="w-1/2 h-2 bg-gray-900 rounded-lg appearance-none cursor-pointer"
             disabled={startAnimation === true}
           />
         </div>

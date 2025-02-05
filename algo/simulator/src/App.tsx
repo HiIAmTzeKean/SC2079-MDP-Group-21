@@ -4,7 +4,7 @@ import { AlgorithmCore } from "./components/core/algorithm";
 function App() {
 
   return (
-    <div id="app-container" className="font-poppins">
+    <div id="app-container">
       <Layout>
         <AlgorithmCore />
       </Layout>

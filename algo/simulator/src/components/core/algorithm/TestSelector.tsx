@@ -134,7 +134,7 @@ export const TestSelector = (props: TestSelectorProps) => {
                     setCustomObstacle_X(Number(e.target.value));
                   }}
                   step={1}
-                  className="w-full h-2 bg-orange-900 rounded-lg appearance-none cursor-pointer"
+                  className="w-full h-2 bg-gray-900 rounded-lg appearance-none cursor-pointer"
                 />
                 <span className="font-bold">{customObstacle_X}</span>
               </div>
@@ -154,7 +154,7 @@ export const TestSelector = (props: TestSelectorProps) => {
                     setCustomObstacle_Y(Number(e.target.value));
                   }}
                   step={1}
-                  className="w-full h-2 bg-orange-900 rounded-lg appearance-none cursor-pointer"
+                  className="w-full h-2 bg-gray-900 rounded-lg appearance-none cursor-pointer"
                 />
                 <span className="font-bold">{customObstacle_Y}</span>
               </div>
@@ -164,7 +164,7 @@ export const TestSelector = (props: TestSelectorProps) => {
                 <label className="font-bold">Direction: </label>
                 <Button
                   className={`${customObstacle_Direction === Direction.NORTH &&
-                    "!text-orange-300"
+                    "!text-gray-300"
                     }`}
                   onClick={() =>
                     setCustomObstacle_Direction(Direction.NORTH)
@@ -174,7 +174,7 @@ export const TestSelector = (props: TestSelectorProps) => {
                 </Button>
                 <Button
                   className={`${customObstacle_Direction === Direction.SOUTH &&
-                    "!text-orange-300"
+                    "!text-gray-300"
                     }`}
                   onClick={() =>
                     setCustomObstacle_Direction(Direction.SOUTH)
@@ -184,7 +184,7 @@ export const TestSelector = (props: TestSelectorProps) => {
                 </Button>
                 <Button
                   className={`${customObstacle_Direction === Direction.EAST &&
-                    "!text-orange-300"
+                    "!text-gray-300"
                     }`}
                   onClick={() =>
                     setCustomObstacle_Direction(Direction.EAST)
@@ -194,7 +194,7 @@ export const TestSelector = (props: TestSelectorProps) => {
                 </Button>
                 <Button
                   className={`${customObstacle_Direction === Direction.WEST &&
-                    "!text-orange-300"
+                    "!text-gray-300"
                     }`}
                   onClick={() =>
                     setCustomObstacle_Direction(Direction.WEST)
