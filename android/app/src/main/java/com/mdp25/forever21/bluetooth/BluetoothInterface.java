@@ -7,7 +7,10 @@ import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.Set;
@@ -27,14 +30,18 @@ public class BluetoothInterface {
     private static final UUID BT_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); // standard SerialPortServiceClass UUID?
 
     private final Context context; //read-only, used by child threads
-    private final BluetoothAdapter bluetoothAdapter; // ignore synchronization
+    private final BluetoothAdapter bluetoothAdapter; // adapter is already synchronized
 
+    // note that AcceptThread and ConnectThread are not mutually exclusive,
+    // but they share a lock for simplicity.
+    // Both threads should be done when a BluetoothConnection is made.
     private AcceptThread acceptThread = null; // thread that accepts and incoming bt connection
     private ConnectThread connectThread = null; // thread that scans for devices to connect to
     private BluetoothConnection btConnection = null; // resulting bluetooth connection handler
 
-    private Lock threadLock; // to lock acceptThread and connectThread read/write
-    private Lock connectionLock; // to lock btConnection
+    private final Lock threadLock; // to lock acceptThread and connectThread read/write
+    private final Lock connectionLock; // to lock btConnection
+
     public BluetoothInterface(Context context) {
         BluetoothManager btMgr = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
         this.bluetoothAdapter = btMgr.getAdapter();
@@ -47,6 +54,8 @@ public class BluetoothInterface {
     // this method runs when a connection is made
     void onConnected(BluetoothSocket socket, BluetoothDevice device) {
         threadLock.lock();
+        // close un-needed server sockets and resources
+        // but importantly do not close BluetoothSocket!
         try {
             if (acceptThread != null) {
                 acceptThread.cancel();
@@ -84,18 +93,16 @@ public class BluetoothInterface {
 
     /**
      * I.e. starts the {@link AcceptThread} (and stops the {@link ConnectThread})
+     * <p> Make sure the device is discoverable in the first place for unpaired connection.
      */
     public void acceptIncomingConnection() {
         threadLock.lock();
         try {
-            if (connectThread != null) {
-                connectThread.cancel();
-                connectThread = null;
+            if (acceptThread != null) {
+                acceptThread.cancel();
             }
-            if (acceptThread == null) {
-                acceptThread = new AcceptThread();
-                acceptThread.start();
-            }
+            acceptThread = new AcceptThread();
+            acceptThread.start();
         } finally {
             threadLock.unlock();
         }
@@ -107,14 +114,11 @@ public class BluetoothInterface {
     public void connectAsClient(BluetoothDevice btDevice) {
         threadLock.lock();
         try {
-            if (acceptThread != null) {
-                acceptThread.cancel();
-                acceptThread = null;
+            if (connectThread != null) {
+                connectThread.cancel();
             }
-            if (connectThread == null) {
-                connectThread = new ConnectThread(btDevice);
-                connectThread.start();
-            }
+            connectThread = new ConnectThread(btDevice);
+            connectThread.start();
         } finally {
             threadLock.unlock();
         }
@@ -122,15 +126,15 @@ public class BluetoothInterface {
 
     /**
      * Scans for bluetooth devices
-     * TODO decide how to return
      */
     @SuppressLint("MissingPermission")
     public void scanForDevices() {
         if (bluetoothAdapter.isDiscovering()) {
             bluetoothAdapter.cancelDiscovery();
-            bluetoothAdapter.startDiscovery();
-            Log.d(TAG, "Starting Bluetooth discovery");
         }
+        boolean res = bluetoothAdapter.startDiscovery();
+        Log.d(TAG, "Starting Bluetooth discovery: " + res);
+        Toast.makeText(context, "Scanning for devices...", Toast.LENGTH_SHORT).show();
     }
 
     @SuppressLint("MissingPermission")
@@ -221,6 +225,10 @@ public class BluetoothInterface {
             } catch (IOException connectException) {
                 // unable to connect
                 try {
+                    Log.e(TAG, "Unable to connect");
+                    new Handler(Looper.getMainLooper()).post(() ->
+                            Toast.makeText(context, "Connection failed", Toast.LENGTH_SHORT).show()
+                    );
                     socket.close();
                 } catch (IOException closeException) {
                     Log.e(TAG, "Could not close the client socket", closeException);
@@ -232,12 +240,13 @@ public class BluetoothInterface {
         }
 
         public void cancel() {
-            try {
-                socket.close();
-                Log.d(TAG, "ConnectThread: Socket closed.");
-            } catch (IOException e) {
-                Log.e(TAG, "Could not close the ConnectThread socket", e);
-            }
+            // let other thread close the socket!
+//            try {
+//                //socket.close();
+//                //Log.d(TAG, "ConnectThread: Socket closed.");
+//            } catch (IOException e) {
+//                Log.e(TAG, "Could not close the ConnectThread socket", e);
+//            }
             this.interrupt();
         }
     }

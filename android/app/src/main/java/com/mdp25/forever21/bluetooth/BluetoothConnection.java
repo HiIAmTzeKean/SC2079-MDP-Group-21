@@ -1,5 +1,6 @@
 package com.mdp25.forever21.bluetooth;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
@@ -7,6 +8,7 @@ import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,6 +54,8 @@ public class BluetoothConnection {
 
         private final Handler handler; // to post to main thread
 
+
+        @SuppressLint("MissingPermission")
         public MessageThread(BluetoothSocket socket, BluetoothDevice device) {
             handler = new Handler(Looper.getMainLooper());
 
@@ -69,14 +73,26 @@ public class BluetoothConnection {
             this.outStream = tmpOut;
 
             this.readBuffer = new byte[READ_BUF_SIZE];
+
+            handler.post(() -> {
+                Toast.makeText(appContext, "Connected to " + device.getName(), Toast.LENGTH_SHORT).show();
+                // broadcast this TODO
+            });
         }
 
+        @SuppressLint("MissingPermission")
         public void run() {
             Log.d(TAG, "MessageThread: Running.");
             boolean shldQuit = false;
             while (socket != null && !shldQuit) {
                 shldQuit = read();
             }
+            handler.post(() -> {
+                Toast.makeText(appContext, "Disconnected from " + device.getName(), Toast.LENGTH_SHORT).show();
+                // broadcast this...
+                // either accept incoming for reconnection
+                // or send connection to prev device
+            });
             cancel();
         }
 
