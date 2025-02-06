@@ -36,8 +36,9 @@ export const AlgorithmCore = () => {
   const totalSteps = robotPositions?.length ?? 0;
   const [robotCommands, setRobotCommands] = useState<string[]>();
 
-  // Algorithm Runtime
-  const [algoRuntime, setAlgoRuntime] = useState<string>("");
+  // Algorithm Runtime & Cost
+  const [algoRuntime, setAlgoRuntime] = useState<number | null>();
+  const [algoCost, setAlgoCost] = useState<number | null>();
 
   // Select Tests
   const [selectedTestEnum, setSelectedTestEnum] = useState<AlgoTestEnum>(
@@ -64,12 +65,14 @@ export const AlgorithmCore = () => {
 
   // Run Algorithm
   const [isAlgorithmLoading, setIsAlgorithmLoading] = useState(false);
+  const [numberOfAlgoRuns, setNumberOfAlgoRuns] = useState<number>(1);
 
   // Run Algorithm
   const handleRunAlgorithm = async () => {
     if (startAnimation === true || isAlgorithmLoading === true) return;
     setIsAlgorithmLoading(true);
-    setAlgoRuntime("");
+    setAlgoRuntime(null);
+    setAlgoCost(null);
 
     const algoInput: AlgoInput = {
       obstacles: selectedTest.obstacles.map((o) => {
@@ -84,7 +87,8 @@ export const AlgorithmCore = () => {
       big_turn: isBigTurn ? 1 : 0,
       robot_dir: ROBOT_INITIAL_POSITION.d,
       robot_x: ROBOT_INITIAL_POSITION.x,
-      robot_y: ROBOT_INITIAL_POSITION.y
+      robot_y: ROBOT_INITIAL_POSITION.y,
+      num_runs: numberOfAlgoRuns
     };
     try {
       const algoOutput: AlgoOutput = await fetch.post(
@@ -95,7 +99,8 @@ export const AlgorithmCore = () => {
       setRobotCommands(algoOutput.data.commands);
       setCurrentStep(0);
 
-      setAlgoRuntime("TODO"); // TODO
+      setAlgoRuntime(algoOutput.data.runtime);
+      setAlgoCost(algoOutput.data.distance);
       toast.success("Algorithm ran successfully.");
     } catch (e) {
       toast.error("Failed to run algorithm. Server Error: " + e);
@@ -156,7 +161,6 @@ export const AlgorithmCore = () => {
         setSelectedTestEnum={setSelectedTestEnum}
         selectedTest={selectedTest}
         setSelectedTest={setSelectedTest}
-        setAlgoRuntime={setAlgoRuntime}
       />
 
       {/* Algo input parameters Big Turn & Retrying*/}
@@ -187,8 +191,8 @@ export const AlgorithmCore = () => {
         </div>
       </div>
 
-      {/* Run Algo */}
-      <div className="mb-4 flex justify-center">
+      {/* Run Algo N times*/}
+      <div className="mb-4 flex justify-center items-center gap-8">
         <Button onClick={handleRunAlgorithm}>
           <span>Run Algorithm</span>
           {isAlgorithmLoading ? (
@@ -197,15 +201,35 @@ export const AlgorithmCore = () => {
             <FaSitemap className="text-[18px]" />
           )}
         </Button>
+        <div className="flex justify-center items-center gap-2">
+          <input
+            className="w-20"
+            type="number"
+            min={1}
+            onChange={(e) => {
+              setNumberOfAlgoRuns(Math.round(Number(e.target.value)));
+            }}
+            value={numberOfAlgoRuns}
+          />
+          <label>times</label>
+        </div>
       </div>
 
       {/* Algo Runtime */}
-      {algoRuntime && (
-        <div className="mb-4 flex justify-center">
-          Algorithm Runtime:&nbsp;
-          <span className="font-bold">{algoRuntime}</span>&nbsp;
+      {robotPositions && algoRuntime && algoCost &&
+        <div className="flex flex-col justify-center items-center">
+          <div className="">
+            Average Runtime:&nbsp;
+            <span className="font-bold">{algoRuntime}</span>&nbsp;
+            s
+          </div>
+          <div className="">
+            Average Cost:&nbsp;
+            <span className="font-bold">{algoCost}</span>&nbsp;
+            units
+          </div>
         </div>
-      )}
+      }
 
       {/* Animation */}
       {robotPositions && (
