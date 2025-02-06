@@ -3,22 +3,43 @@ from flask_restx import fields
 
 def get_models(api):
     obstacle = api.model('Obstacle', {
-        'x': fields.Integer,
-        'y': fields.Integer,
-        'd': fields.Integer,
-        'id': fields.Integer
+        'x': fields.Integer(min=0, max=20),
+        'y': fields.Integer(min=0, max=20),
+        'd': fields.Integer(min=0, max=8, multiple=2),
+        'id': fields.Integer(min=1)
+    })
+
+    position = api.model('Position', {
+        'x': fields.Integer(),
+        'y': fields.Integer(),
+        'd': fields.Integer(),
+        's': fields.String()
     })
 
     path_finding_request = api.model('PathFindingRequest', {
-        'obstacles': fields.List(fields.Nested(obstacle)),
-        'retrying': fields.Boolean,
-        'big_turn': fields.Integer,
-        'robot_dir': fields.Integer,
-        'robot_x': fields.Integer,
-        'robot_y': fields.Integer
+        'obstacles': fields.List(fields.Nested(obstacle), required=True),
+        'retrying': fields.Boolean(required=False),
+        'big_turn': fields.Integer(required=False, min=0, max=1),
+        'robot_dir': fields.Integer(required=False, min=0, max=8, multiple=2),
+        'robot_x': fields.Integer(required=False, min=0, max=20),
+        'robot_y': fields.Integer(required=False, min=0, max=20),
+        'num_runs': fields.Integer(required=False, min=1)
+    })
+
+    path_finding_data = api.model('PathFindingData', {
+        'commands': fields.List(fields.String()),
+        'distance': fields.Float(),
+        'path': fields.List(fields.Nested(position)),
+        'runtime': fields.Float()
+    })
+
+    path_finding_response = api.model('PathFindingResponse', {
+        'data': fields.Nested(path_finding_data),
+        'error': fields.String()
     })
 
     return {
         "Obstacle": obstacle,
-        "PathFindingRequest": path_finding_request
+        "PathFindingRequest": path_finding_request,
+        "PathFindingResponse": path_finding_response
     }
