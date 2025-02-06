@@ -42,10 +42,10 @@ export const AlgorithmCore = () => {
 
   // Select Tests
   const [selectedTestEnum, setSelectedTestEnum] = useState<AlgoTestEnum>(
-    AlgoTestEnum.Basic_Mock
+    AlgoTestEnum.Custom
   );
   const [selectedTest, setSelectedTest] = useState<AlgoTestDataInterface>(
-    AlgoTestEnumMapper[AlgoTestEnum.Basic_Mock]
+    AlgoTestEnumMapper[AlgoTestEnum.Custom]
   );
 
   // Select Tests
