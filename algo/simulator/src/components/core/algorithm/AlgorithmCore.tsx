@@ -53,11 +53,7 @@ export const AlgorithmCore = () => {
     const selectedTest = AlgoTestEnumMapper[selectedTestEnum];
     setSelectedTest(selectedTest);
 
-    setCurrentStep(0);
-    setCurrentRobotPosition(ROBOT_INITIAL_POSITION);
-    setRobotPositions(undefined);
-    setRobotCommands(undefined);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    resetNavigationGrid();
   }, [selectedTestEnum]);
 
   const [isBigTurn, setIsBigTurn] = useState<boolean>(true);
@@ -70,9 +66,8 @@ export const AlgorithmCore = () => {
   // Run Algorithm
   const handleRunAlgorithm = async () => {
     if (startAnimation === true || isAlgorithmLoading === true) return;
+    resetNavigationGrid();
     setIsAlgorithmLoading(true);
-    setAlgoRuntime(null);
-    setAlgoCost(null);
 
     const algoInput: AlgoInput = {
       obstacles: selectedTest.obstacles.map((o) => {
@@ -147,8 +142,17 @@ export const AlgorithmCore = () => {
       setCurrentRobotPosition(robotPositions[currentStep]);
 
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep, totalSteps, startAnimation, isManualAnimation]);
+
+  const resetNavigationGrid = () => {
+    setCurrentStep(0);
+    setCurrentRobotPosition(ROBOT_INITIAL_POSITION);
+    setRobotPositions(undefined);
+    setRobotCommands(undefined);
+
+    setAlgoRuntime(null);
+    setAlgoCost(null);
+  }
 
   return (
     <CoreContainter title="Algorithm Simulator">

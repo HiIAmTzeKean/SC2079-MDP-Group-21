@@ -192,7 +192,7 @@ export const NavigationGrid = (props: NavigationGridProps) => {
 
       {/* Draw the path taken so far by the robot */}
       {robotPath &&
-        robotPath.map((pos, index) => {
+        robotPath.map((_, index) => {
           if (index === 0) return null;
           const { x: x1, y: y1 } = getSVGCoords(robotPath[index - 1]);
           const { x: x2, y: y2 } = getSVGCoords(robotPath[index]);

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 import { Direction, Position } from "../schemas/entity";
 
 // Robot's Environment - Grid Format
