@@ -7,12 +7,14 @@ import {
   ROBOT_INITIAL_POSITION,
 } from "../../../constants";
 import {
+  FaCheckSquare,
   FaChevronLeft,
   FaChevronRight,
   FaPause,
   FaPlay,
   FaSitemap,
   FaSpinner,
+  FaSquare,
 } from "react-icons/fa";
 import {
   AlgoTestDataInterface,
@@ -57,6 +59,9 @@ export const AlgorithmCore = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTestEnum]);
 
+  const [isBigTurn, setIsBigTurn] = useState<boolean>(true);
+  const [isRetrying, setIsRetrying] = useState<boolean>(false);
+
   // Run Algorithm
   const [isAlgorithmLoading, setIsAlgorithmLoading] = useState(false);
 
@@ -75,8 +80,8 @@ export const AlgorithmCore = () => {
           d: o.d,
         };
       }),
-      retrying: false, // TODO: add setting
-      big_turn: 1, // TODO: add setting
+      retrying: isRetrying,
+      big_turn: isBigTurn ? 1 : 0,
       robot_dir: ROBOT_INITIAL_POSITION.d,
       robot_x: ROBOT_INITIAL_POSITION.x,
       robot_y: ROBOT_INITIAL_POSITION.y
@@ -153,6 +158,34 @@ export const AlgorithmCore = () => {
         setSelectedTest={setSelectedTest}
         setAlgoRuntime={setAlgoRuntime}
       />
+
+      {/* Algo input parameters Big Turn & Retrying*/}
+      <div className="flex gap-8 items-center justify-center mb-4">
+        <div
+          className="flex gap-2 items-center justify-center cursor-pointer"
+          onClick={() => {
+            setIsBigTurn(!isBigTurn)
+          }}
+        >
+          {isBigTurn
+            ? <FaCheckSquare />
+            : <FaSquare />
+          }
+          Big Turn
+        </div>
+        <div
+          className="flex gap-2 items-center justify-center cursor-pointer"
+          onClick={() => {
+            setIsRetrying(!isRetrying)
+          }}
+        >
+          {isRetrying
+            ? <FaCheckSquare />
+            : <FaSquare />
+          }
+          Retrying
+        </div>
+      </div>
 
       {/* Run Algo */}
       <div className="mb-4 flex justify-center">
