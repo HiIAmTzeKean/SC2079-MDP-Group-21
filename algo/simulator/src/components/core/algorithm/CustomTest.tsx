@@ -119,11 +119,15 @@ export const CustomTest = (props: CustomTestProps) => {
     return (
         <div>
             {/* Manage Custom Obstacles */}
-
-            <Button onClick={() => setIsManageObstaclesModalOpen(true)}>
-                <span>Manage Obstacles</span>
-                <FaBox />
-            </Button>
+            <div className="flex items-center justify-center gap-2">
+                <Button onClick={() => setIsManageObstaclesModalOpen(true)}>
+                    <span>Manage Obstacles</span>
+                    <FaBox />
+                </Button>
+                <span className="w-40 text-center">
+                    Click on grid cell to add obstacle or change direction
+                </span>
+            </div>
 
 
             {/* Manage Custom Obstacles Modal */}
