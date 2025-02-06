@@ -60,7 +60,7 @@ export const CustomTest = (props: CustomTestProps) => {
             obstacles: [
                 ...selectedTest.obstacles,
                 {
-                    id: selectedTest.obstacles.length,
+                    id: selectedTest.obstacles.length + 1,
                     x: customObstacle_X,
                     y: customObstacle_Y,
                     d: customObstacle_Direction,
