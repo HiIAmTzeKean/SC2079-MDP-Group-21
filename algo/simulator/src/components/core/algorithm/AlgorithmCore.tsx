@@ -119,7 +119,7 @@ export const AlgorithmCore = () => {
 
         // Handle Scan Animation
         if (robotPositions[nextStep].s)
-          toast.success("Image Scanned!");
+          toast.success(`Image Scanned! ${robotPositions[nextStep].s}`);
 
         setCurrentRobotPosition(robotPositions[nextStep]);
 
@@ -137,7 +137,7 @@ export const AlgorithmCore = () => {
       // User manually click through the steps
       // Handle Scan Animation
       if (robotPositions[currentStep].s)
-        toast.success("Image Scanned!");
+        toast.success(`Image Scanned! ${robotPositions[currentStep].s}`);
 
       setCurrentRobotPosition(robotPositions[currentStep]);
 

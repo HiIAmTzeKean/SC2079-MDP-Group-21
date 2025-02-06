@@ -8,7 +8,7 @@ export enum Direction {
 }
 
 export interface Position {
-  s: number | null; // screenshot_id
+  s: string | null; // screenshot: obstacleid_L/C/R
   x: number;
   y: number;
   d: Direction;

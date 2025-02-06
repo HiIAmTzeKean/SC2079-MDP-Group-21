@@ -1,6 +1,7 @@
 import { Position, Obstacle, Direction } from "../../../schemas/entity";
 import { GRID_TOTAL_HEIGHT, GRID_TOTAL_WIDTH, ROBOT_ACTUAL_GRID_HEIGHT, ROBOT_ACTUAL_GRID_WIDTH, ROBOT_GRID_HEIGHT, ROBOT_GRID_WIDTH } from "../../../constants";
 import { AlgoTestDataInterface } from "../../../tests/algorithm";
+import { useEffect, useState } from "react";
 
 interface NavigationGridProps {
   robotPosition: Position;
@@ -22,6 +23,24 @@ export const NavigationGrid = (props: NavigationGridProps) => {
   const robotHeight = ROBOT_ACTUAL_GRID_HEIGHT * cellSize;
   const robotCenterX = robotFootprintX + (cellSize * ROBOT_GRID_WIDTH - robotWidth) / 2;
   const robotCenterY = robotFootprintY + (cellSize * ROBOT_GRID_HEIGHT - robotHeight) / 2;
+
+  // to mark obstacles as scanned
+  const [scannedObstacles, setScannedObstacles] = useState<Obstacle[]>([]);
+
+  useEffect(() => {
+    const scannedObstaclesAtStep: Obstacle[] = [];
+    robotPath?.map(position => {
+      if (position?.s !== null) {
+        const obstacleId = Number(position.s.split("_")[0]);
+        const obstacle = obstacles.find(o => o.id === obstacleId);
+        if (obstacle) {
+          scannedObstaclesAtStep.push(obstacle);
+        }
+      }
+    })
+    setScannedObstacles(scannedObstaclesAtStep);
+  }, [robotPath])
+
 
   const getDirectionRotationAngle = (direction: Direction) => {
     switch (direction) {
@@ -143,7 +162,7 @@ export const NavigationGrid = (props: NavigationGridProps) => {
           y={y}
           width={cellSize}
           height={cellSize}
-          fill="yellow"
+          fill={scannedObstacles.includes(obstacle) ? "lime" : "yellow"}
           stroke={angle !== null ? "red" : undefined}
           stroke-width="5"
           stroke-dasharray={
@@ -178,7 +197,10 @@ export const NavigationGrid = (props: NavigationGridProps) => {
         height={robotHeight}
         fill="black"
         fillOpacity={0.8}
-        stroke={robotAngle !== null ? "red" : undefined}
+        stroke={robotAngle !== null
+          ? (robotPosition.s === null ? "red" : "lime")
+          : undefined
+        }
         stroke-width="5"
         stroke-dasharray={robotAngle !== null ?
           `${robotWidth}, ${GRID_TOTAL_WIDTH * cellSize}` : undefined
