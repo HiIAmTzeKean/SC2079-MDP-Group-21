@@ -284,17 +284,24 @@ class Grid:
         """
         This function return a list of desired states for the robot to achieve based on the obstacle position and direction.
         The state is the position that the robot can see the image of the obstacle and is safe to reach without collision
+
+        Sorting obstacles by (x, y, obstacle_id) ensures that the same obstacle order is always used, 
+        preventing inconsistencies in path planning when obstacles are added in different orders.
+
         :return: [[CellState]]
         """
 
         optimal_positions = []
-        for obstacle in self.obstacles:
+        # Always process obstacles in a fixed order by sorting them before computing viewpoints.
+        sorted_obstacles = sorted(self.obstacles, key=lambda o: (o.x, o.y, o.obstacle_id))
+        for obstacle in sorted_obstacles:
             # skip objects that have SKIP as their direction
             if obstacle.direction == Direction.SKIP:
                 continue
-            else:
-                view_states = [view_state for view_state in obstacle.get_view_state(retrying) if
-                               self.reachable(view_state.x, view_state.y)]
+            view_states = [
+            view_state for view_state in obstacle.get_view_state(retrying) 
+            if self.reachable(view_state.x, view_state.y)
+        ]
             optimal_positions.append(view_states)
         return optimal_positions
 

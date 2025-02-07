@@ -1,8 +1,8 @@
 import heapq
 import math
 import numpy as np
-from functools import lru_cache
 from python_tsp.heuristics import solve_tsp_local_search
+from python_tsp.exact import solve_tsp_dynamic_programming
 from algo.entities.entity import CellState, Obstacle, Grid
 from algo.entities.robot import Robot
 from algo.tools.consts import (
@@ -85,6 +85,8 @@ class MazeSolver:
         optimal_path = []
 
         # get all grid positions that can view the obstacle images
+        #Sorting obstacles before retrieving view positions ensures consistency across different obstacle orders
+        self.grid.obstacles.sort(key=lambda obs: (obs.x, obs.y, obs.obstacle_id))
         views = self.grid.get_view_obstacle_positions(retrying)
         num_views = len(views)
 
@@ -149,7 +151,11 @@ class MazeSolver:
                 cost_matrix[:, 0] = 0
 
                 # find Hamiltonian path with least cost for the selected combination of view states
-                permutation, distance = solve_tsp_local_search(cost_matrix)
+                # TODO: experiment with different solvers
+                permutation, distance = solve_tsp_local_search(
+                    cost_matrix)
+                # permutation, distance = solve_tsp_dynamic_programming(
+                #     cost_matrix)
 
                 # if the distance is more than the minimum distance, the path is irrelevant
                 if distance + cost >= min_dist:
@@ -204,7 +210,6 @@ class MazeSolver:
             for j in range(i + 1, len(states)):
                 self._astar_search(states[i], states[j])
 
-    @lru_cache(maxsize=None)
     def _astar_search(self, start: CellState, end: CellState) -> None:
         """
         A* search algorithm to find the shortest path between two states
@@ -226,10 +231,8 @@ class MazeSolver:
 
         # initialize min heap with the start state
         # the heap is a list of tuples (h, x, y, direction) where h is the estimated distance from the current state to the end state
-        heap = [(self._estimate_distance(start, end), start.x, start.y, start.direction.value)]
-
-
-       
+        heap = [(self._estimate_distance(start, end),
+                 start.x, start.y, start.direction)]
 
         while heap:
             # get the node with the minimum estimated distance
@@ -351,7 +354,6 @@ class MazeSolver:
         """
         if (x, y, direction) in self.neighbor_cache:
             return self.neighbor_cache[(x, y, direction)]
-        
         neighbors = []
 
         # Assume that after following this direction, the car direction is EXACTLY md
@@ -728,11 +730,7 @@ class MazeSolver:
             return math.sqrt(horizontal_distance ** 2 + vertical_distance ** 2)
 
         # Manhattan distance
-        D = 1
-        D2 = math.sqrt(2)
-        dx, dy = abs(start.x - end.x), abs(start.y - end.y)
-        return D * (dx + dy) + (D2 - 2 * D) * min(dx, dy)
-
+        return abs(horizontal_distance) + abs(vertical_distance)
 
     @staticmethod
     def _get_visit_options(n):
@@ -767,8 +765,7 @@ class MazeSolver:
             return result
 
         # update the number of iterations
-        num_iters = min(num_iters, len(view_positions))  # Limit recursion depth
-
+        num_iters -= 1
 
         # iterate over the view positions and generate the combinations for the next view position
         for i in range(len(view_positions[index])):
