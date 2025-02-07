@@ -256,36 +256,32 @@ class TaskOne(RaspberryPi):
                 self.rpi_action_queue.put(PiAction(**message))
                 logger.debug(f"PiAction obstacles appended to queue: {message}")
 
-            elif message["cat"] == "manual":
+            elif message["cat"] == Category.MANUAL.value:
                 command = manual_commands.get(message["value"])
-                if command:
-                    self.stm_link.send_cmd(*command)
-                else:
+                if not command:
                     logger.error("Invalid manual command!")
-                continue
-
+                self.stm_link.send_cmd(*command)
+                
             ## Command: Start Moving ##
+            # TODO check with android team if they want to use control
             elif message["cat"] == "control":
                 if message["value"] == "start":
                     # Check API
+                    # TODO handle the error
                     if not self.check_api():
-                        logger.error("In recv_android: API is down! Start command aborted.")
+                        logger.error("API is down! Start command aborted.")
                         self.android_queue.put(AndroidMessage("error", "API is down, start command aborted."))
 
                     # Commencing path following
                     if not self.command_queue.empty():
-                        logger.info("Gryo reset!")
-                        # self.stm_link.send("RS00")
-                        # Main trigger to start movement #
                         self.unpause.set()
-                        logger.info("In recv_android: Start command received, starting robot on path!")
+                        
+                        logger.info("Start command received, starting robot on path!")
                         self.android_queue.put(AndroidMessage("info", "Starting robot on path!"))
                         self.android_queue.put(AndroidMessage("status", "running"))
                     else:
-                        logger.warning("In recv_android: The command queue is empty, please set obstacles.")
-                        self.android_queue.put(
-                            AndroidMessage("error", "Command queue is empty, did you set obstacles?")
-                        )
+                        logger.warning("The command queue is empty, please set obstacles.")
+                        self.android_queue.put(AndroidMessage("error", "Command queue empty (no obstacles)"))
 
     # TODO fix this section
     def recognize_image(self, obstacle_id_with_signal: str) -> None:
