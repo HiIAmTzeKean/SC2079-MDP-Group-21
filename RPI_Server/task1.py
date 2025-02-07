@@ -1,8 +1,8 @@
 import json
 import logging
 import queue
-from multiprocessing import Process
 import time
+from multiprocessing import Process
 from typing import Optional
 
 import requests
