@@ -14,7 +14,7 @@ class AndroidMessage:
     """
     Android message sent over Bluetooth connection.
     """
-
+    # TODO TypeError: unsupported operand type(s) for |: 'type' and '_GenericAlias'
     def __init__(self, cat: str, value: str | dict[str,int]) -> None:
         self._cat = cat
         self._value = value
@@ -45,6 +45,24 @@ class AndroidMessage:
         """
         return json.dumps({"cat": self._cat, "value": self._value})
 
+    def __str__(self) -> str:
+        """_summary_
+
+        self.android_queue.put(AndroidMessage("info", "You are reconnected!"))
+        "info, you are reconnected!"
+        
+        
+        self.android_queue.put(
+            AndroidMessage(
+                "location",
+                {
+                    "x": cur_location["x"],
+                    "y": cur_location["y"],
+                    "d": cur_location["d"],
+                },
+            )
+        )
+        """
 
 class AndroidDummy(Link):
     """
@@ -174,8 +192,11 @@ class AndroidLink(Link):
 
     #### Image Recognition
     
+    The obstacle set by NTU
+    The target id is what we identify
+    
     ```json
-    {"cat": "image-rec", "value": {"image_id": "A", "obstacle_id":  "1"}}
+    {"cat": "image-rec", "value": {"obstacle_id": "A", "target_id":  "1"}}
     ```
 
     #### Location Updates
@@ -256,6 +277,7 @@ class AndroidLink(Link):
     def send(self, message: AndroidMessage) -> None:
         """Send message to Android"""
         try:
+            # TODO change to string format
             self.client_sock.send(f"{message.jsonify}\n".encode("utf-8"))
             logger.debug(f"Sent to Android: {message.jsonify}")
         except OSError as e:
