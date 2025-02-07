@@ -1,5 +1,6 @@
 from communication.stm32 import STMLink
 
+
 stm_link = STMLink()
 stm_link.connect()
 stm_link.send_cmd("t",50,0,10)
