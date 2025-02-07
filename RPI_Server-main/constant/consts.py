@@ -39,6 +39,7 @@ class Category(Enum):
     INFO = 'info'
     MODE = 'mode' # the current mode of the robot (`manual` or `path`)
     PATH = 'path'
+    MANUAL = 'manual'
     SNAP = 'snap'
     LOCATION = 'location' # the current location of the robot (in Path mode)
     FAILED = 'failed'
