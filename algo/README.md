@@ -2,8 +2,6 @@
 
 ## Setup 
 
----
-
 1. Clone the repository
 2. Open the terminal and navigate to `/algo` directory
 3. Create a python virtual environment
@@ -27,11 +25,14 @@
     pip install -r requirements.txt
     ```
 
+## Running Web Simulation
+
+1. Refer to `README.md` in `/simulator` directory
 
 
-## Running Simulation
 
----
+## Running MatPlotLib Simulation (DEPRECATED)
+### Note: DEPRECATED in favor of interactive web simulator
 
 1. Navigate to `/algo` directory
 2. Activate the virtual environment for the directory

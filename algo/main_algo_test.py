@@ -21,24 +21,24 @@ obstacles = [
 ]
 
 
-# -------------------- TESTING SIMULATOR --------------------
-sim = MazeSolverSimulation(
-    grid_size_x=20,
-    grid_size_y=20,
-    robot_x=1,
-    robot_y=1,
-    robot_direction=Direction.NORTH,
-    big_turn=1
-)
+# -------------------- TESTING MATPLOTLIB SIMULATOR --------------------
+# sim = MazeSolverSimulation(
+#     grid_size_x=20,
+#     grid_size_y=20,
+#     robot_x=1,
+#     robot_y=1,
+#     robot_direction=Direction.NORTH,
+#     big_turn=1
+# )
 
-sim.enable_debug(0)
+# sim.enable_debug(0)
 
-# sim.load_obstacles(0)  # load obstacles from file option 0 for last
-# sim.generate_random_obstacles(2)
-for ob in obstacles:
-    sim.maze_solver.add_obstacle(ob["x"], ob["y"], ob["d"], ob["id"])
+# # sim.load_obstacles(0)  # load obstacles from file option 0 for last
+# # sim.generate_random_obstacles(2)
+# for ob in obstacles:
+#     sim.maze_solver.add_obstacle(ob["x"], ob["y"], ob["d"], ob["id"])
 
-sim.plot_optimal_path_animation(testing=True)
+# sim.plot_optimal_path_animation(testing=True)
 
 
 # -------------------- TESTING ACTUAL ALGO --------------------
