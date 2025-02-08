@@ -62,14 +62,12 @@ class AndroidMessage:
                 },
             )
         )
-        -> "location, x, y, d"
+        -> "location:x,y,d"
         """
         if isinstance(self._value, dict):
             # return values in the dictionary as string
-            return f"{self._cat},{','.join([str(v) for v in self._value.values()])}"
-        # TODO fix all messages sent that contain comma to semi colon
-        processed_string = self._value.replace(",",";")
-        return f"{self._cat},{processed_string}"
+            return f"{self._cat};{','.join([str(v) for v in self._value.values()])}"
+        return f"{self._cat};{self._value}"
 
 
 class AndroidDummy(Link):
