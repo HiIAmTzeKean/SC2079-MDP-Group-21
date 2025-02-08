@@ -1,5 +1,8 @@
 import { Direction, Position } from "../schemas/entity";
 
+export const API_IP = "192.168.10.224"; // TODO: replace with your PC's local IP
+export const PORT = "5000";
+
 // Robot's Environment - Grid Format
 const WIDTH_CM = 200;
 const HEIGHT_CM = 200;

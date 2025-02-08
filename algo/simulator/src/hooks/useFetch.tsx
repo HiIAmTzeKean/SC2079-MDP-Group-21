@@ -1,4 +1,6 @@
-const serverDomainUrl = "http://192.168.10.224:5000";
+import { API_IP, PORT } from "../constants";
+
+const serverDomainUrl = `http://${API_IP}:${PORT}`;
 
 // Helper functions
 const handleResponse = async (response: Response) => {
