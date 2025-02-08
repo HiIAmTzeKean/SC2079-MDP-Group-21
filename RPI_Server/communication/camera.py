@@ -9,7 +9,27 @@ from picamera import PiCamera
 
 
 logger = logging.getLogger(__name__)
+con_file = "PiLCConfig9.txt"
+home_files = []
+home_files.append(str(os.getenv("USER")))
+config_file = "/home/" + "/pi" + "/" + con_file
 
+extns = ["jpg", "png", "bmp", "rgb", "yuv420", "raw"]
+
+shutters = [
+    -2000,-1600,-1250,-1000,-800,-640,-500, 
+    -400,-320,-288,-250,-240,-200,-160,-144,
+    -125,-120,-100,-96,-80,-60,-50,-48,-40,
+    -30,-25,-20,-15,-13,-10,-8,-6,-5,
+    -4,-3,0.4,0.5,0.6,0.8,1,1.1,1.2,2,3,4,5,6,
+    7,8,9,10,11,15,20,25,30,40,50,60,75,
+    100,112,120,150,200,220,230,239,435
+]
+
+meters = ["centre", "spot", "average"]
+awbs = ["off", "auto", "incandescent", "tungsten", "fluorescent", "indoor", "daylight", "cloudy"]
+denoises = ["off", "cdn_off", "cdn_fast", "cdn_hq"]
+    
 def calculate_brightness(image_path: str) -> int:
     """
     calculate brightness based on average pixel brightness (ranges between 0 and 255)
@@ -46,26 +66,6 @@ def snap_using_libcamera(
     The image is saved in /home/pi/cam
     The response is then forwarded back to the android
     """
-    con_file = "PiLCConfig9.txt"
-    home_files = []
-    home_files.append(str(os.getenv("USER")))
-    config_file = "/home/" + "/pi" + "/" + con_file
-    
-    extns = ["jpg", "png", "bmp", "rgb", "yuv420", "raw"]
-    
-    shutters = [
-        -2000,-1600,-1250,-1000,-800,-640,-500, 
-        -400,-320,-288,-250,-240,-200,-160,-144,
-        -125,-120,-100,-96,-80,-60,-50,-48,-40,
-        -30,-25,-20,-15,-13,-10,-8,-6,-5,
-        -4,-3,0.4,0.5,0.6,0.8,1,1.1,1.2,2,3,4,5,6,
-        7,8,9,10,11,15,20,25,30,40,50,60,75,
-        100,112,120,150,200,220,230,239,435
-    ]
-    
-    meters = ["centre", "spot", "average"]
-    awbs = ["off", "auto", "incandescent", "tungsten", "fluorescent", "indoor", "daylight", "cloudy"]
-    denoises = ["off", "cdn_off", "cdn_fast", "cdn_hq"]
 
     config = []
     with open(config_file, "r") as file:
