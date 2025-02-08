@@ -54,7 +54,6 @@ def get_random_string(length):
     result = ''.join(random.choice(string.ascii_letters) for i in range(length))
     return result
 
-
 def find_largest_or_central_bbox(bboxes, selection_mode='largest', confidence_adjustment=False):
     if not bboxes:
         return "NA", 0.0
@@ -113,6 +112,7 @@ def predict_image(model, image_path, output_dir, selection_mode='largest'):
         bboxes.append({"label": "NA", "xywh": [0, 0, 0, 0], "bbox_area": 0.0, "confidence": 0.0})
 
     selected_label, selected_area = find_largest_or_central_bbox(bboxes, selection_mode)
+    
     image_id = id_map.get(selected_label, "NA")
 
     if selected_label != "NA":
@@ -181,6 +181,7 @@ def stitch_image():
 
 
 ## Testing ##
+# Comment out Later # 
 model = YOLO(MODEL_CONFIG["path"])
 model.to(device)
 
