@@ -1,8 +1,8 @@
 import json
 import logging
 import queue
-from multiprocessing import Process
 import time
+from multiprocessing import Process
 from typing import Optional
 
 import requests
@@ -11,7 +11,7 @@ from communication.android import AndroidMessage
 from communication.camera import snap_using_libcamera
 from communication.pi_action import PiAction
 from constant.consts import Category, manual_commands, stm32_prefixes
-from constant.settings import API_IP, API_PORT
+from constant.settings import URL
 
 
 logger = logging.getLogger(__name__)
@@ -47,11 +47,12 @@ class TaskOne(RaspberryPi):
 
             logger.info("Child Processes started")
 
-            self.android_queue.put(AndroidMessage("info", "Robot is ready!"))
-            self.android_queue.put(AndroidMessage("mode", "path"))
-
-            # TODO check why reconnect again
-            # self.reconnect_android()
+            self.android_queue.put(AndroidMessage(Category.INFO.value, "Robot is ready!"))
+            self.android_queue.put(AndroidMessage(Category.MODE.value, "path"))
+            
+            # Reconnect Android if connection is lost
+            # Handled in main process
+            self.reconnect_android()
         except KeyboardInterrupt:
             self.stop()
 
@@ -128,7 +129,7 @@ class TaskOne(RaspberryPi):
                 except:
                     pass
                 logger.info("Commands queue finished.")
-                self.android_queue.put(AndroidMessage("status", "finished"))
+                self.android_queue.put(AndroidMessage(Category.STATUS.value, "finished"))
                 self.rpi_action_queue.put(PiAction(cat=Category.STITCH, value=""))
             else:
                 raise Exception(f"Unknown command: {command}")
@@ -166,8 +167,8 @@ class TaskOne(RaspberryPi):
             self.proc_android_controller.start()
 
             logger.info("Android processes restarted")
-            self.android_queue.put(AndroidMessage("info", "You are reconnected!"))
-            self.android_queue.put(AndroidMessage("mode", "path"))
+            self.android_queue.put(AndroidMessage(Category.INFO.value, "You are reconnected!"))
+            self.android_queue.put(AndroidMessage(Category.MODE.value, "path"))
 
             self.android_dropped.clear()
 
@@ -213,7 +214,7 @@ class TaskOne(RaspberryPi):
                 logger.info(f"self.current_location = {self.current_location}")
                 self.android_queue.put(
                     AndroidMessage(
-                        "location",
+                        Category.LOCATION.value,
                         {
                             "x": cur_location["x"],
                             "y": cur_location["y"],
@@ -270,18 +271,17 @@ class TaskOne(RaspberryPi):
                     # TODO handle the error
                     if not self.check_api():
                         logger.error("API is down! Start command aborted.")
-                        self.android_queue.put(AndroidMessage("error", "API is down, start command aborted."))
+                        self.android_queue.put(AndroidMessage(Category.ERROR.value, "API is down, start command aborted."))
 
                     # Commencing path following
                     if not self.command_queue.empty():
                         self.unpause.set()
                         
                         logger.info("Start command received, starting robot on path!")
-                        self.android_queue.put(AndroidMessage("info", "Starting robot on path!"))
-                        self.android_queue.put(AndroidMessage("status", "running"))
+                        self.android_queue.put(AndroidMessage(Category.INFO.value, "Starting robot on path!"))
                     else:
                         logger.warning("The command queue is empty, please set obstacles.")
-                        self.android_queue.put(AndroidMessage("error", "Command queue empty (no obstacles)"))
+                        self.android_queue.put(AndroidMessage(Category.ERROR.value, "Command queue empty (no obstacles)"))
 
     # TODO fix this section
     def recognize_image(self, obstacle_id_with_signal: str) -> None:
@@ -293,8 +293,8 @@ class TaskOne(RaspberryPi):
         """
         obstacle_id, signal = obstacle_id_with_signal.split("_")
         logger.info(f"Capturing image for obstacle id: {obstacle_id}")
-        self.android_queue.put(AndroidMessage("info", f"Capturing image for obstacle id: {obstacle_id}"))
-        url = f"http://{API_IP}:{API_PORT}/image"
+        self.android_queue.put(AndroidMessage(Category.INFO.value, f"Capturing image for obstacle id: {obstacle_id}"))
+        url = f"{URL}/image"
 
         filename = f"/home/pi/cam/{int(time.time())}_{obstacle_id}_{signal}.jpg"
         filename_send = f"{int(time.time())}_{obstacle_id}_{signal}.jpg"
@@ -327,12 +327,12 @@ class TaskOne(RaspberryPi):
             "retrying": retrying,
         }
 
-        response = requests.post(url=f"http://{API_IP}:{API_PORT}/path", json=body)
+        response = requests.post(url=f"{URL}/path", json=body)
 
         # TODO if the response fails, we should retry
         if response.status_code != 200:
-            self.android_queue.put(AndroidMessage("error", "Error when requesting path from Algo API."))
             logger.error("Error when requesting path from Algo API.")
+            self.android_queue.put(AndroidMessage(Category.ERROR.value, "Error when requesting path from Algo API."))
             return
 
         # Parse response
@@ -371,4 +371,4 @@ class TaskOne(RaspberryPi):
             return
 
         logger.info("Images stitched!")
-        self.android_queue.put(AndroidMessage("info", "Images stitched!"))
+        self.android_queue.put(AndroidMessage(Category.INFO.value, "Images stitched!"))

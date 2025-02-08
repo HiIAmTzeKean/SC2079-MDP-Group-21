@@ -2,7 +2,7 @@ import json
 import logging
 import os
 import socket
-from typing import Optional
+from typing import Dict, Optional, Union
 
 import bluetooth
 from communication.link import Link
@@ -15,9 +15,7 @@ class AndroidMessage:
     """
     Android message sent over Bluetooth connection.
     """
-
-    # TODO TypeError: unsupported operand type(s) for |: 'type' and '_GenericAlias'
-    def __init__(self, cat: str, value: str | dict[str, int]) -> None:
+    def __init__(self, cat: str, value: Union[str, Dict[str, int]]) -> None:
         self._cat = cat
         self._value = value
 
@@ -64,11 +62,12 @@ class AndroidMessage:
                 },
             )
         )
-        -> "location, {'x': 1, 'y': 1, 'd': 0}"
+        -> "location:x,y,d"
         """
         if isinstance(self._value, dict):
-            return f"{self._cat}, {self._value}"
-        return f"{self._cat}, {self._value}"
+            # return values in the dictionary as string
+            return f"{self._cat};{','.join([str(v) for v in self._value.values()])}"
+        return f"{self._cat};{self._value}"
 
 
 class AndroidDummy(Link):
@@ -284,7 +283,7 @@ class AndroidLink(Link):
         """Send message to Android"""
         try:
             # TODO change to string format
-            self.client_sock.send(f"{message.jsonify}\n".encode("utf-8"))
+            self.client_sock.send(f"{message.to_string()}\n".encode("utf-8"))
             logger.debug(f"Sent to Android: {message.jsonify}")
         except OSError as e:
             logger.error(f"Error sending message to Android: {e}")

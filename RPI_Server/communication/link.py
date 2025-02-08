@@ -1,6 +1,8 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Union
+
+from android import AndroidMessage
 
 
 logger = logging.getLogger(__name__)
@@ -20,7 +22,7 @@ class Link(ABC):
         self.logger = logger
 
     @abstractmethod
-    def send(self, message: str) -> None:
+    def send(self, message: Union[str, AndroidMessage]) -> None:
         pass
 
     @abstractmethod
