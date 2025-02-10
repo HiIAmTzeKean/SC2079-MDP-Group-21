@@ -85,8 +85,6 @@ class MazeSolver:
         optimal_path = []
 
         # get all grid positions that can view the obstacle images
-        #Sorting obstacles before retrieving view positions ensures consistency across different obstacle orders
-        self.grid.obstacles.sort(key=lambda obs: (obs.x, obs.y, obs.obstacle_id))
         views = self.grid.get_view_obstacle_positions(retrying)
         num_views = len(views)
 

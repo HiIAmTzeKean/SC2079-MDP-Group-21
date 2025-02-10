@@ -282,28 +282,27 @@ class Grid:
 
     def get_view_obstacle_positions(self, retrying) -> List[List[CellState]]:
         """
-        This function return a list of desired states for the robot to achieve based on the obstacle position and direction.
-        The state is the position that the robot can see the image of the obstacle and is safe to reach without collision
-
-        Sorting obstacles by (x, y, obstacle_id) ensures that the same obstacle order is always used, 
-        preventing inconsistencies in path planning when obstacles are added in different orders.
-
-        :return: [[CellState]]
+        Extracts all valid viewing positions in a grid-wide fashion,
+        without being affected by the order in which obstacles were added.
         """
-
         optimal_positions = []
-        # Always process obstacles in a fixed order by sorting them before computing viewpoints.
-        sorted_obstacles = sorted(self.obstacles, key=lambda o: (o.x, o.y, o.obstacle_id))
-        for obstacle in sorted_obstacles:
-            # skip objects that have SKIP as their direction
-            if obstacle.direction == Direction.SKIP:
-                continue
-            view_states = [
-            view_state for view_state in obstacle.get_view_state(retrying) 
-            if self.reachable(view_state.x, view_state.y)
-        ]
-            optimal_positions.append(view_states)
+    
+        # Instead of relying on `self.obstacles`, scan the entire grid and collect obstacles dynamically
+        all_obstacles = { (o.x, o.y): o for o in self.obstacles }  # Dictionary for fast lookup
+
+        # Loop through the grid, detecting obstacles in a structured way
+        for x in range(self.size_x):
+            for y in range(self.size_y):
+                if (x, y) in all_obstacles:
+                    obstacle = all_obstacles[(x, y)]
+                
+                    # Compute valid view positions for this obstacle
+                    view_states = [view for view in obstacle.get_view_state(retrying) if self.reachable(view.x, view.y)]
+                
+                    optimal_positions.append(view_states)
+
         return optimal_positions
+
 
     def find_obstacle_by_id(self, obstacle_id: int) -> Obstacle:
         """
