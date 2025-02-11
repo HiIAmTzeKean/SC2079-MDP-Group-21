@@ -232,9 +232,9 @@ public class BluetoothActivity extends AppCompatActivity {
         } else if (btMsg instanceof BluetoothMessage.RobotStatusMessage m) {
             statusView.setText(m.status());
         } else if (btMsg instanceof BluetoothMessage.TargetFoundMessage m) {
-            //TODO
+            receivedMsgView.append("image-rec! " + m.rawMsg() + "\n"); // just print on ui for now
         } else if (btMsg instanceof BluetoothMessage.RobotPositionMessage m) {
-            //TODO
+            receivedMsgView.append("location! " + m.rawMsg() + "\n"); // just print on ui for now
         }
     }
 }

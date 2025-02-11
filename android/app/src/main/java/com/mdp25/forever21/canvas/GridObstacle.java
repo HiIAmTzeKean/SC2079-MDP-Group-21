@@ -1,6 +1,7 @@
 package com.mdp25.forever21.canvas;
 
 import com.mdp25.forever21.Facing;
+import com.mdp25.forever21.Position;
 import com.mdp25.forever21.Target;
 
 /**
@@ -12,11 +13,13 @@ public class GridObstacle {
     private final int id; // id of obstacle
     private Facing facing;
     private Target target;
+    private Position position;
 
     public GridObstacle(int id) {
         this.facing = Facing.NORTH;
         this.id = id;
         this.target = null;
+        this.position = new Position(); //TODO
     }
 
     public void updateFacing(Facing facing){
@@ -25,5 +28,21 @@ public class GridObstacle {
 
     public void updateTarget(Target target){
         this.target = target;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public Facing getFacing() {
+        return facing;
+    }
+
+    public Target getTarget() {
+        return target;
+    }
+
+    public Position getPosition() {
+        return position;
     }
 }

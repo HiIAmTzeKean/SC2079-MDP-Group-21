@@ -80,7 +80,6 @@ public sealed interface BluetoothMessage permits BluetoothMessage.CustomMessage,
 
     /**
      * Sent to RPI.
-     * TODO
      */
     public record ObstaclesMessage(List<GridObstacle> obstacleList) implements BluetoothMessage, JsonMessage {
         @Override
@@ -91,10 +90,10 @@ public sealed interface BluetoothMessage permits BluetoothMessage.CustomMessage,
                 JSONArray arr = new JSONArray();
                 for (GridObstacle obst : obstacleList) {
                     JSONObject obstJson = new JSONObject();
-//                    obstJson.put("x", obst.); // TODO waiting on obstacles class...
-//                    obstJson.put("y", obst.);
-//                    obstJson.put("id", obst.);
-//                    obstJson.put("d", obst.);
+                    obstJson.put("x", obst.getPosition().getXInt());
+                    obstJson.put("y", obst.getPosition().getYInt());
+                    obstJson.put("id", obst.getId());
+                    obstJson.put("d", obst.getFacing().getMappedCode());
                     arr.put(obstJson);
                 }
                 jsonObject.put("obstacles", arr);
