@@ -23,6 +23,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -135,6 +137,11 @@ public class BluetoothActivity extends AppCompatActivity {
         findViewById(R.id.btnRobotBackward).setOnClickListener(view -> myApp.btConnection().sendMessage("r"));
         findViewById(R.id.btnRobotRight).setOnClickListener(view -> myApp.btConnection().sendMessage("tr"));
         findViewById(R.id.btnRobotLeft).setOnClickListener(view -> myApp.btConnection().sendMessage("tl"));
+
+        Button canvasButton = findViewById(R.id.btnTemp);
+        canvasButton.setOnClickListener(view -> {
+            startActivity(new Intent(this, CanvasActivity.class));
+        });
     }
 
     @Override
