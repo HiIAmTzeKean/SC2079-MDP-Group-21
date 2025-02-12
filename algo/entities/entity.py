@@ -216,20 +216,20 @@ class Grid:
         self.obstacles: List[Obstacle] = []
 
     def add_obstacle(self, obstacle: Obstacle):
-        """Add a new obstacle to the Grid object, ignores if duplicate obstacle
+        """
+        Add a new obstacle to the Grid object, ignores if duplicate obstacle. 
+        Ensures that list of Obstacles is always sorted so that the same optimal path is returned for the same obstacles in different orders.
+
+        NOTE: Sorting is just a band-aid fix to to ensure consistency. 
+        There may be issues in the pathfinding algorithm or the A* heuristic may not be admissible 
+        which is causing different paths to be returned for same obstacles in different orders
 
         Args:
             obstacle (Obstacle): Obstacle to be added
         """
-        # Loop through the existing obstacles to check for duplicates
-        to_add = True
-        for ob in self.obstacles:
-            if ob == obstacle:
-                to_add = False
-                break
-
-        if to_add:
+        if obstacle not in self.obstacles:
             self.obstacles.append(obstacle)
+            self.obstacles.sort(key=lambda ob: (ob.x, ob.y))
 
     def reset_obstacles(self):
         """
