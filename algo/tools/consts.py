@@ -48,6 +48,11 @@ TURN_RADIUS = 1
 TURN_WRT_BIG_TURNS = [[4 * TURN_RADIUS, TURN_RADIUS],
                       [6 * TURN_RADIUS, 3 * TURN_RADIUS]]
 
+# for collision checking. minimum padding from robot to obstacle position
+TURN_PADDING = 2 * EXPANDED_CELL
+MID_TURN_PADDING = 2 * EXPANDED_CELL
+PADDING = 2 * EXPANDED_CELL
+
 """
 The number of grid squares the robot moves for TWO half turns on each axis. This must be tuned based on real robot movement.
 eg. Motion.FORWARD_OFFSET_LEFT: TWO half turns to end up diagonally in the specified direction
@@ -60,7 +65,3 @@ eg. Motion.FORWARD_OFFSET_LEFT: TWO half turns to end up diagonally in the speci
 0: long axis, 1: short axis
 """
 HALF_TURNS = [6 * TURN_RADIUS, 2 * TURN_RADIUS]
-
-
-# minimum padding from obstacle to robot position
-PADDING = 2
