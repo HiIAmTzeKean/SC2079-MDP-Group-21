@@ -7,6 +7,16 @@
     <string name="next">Next</string>
     <string name="previous">Previous</string>
 
+    <!-- Strings used for buttons in canvas_activity.xml -->
+    <string name="move_backward">Move Backward</string>
+    <string name="move_forward">Move Forward</string>
+    <string name="move_right">Move Right</string>
+    <string name="move_left">Move Left</string>
+
+    <string name="robot_status_static">ROBOT STATUS</string>
+    <string name="received_messages_title">Received Messages:</string>
+    <string name="robot_status_dynamic">Awaiting Orders</string>
+
     <string name="lorem_ipsum">
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam in scelerisque sem. Mauris
         volutpat, dolor id interdum ullamcorper, risus dolor egestas lectus, sit amet mattis purus

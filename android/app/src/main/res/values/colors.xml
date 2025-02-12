@@ -4,4 +4,5 @@
     <color name="white">#FFFFFFFF</color>
     <color name="bt_device_list_bg">#FF000000</color>
     <color name="paired_device_bg">#2F2F2F00</color>
+    <color name="button_pressed_grey">#808080</color>
 </resources>
