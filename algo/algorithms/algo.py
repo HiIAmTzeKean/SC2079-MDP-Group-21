@@ -9,7 +9,7 @@ from algo.tools.consts import (
     TURN_FACTOR,
     ITERATIONS,
     SAFE_COST,
-    TURN_WRT_BIG_TURNS,
+    TURN_DISPLACEMENT,
     HALF_TURNS,
     REVERSE_FACTOR,
     PADDING,
@@ -35,7 +35,6 @@ class MazeSolver:
             robot_x: int = 1,
             robot_y: int = 1,
             robot_direction: Direction = Direction.NORTH,
-            big_turn=0,
     ):
         self.neighbor_cache = {}  # Store precomputed neighbors
         """
@@ -45,14 +44,11 @@ class MazeSolver:
         :param robot_x: If no robot object is provided, the x coordinate of the robot. Default is 1
         :param robot_y: If no robot object is provided, the y coordinate of the robot. Default is 1
         :param robot_direction: If no robot object is provided, the direction the robot is facing. Default is NORTH
-        :param big_turn: A flag to indicate the turn radius of the robot. Must be 0 or 1. 0: 3-1 turn radius (default), 1: 4-2 turn
         """
         self.grid = Grid(size_x, size_y)
 
         self.robot = robot if robot else Robot(
             robot_x, robot_y, robot_direction)
-
-        self.big_turn = big_turn
 
         self.path_table = dict()
         self.cost_table = dict()
@@ -77,7 +73,7 @@ class MazeSolver:
         """
         self.grid.reset_obstacles()
 
-    def get_optimal_path(self, retrying):
+    def get_optimal_path(self):
         """
         Get the optimal path from the using dynamic programming
 
@@ -87,7 +83,7 @@ class MazeSolver:
         optimal_path = []
 
         # get all grid positions that can view the obstacle images
-        views = self.grid.get_view_obstacle_positions(retrying)
+        views = self.grid.get_view_obstacle_positions()
         num_views = len(views)
 
         for bin_pos in self._get_visit_options(num_views):
@@ -426,8 +422,8 @@ class MazeSolver:
             else:  # consider 8 cases
 
                 # Turning displacement
-                delta_big = TURN_WRT_BIG_TURNS[self.big_turn][0]
-                delta_small = TURN_WRT_BIG_TURNS[self.big_turn][1]
+                delta_big = TURN_DISPLACEMENT[0]
+                delta_small = TURN_DISPLACEMENT[1]
 
                 # north -> east
                 if direction == Direction.NORTH and md == Direction.EAST:
