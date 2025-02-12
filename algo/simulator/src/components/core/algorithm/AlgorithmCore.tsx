@@ -153,6 +153,28 @@ export const AlgorithmCore = () => {
 		setAlgoCost(null);
 	};
 
+	// TODO: FOR DEBUGGING, remove when done. to directly send commands to STM
+	const [commandsInput, setCommandsInput] = useState<string>("");
+	const [commandsOutput, setCommandsOutput] = useState<string>("");
+	const convertToSTMCommands = () => {
+		if (commandsInput === "") {
+			setCommandsOutput("");
+			return;
+		}
+
+		const commandsList: string[] = JSON.parse(commandsInput);
+		let STMCommands = "";
+		STMCommands += "stm_link = STMLink()\nstm_link.connect()\n";
+		for (const cmd of commandsList) {
+			if (cmd === "FIN" || cmd.startsWith("SNAP")) continue;
+
+			const flag = cmd[0];
+			const [speed, angle, val] = cmd.slice(1).split("|");
+			STMCommands += `stm_link.send_cmd("${flag}",${speed},${angle},${val})\nstm_link.recv()\n`;
+		}
+		setCommandsOutput(STMCommands);
+	};
+
 	return (
 		<CoreContainter title="Algorithm Simulator">
 			{/* Server Status */}
@@ -305,9 +327,22 @@ export const AlgorithmCore = () => {
 				setSelectedTest={setSelectedTest}
 			/>
 
-			{robotCommands && (
-				<div className="flex justify-center">
-					<div className="w-[500px] text-center">
+			<div className="flex justify-between gap-8">
+				<div className="flex flex-col gap-2">
+					<span>Input list of command strings (in RPI format):</span>
+					<textarea
+						className="w-[400px] h-[200px]"
+						value={commandsInput}
+						onChange={(e) => setCommandsInput(e.target.value)}
+					/>
+					<Button onClick={() => convertToSTMCommands()}>
+						Convert to STM commands
+					</Button>
+					<pre>{commandsOutput}</pre>
+				</div>
+
+				{robotCommands && (
+					<div className="text-center">
 						<span className="font-bold">Commands:</span>
 						{robotCommands?.map((command, index) => (
 							<span key={index} className="block">
@@ -315,8 +350,8 @@ export const AlgorithmCore = () => {
 							</span>
 						))}
 					</div>
-				</div>
-			)}
+				)}
+			</div>
 		</CoreContainter>
 	);
 };
