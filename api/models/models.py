@@ -19,7 +19,6 @@ def get_models(api):
     path_finding_request = api.model('PathFindingRequest', {
         'obstacles': fields.List(fields.Nested(obstacle), required=True),
         'retrying': fields.Boolean(required=False),
-        'big_turn': fields.Integer(required=False, min=0, max=1),
         'robot_dir': fields.Integer(required=False, min=0, max=8, multiple=2),
         'robot_x': fields.Integer(required=False, min=0, max=20),
         'robot_y': fields.Integer(required=False, min=0, max=20),

@@ -44,9 +44,9 @@ class PathFinding(Resource):
         # Get the json data from the request
         content = request.json
 
-        # Get the obstacles, big_turn, retrying, robot_x, robot_y, and robot_direction from the json data
+        # Get the obstacles, retrying, robot_x, robot_y, and robot_direction from the json data
         obstacles = content['obstacles']
-        big_turn = content.get('big_turn', 1)
+        # TODO: use alternative algo for retrying?
         retrying = content.get('retrying', False)
         robot_x, robot_y = content.get('robot_x', 1), content.get('robot_y', 1)
         robot_direction = content.get('robot_dir', 0)
@@ -54,17 +54,16 @@ class PathFinding(Resource):
 
         optimal_path, commands, total_cost, total_runtime, = None, None, 0, 0
         for _ in range(num_runs):
-            # Initialize MazeSolver object with robot size of 20x20, bottom left corner of robot at (1,1), facing north, and whether to use a big turn or not.
+            # Initialize MazeSolver object with robot size of 20x20, bottom left corner of robot at (1,1), facing north.
             maze_solver = MazeSolver(size_x=20, size_y=20, robot_x=robot_x,
-                                     robot_y=robot_y, robot_direction=robot_direction, big_turn=big_turn)
+                                     robot_y=robot_y, robot_direction=robot_direction)
             # Add each obstacle into the MazeSolver. Each obstacle is defined by its x,y positions, its direction, and its id
             for ob in obstacles:
                 maze_solver.add_obstacle(ob['x'], ob['y'], ob['d'], ob['id'])
 
             start = time.time()
             # Get shortest path
-            optimal_path, cost = maze_solver.get_optimal_path(
-                retrying=retrying)
+            optimal_path, cost = maze_solver.get_optimal_path()
             runtime = time.time() - start
             total_runtime += runtime
             total_cost += cost

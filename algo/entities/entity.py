@@ -78,7 +78,7 @@ class Obstacle(CellState):
         """
         return self.x == other.x and self.y == other.y and self.direction == other.direction
 
-    def get_view_state(self, retrying) -> List[CellState]:
+    def get_view_state(self) -> List[CellState]:
         """
         Constructs the list of CellStates from which the robot can view the image on the obstacle properly.
         Currently checks a T shape of grids in front of the image
@@ -354,7 +354,7 @@ class Grid:
         """
         return self.is_valid_coord(state.x, state.y)
 
-    def get_view_obstacle_positions(self, retrying) -> List[List[CellState]]:
+    def get_view_obstacle_positions(self) -> List[List[CellState]]:
         """
         This function return a list of desired states for the robot to achieve based on the obstacle position and direction.
         The state is the position that the robot can see the image of the obstacle and is safe to reach without collision
@@ -367,7 +367,7 @@ class Grid:
             if obstacle.direction == Direction.SKIP:
                 continue
             else:
-                view_states = [view_state for view_state in obstacle.get_view_state(retrying) if
+                view_states = [view_state for view_state in obstacle.get_view_state() if
                                self.reachable(view_state.x, view_state.y)]
             optimal_positions.append(view_states)
         return optimal_positions
