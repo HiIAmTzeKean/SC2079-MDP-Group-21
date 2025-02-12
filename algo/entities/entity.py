@@ -1,5 +1,5 @@
 from typing import List
-from algo.tools.consts import EXPANDED_CELL, SCREENSHOT_COST, HEIGHT, WIDTH
+from algo.tools.consts import EXPANDED_CELL, SCREENSHOT_COST, TOO_CLOSE_COST, PADDING, HEIGHT, WIDTH
 from algo.tools.movement import Direction
 
 
@@ -87,69 +87,98 @@ class Obstacle(CellState):
             List[CellState]: Valid cell states where robot can be positioned to view the symbol on the obstacle
         """
         cells = []
-        offset = 2 * EXPANDED_CELL
+        offset = PADDING * EXPANDED_CELL
+
         # If the obstacle is facing north, then robot's cell state must be facing south
         if self.direction == Direction.NORTH:
-            if not retrying:
-                positions = [(self.x, self.y + offset), (self.x - 1, self.y + 1 + offset),
-                             (self.x + 1, self.y + 1 + offset), (self.x, self.y + 1 + offset)]
-                costs = [0, SCREENSHOT_COST, SCREENSHOT_COST, 5]
-            else:
-                positions = [(self.x, self.y + 1 + offset), (self.x - 1, self.y + 2 + offset),
-                             (self.x + 2, self.y + 1 + offset), (self.x, self.y + 2 + offset)]
-                costs = [0, SCREENSHOT_COST, SCREENSHOT_COST, 5]
+            positions = [
+                # robot camera is directly in front of obstacle
+                (self.x, self.y + offset),
+                # robot camera is left of obstacle
+                (self.x - 1, self.y + 2 + offset),
+                # robot camera is right of obstacle
+                (self.x + 1, self.y + 2 + offset),
+                (self.x, self.y + 2 + offset),
+            ]
+            costs = [
+                TOO_CLOSE_COST,         # robot camera is directly in front of obstacle
+                SCREENSHOT_COST,        # robot camera is left of obstacle
+                SCREENSHOT_COST,        # robot camera is right of obstacle
+                0,                      # robot camera is positioned just nice
+            ]
 
             for idx, pos in enumerate(positions):
                 if self.is_valid_position(*pos):
-                    cells.append(CellState(*pos, Direction.SOUTH,
-                                 self.obstacle_id, costs[idx]))
+                    cells.append(
+                        CellState(*pos, Direction.SOUTH,
+                                  self.obstacle_id, costs[idx])
+                    )
 
         # If obstacle is facing south, then robot's cell state must be facing north
         elif self.direction == Direction.SOUTH:
+            positions = [
+                (self.x, self.y - offset),
+                (self.x + 1, self.y - 2 - offset),
+                (self.x - 1, self.y - 2 - offset),
+                (self.x, self.y - 1 - offset),
+            ]
+            costs = [
+                TOO_CLOSE_COST,
+                SCREENSHOT_COST,
+                SCREENSHOT_COST,
+                0,
+            ]
 
-            if not retrying:
-                positions = [(self.x, self.y - offset), (self.x + 1, self.y - 1 - offset),
-                             (self.x - 1, self.y - 1 - offset), (self.x, self.y - 1 - offset)]
-                costs = [0, SCREENSHOT_COST, SCREENSHOT_COST, 5]
-            else:
-                positions = [(self.x, self.y - 1 - offset), (self.x + 1, self.y - 2 - offset),
-                             (self.x - 1, self.y - 2 - offset), (self.x, self.y - 2 - offset)]
-                costs = [0, SCREENSHOT_COST, SCREENSHOT_COST, 5]
             for idx, pos in enumerate(positions):
                 if self.is_valid_position(*pos):
-                    cells.append(CellState(*pos, Direction.NORTH,
-                                 self.obstacle_id, costs[idx]))
+                    cells.append(
+                        CellState(*pos, Direction.NORTH,
+                                  self.obstacle_id, costs[idx])
+                    )
 
         # If obstacle is facing east, then robot's cell state must be facing west
         elif self.direction == Direction.EAST:
-            if not retrying:
-                positions = [(self.x + offset, self.y), (self.x + 1 + offset, self.y + 1),
-                             (self.x + 1 + offset, self.y - 1), (self.x + 1 + offset, self.y)]
-                costs = [0, SCREENSHOT_COST, SCREENSHOT_COST, 5]
-            else:
-                positions = [(self.x + 1 + offset, self.y), (self.x + 2 + offset, self.y + 1),
-                             (self.x + 2 + offset, self.y - 1), (self.x + 2 + offset, self.y)]
-                costs = [0, SCREENSHOT_COST, SCREENSHOT_COST, 5]
+            positions = [
+                (self.x + offset, self.y),
+                (self.x + 2 + offset, self.y + 1),
+                (self.x + 2 + offset, self.y - 1),
+                (self.x + 2 + offset, self.y),
+            ]
+            costs = [
+                TOO_CLOSE_COST,
+                SCREENSHOT_COST,
+                SCREENSHOT_COST,
+                0,
+            ]
 
             for idx, pos in enumerate(positions):
                 if self.is_valid_position(*pos):
-                    cells.append(CellState(*pos, Direction.WEST,
-                                 self.obstacle_id, costs[idx]))
+                    cells.append(
+                        CellState(*pos, Direction.WEST,
+                                  self.obstacle_id, costs[idx])
+                    )
 
         # If obstacle is facing west, then robot's cell state must be facing east
         elif self.direction == Direction.WEST:
-            if not retrying:
-                position = [(self.x - offset, self.y), (self.x - 1 - offset, self.y + 1),
-                            (self.x - 1 - offset, self.y - 1), (self.x - 1 - offset, self.y)]
-                costs = [0, SCREENSHOT_COST, SCREENSHOT_COST, 5]
-            else:
-                position = [(self.x - 1 - offset, self.y), (self.x - 2 - offset, self.y + 1),
-                            (self.x - 2 - offset, self.y - 1), (self.x - 2 - offset, self.y)]
-                costs = [0, SCREENSHOT_COST, SCREENSHOT_COST, 5]
-            for idx, pos in enumerate(position):
+            positions = [
+                (self.x - offset, self.y),
+                (self.x - 2 - offset, self.y + 1),
+                (self.x - 2 - offset, self.y - 1),
+                (self.x - 2 - offset, self.y),
+            ]
+            costs = [
+                TOO_CLOSE_COST,
+                SCREENSHOT_COST,
+                SCREENSHOT_COST,
+                0,
+            ]
+
+            for idx, pos in enumerate(positions):
                 if self.is_valid_position(*pos):
-                    cells.append(CellState(*pos, Direction.EAST,
-                                 self.obstacle_id, costs[idx]))
+                    cells.append(
+                        CellState(*pos, Direction.EAST,
+                                  self.obstacle_id, costs[idx])
+                    )
         return cells
 
     def get_obstacle_id(self):
@@ -224,7 +253,7 @@ class Grid:
             turn (bool): Should be set to True when checking coordinates while turning
             preturn (bool): Should be set to True when checking coordinates before turning
         """
-        turn_padding = EXPANDED_CELL + 2
+        turn_padding = EXPANDED_CELL * PADDING
         if not self.is_valid_coord(x, y):
             return False
 
@@ -245,22 +274,32 @@ class Grid:
         return True
 
     def half_turn_reachable(self, x: int, y: int, new_x: int, new_y: int) -> bool:
+        """
+        Checks if the robot can make 2 half-turns from x, y to new_x, new_y
+        Logic:
+            find the longer axis for the movement, and add padding to the shorter axis.
+            Check if the obstacle is within the padded area
+        """
         # create a path with padding from x, y to new_x, new_y and check if it is reachable
         if not self.is_valid_coord(x, y) or not self.is_valid_coord(new_x, new_y):
             return False
-        padding = 2 * EXPANDED_CELL
+        padding = PADDING * EXPANDED_CELL
+
+        # ensure that new_x > x so we can compare to obstacle coordinates later
         if new_x < x:
             new_x, x = x, new_x
         if new_y < y:
             new_y, y = y, new_y
-        for obs in self.obstacles:
 
+        for obs in self.obstacles:
             if abs(x-new_x) > abs(y-new_y):
-                # x is the longer axis. Use padding only for the y-axis
+                # x is the longer axis
+                # Use padding for the shorter y-axis to account for small vertical deviations when robot is moving mostly horizontally
                 if x <= obs.x <= new_x and y - padding <= obs.y <= new_y + padding:
                     return False
             else:
-                # y is the longer axis. Use padding only for the x-axis
+                # y is the longer axis
+                # Use padding for the shorter x-axis to account for small horizontal deviations when robot is moving mostly vertically
                 if x - padding <= obs.x <= new_x + padding and y <= obs.y <= new_y:
                     return False
         return True
