@@ -133,10 +133,6 @@ public class BluetoothActivity extends AppCompatActivity {
                 }
             }
         });
-        findViewById(R.id.btnRobotForward).setOnClickListener(view -> myApp.btConnection().sendMessage("f"));
-        findViewById(R.id.btnRobotBackward).setOnClickListener(view -> myApp.btConnection().sendMessage("r"));
-        findViewById(R.id.btnRobotRight).setOnClickListener(view -> myApp.btConnection().sendMessage("tr"));
-        findViewById(R.id.btnRobotLeft).setOnClickListener(view -> myApp.btConnection().sendMessage("tl"));
 
         Button canvasButton = findViewById(R.id.btnTemp);
         canvasButton.setOnClickListener(view -> {
