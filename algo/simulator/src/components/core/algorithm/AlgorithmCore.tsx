@@ -206,7 +206,7 @@ export const AlgorithmCore = () => {
 			</div>
 
 			{/* Algo Runtime */}
-			{robotPositions && algoRuntime && algoCost && (
+			{robotPositions && algoRuntime && algoCost ? (
 				<div className="flex flex-col justify-center items-center">
 					<div className="">
 						Average Runtime:&nbsp;
@@ -218,7 +218,7 @@ export const AlgorithmCore = () => {
 						units
 					</div>
 				</div>
-			)}
+			) : null}
 
 			{/* Animation */}
 			{robotPositions && (
