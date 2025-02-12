@@ -13,7 +13,6 @@ from algo.tools.consts import (
     HALF_TURNS,
     REVERSE_FACTOR,
     PADDING,
-    EXPANDED_CELL,
     HALF_TURN_FACTOR
 )
 from algo.tools.movement import (
@@ -433,9 +432,9 @@ class MazeSolver:
                 # north -> east
                 if direction == Direction.NORTH and md == Direction.EAST:
                     # FORWARD_RIGHT_TURN
-                    if self.grid.reachable(
-                            x + delta_big, y + delta_small, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x + delta_big, y + delta_small, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x + delta_big, y + delta_small
                         )
@@ -446,9 +445,9 @@ class MazeSolver:
                         )
 
                     # REVERSE_LEFT_TURN
-                    if self.grid.reachable(
-                            x - delta_small, y - delta_big, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x - delta_small, y - delta_big, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x - delta_small, y - delta_big
                         )
@@ -461,9 +460,9 @@ class MazeSolver:
                 # east -> north
                 if direction == Direction.EAST and md == Direction.NORTH:
                     # FORWARD_LEFT_TURN
-                    if self.grid.reachable(
-                            x + delta_small, y + delta_big, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x + delta_small, y + delta_big, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x + delta_small, y + delta_big
                         )
@@ -474,9 +473,9 @@ class MazeSolver:
                         )
 
                     # REVERSE_RIGHT_TURN
-                    if self.grid.reachable(
-                            x - delta_big, y - delta_small, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x - delta_big, y - delta_small, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x - delta_big, y - delta_small
                         )
@@ -489,9 +488,9 @@ class MazeSolver:
                 # east -> south
                 if direction == Direction.EAST and md == Direction.SOUTH:
                     # FORWARD_RIGHT_TURN
-                    if self.grid.reachable(
-                            x + delta_small, y - delta_big, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x + delta_small, y - delta_big, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x + delta_small, y - delta_big
                         )
@@ -502,9 +501,9 @@ class MazeSolver:
                         )
 
                     # REVERSE_LEFT_TURN
-                    if self.grid.reachable(
-                            x - delta_big, y + delta_small, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x - delta_big, y + delta_small, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x - delta_big, y + delta_small
                         )
@@ -517,9 +516,9 @@ class MazeSolver:
                 # south -> east
                 if direction == Direction.SOUTH and md == Direction.EAST:
                     # FORWARD_LEFT_TURN
-                    if self.grid.reachable(
-                            x + delta_big, y - delta_small, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x + delta_big, y - delta_small, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x + delta_big, y - delta_small
                         )
@@ -530,9 +529,9 @@ class MazeSolver:
                         )
 
                     # REVERSE_RIGHT_TURN
-                    if self.grid.reachable(
-                            x - delta_small, y + delta_big, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x - delta_small, y + delta_big, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x - delta_small, y + delta_big
                         )
@@ -545,9 +544,9 @@ class MazeSolver:
                 # south -> west
                 if direction == Direction.SOUTH and md == Direction.WEST:
                     # FORWARD_RIGHT_TURN
-                    if self.grid.reachable(
-                            x - delta_big, y - delta_small, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x - delta_big, y - delta_small, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x - delta_big, y - delta_small
                         )
@@ -558,9 +557,9 @@ class MazeSolver:
                         )
 
                     # REVERSE_LEFT_TURN
-                    if self.grid.reachable(
-                            x + delta_small, y + delta_big, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x + delta_small, y + delta_big, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x + delta_small, y + delta_big
                         )
@@ -573,9 +572,9 @@ class MazeSolver:
                 # west -> south
                 if direction == Direction.WEST and md == Direction.SOUTH:
                     # FORWARD_LEFT_TURN
-                    if self.grid.reachable(
-                            x - delta_small, y - delta_big, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x - delta_small, y - delta_big, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x - delta_small, y - delta_big
                         )
@@ -586,9 +585,9 @@ class MazeSolver:
                         )
 
                     # REVERSE_RIGHT_TURN
-                    if self.grid.reachable(
-                            x + delta_big, y + delta_small, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x + delta_big, y + delta_small, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x + delta_big, y + delta_small
                         )
@@ -601,9 +600,9 @@ class MazeSolver:
                 # west -> north
                 if direction == Direction.WEST and md == Direction.NORTH:
                     # FORWARD_RIGHT_TURN
-                    if self.grid.reachable(
-                            x - delta_small, y + delta_big, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x - delta_small, y + delta_big, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x - delta_small, y + delta_big
                         )
@@ -614,9 +613,9 @@ class MazeSolver:
                         )
 
                     # REVERSE_LEFT_TURN
-                    if self.grid.reachable(
-                            x + delta_big, y - delta_small, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x + delta_big, y - delta_small, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x + delta_big, y - delta_small
                         )
@@ -629,9 +628,9 @@ class MazeSolver:
                 # north <-> west
                 if direction == Direction.NORTH and md == Direction.WEST:
                     # FORWARD_LEFT_TURN
-                    if self.grid.reachable(
-                            x - delta_big, y + delta_small, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x - delta_big, y + delta_small, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x - delta_big, y + delta_small
                         )
@@ -642,9 +641,9 @@ class MazeSolver:
                         )
 
                     # REVERSE_RIGHT_TURN
-                    if self.grid.reachable(
-                            x + delta_small, y - delta_big, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x + delta_small, y - delta_big, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x + delta_small, y - delta_big
                         )
@@ -662,11 +661,10 @@ class MazeSolver:
         calculates the safe cost of moving to a new position, considering obstacles that the robot might touch.
         Currently, the function checks PADDING units in each direction.
         """
-        padding = PADDING * EXPANDED_CELL
         for obj in self.grid.obstacles:
-            if abs(obj.x - new_x) <= padding and abs(obj.y - new_y) <= padding:
+            if abs(obj.x - new_x) <= PADDING and abs(obj.y - new_y) <= PADDING:
                 return SAFE_COST
-            if abs(obj.y - new_y) <= padding and abs(obj.x - new_x) <= padding:
+            if abs(obj.y - new_y) <= PADDING and abs(obj.x - new_x) <= PADDING:
                 return SAFE_COST
         return 0
 

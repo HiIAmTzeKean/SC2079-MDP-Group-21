@@ -1,6 +1,7 @@
 from typing import List
-from algo.tools.consts import EXPANDED_CELL, SCREENSHOT_COST, TOO_CLOSE_COST, PADDING, HEIGHT, WIDTH
+from algo.tools.consts import SCREENSHOT_COST, TOO_CLOSE_COST, PADDING, MID_TURN_PADDING, TURN_PADDING, HEIGHT, WIDTH
 from algo.tools.movement import Direction
+from math import sqrt
 
 
 class CellState:
@@ -87,7 +88,7 @@ class Obstacle(CellState):
             List[CellState]: Valid cell states where robot can be positioned to view the symbol on the obstacle
         """
         cells = []
-        offset = PADDING * EXPANDED_CELL
+        offset = PADDING
 
         # If the obstacle is facing north, then robot's cell state must be facing south
         if self.direction == Direction.NORTH:
@@ -242,33 +243,68 @@ class Grid:
         """
         return self.obstacles
 
-    def reachable(self, x: int, y: int, turn=False, preturn=False) -> bool:
-        """Checks whether the given x,y coordinate is reachable/safe. Criterion is as such:
-        - Must be at least 4 units away in total (x+y) from the obstacle
-        - Greater distance (x or y distance) must be at least 3 units away from obstacle
-
+    def reachable(self, x: int, y: int) -> bool:
+        """Checks whether the given x,y coordinate is reachable/safe for the robot from a straight movement.
         Args:
             x (int): x coordinate
             y (int): y coordinate
-            turn (bool): Should be set to True when checking coordinates while turning
-            preturn (bool): Should be set to True when checking coordinates before turning
         """
-        turn_padding = EXPANDED_CELL * PADDING
         if not self.is_valid_coord(x, y):
             return False
 
         for ob in self.obstacles:
-            if abs(ob.x - x) + abs(ob.y - y) <= 2:
+            # ensure Manhattan distance from robot to obstacle is not within padding
+            if abs(ob.x - x) + abs(ob.y - y) <= PADDING:
+                return False
+            # ensure Chebyshev distance from robot to obstacle is not within padding
+            if max(abs(ob.x - x), abs(ob.y - y)) < PADDING:
                 return False
 
-            if turn:
-                if max(abs(ob.x - x), abs(ob.y - y)) < turn_padding:
-                    return False
-            if preturn:
-                if max(abs(ob.x - x), abs(ob.y - y)) < turn_padding + 1:
-                    return False
-            if not turn and not preturn:
-                if max(abs(ob.x - x), abs(ob.y - y)) < 2:
+        return True
+
+    def turn_reachable(
+        self, x: int, y: int, new_x: int, new_y: int, direction: Direction
+    ) -> bool:
+        """
+        Checks if the robot can turn from x, y to new_x, new_y
+        Logic:
+            Checks 3 things for a turn: pre-turn, turn, post-turn
+            1. pre-turn: if the obstacle is within the padding distance from the starting point
+            2. post-turn: if the obstacle is within the padding distance from the end point
+            3. turn:
+                    Finds 3 points near the curve followed by the robot during the turn
+                    For each point, checks if the obstacle is within the padding distance
+        (For more details regarding the 3 points, refer to the _get_turn_checking_points function)
+        """
+
+        points = self._get_turn_checking_points(x, y, new_x, new_y, direction)
+
+        if not self.is_valid_coord(x, y) or not self.is_valid_coord(new_x, new_y):
+            return False
+        for obstacle in self.obstacles:
+            # pre turn
+            preturn_horizontal_distance = obstacle.x - x
+            preturn_vertical_distance = obstacle.y - y
+            preturn_dist = sqrt(
+                preturn_horizontal_distance**2 + preturn_vertical_distance**2
+            )
+            if preturn_dist < TURN_PADDING:
+                return False
+
+            # post-turn
+            turn_horizontal_distance = obstacle.x - new_x
+            turn_vertical_distance = obstacle.y - new_y
+            turn_dist = sqrt(
+                turn_horizontal_distance**2 + turn_vertical_distance**2
+            )
+            if turn_dist < TURN_PADDING:
+                return False
+
+            # turn
+            for point in points:
+                horizontal_distance = obstacle.x - point[0]
+                vertical_distance = obstacle.y - point[1]
+                if sqrt(horizontal_distance**2 + vertical_distance**2) < MID_TURN_PADDING:
                     return False
 
         return True
@@ -283,7 +319,6 @@ class Grid:
         # create a path with padding from x, y to new_x, new_y and check if it is reachable
         if not self.is_valid_coord(x, y) or not self.is_valid_coord(new_x, new_y):
             return False
-        padding = PADDING * EXPANDED_CELL
 
         # ensure that new_x > x so we can compare to obstacle coordinates later
         if new_x < x:
@@ -295,12 +330,12 @@ class Grid:
             if abs(x-new_x) > abs(y-new_y):
                 # x is the longer axis
                 # Use padding for the shorter y-axis to account for small vertical deviations when robot is moving mostly horizontally
-                if x <= obs.x <= new_x and y - padding <= obs.y <= new_y + padding:
+                if x <= obs.x <= new_x and y - PADDING <= obs.y <= new_y + PADDING:
                     return False
             else:
                 # y is the longer axis
                 # Use padding for the shorter x-axis to account for small horizontal deviations when robot is moving mostly vertically
-                if x - padding <= obs.x <= new_x + padding and y <= obs.y <= new_y:
+                if x - PADDING <= obs.x <= new_x + PADDING and y <= obs.y <= new_y:
                     return False
         return True
 
@@ -345,3 +380,35 @@ class Grid:
             if obstacle.obstacle_id == obstacle_id:
                 return obstacle
         return None
+
+    @staticmethod
+    def _get_turn_checking_points(
+        x: int, y: int, new_x: int, new_y: int, direction: Direction
+    ):
+        """
+        Finds 3 points near the curve followed by the robot during the turn. Near the curve since it is difficult to
+        approximate points on the curve since it is not a part of a circle, but rather an irregular ellipse.
+
+        Some intermediate points are used in the calculation. These are:
+            1. mid_x, mid_y: the mid-point between the starting point and end point of the turn
+            2. tr_x, tr_y: The point that completes the right-angled triangle with the starting point and end point of the turn.
+
+        The 3 points are calculated as follows:
+            1. p1x, p1y: A point between the starting point and (mid_x, mid_y)
+            2. p2x, p2y: the mid-point between (tr_x, tr_y) and (mid_x, mid_y)
+            3. p3x, p3y: A point between the ending point and (mid_x, mid_y)
+        """
+        mid_x, mid_y = (x + new_x) / 2, (y + new_y) / 2
+        if direction == Direction.NORTH or direction == Direction.SOUTH:
+            tr_x, tr_y = x, new_y
+            p1x, p1y = (x + mid_x) / 2, mid_y
+            p2x, p2y = (tr_x + mid_x) / 2, (tr_y + mid_y) / 2
+            p3x, p3y = mid_x, (new_y + mid_y) / 2
+            return [(p1x, p1y), (p2x, p2y), (p3x, p3y)]
+        elif direction == Direction.EAST or direction == Direction.WEST:
+            tr_x, tr_y = new_x, y
+            p1x, p1y = mid_x, (y + mid_y) / 2
+            p2x, p2y = (tr_x + mid_x) / 2, (tr_y + mid_y) / 2
+            p3x, p3y = (new_x + mid_x) / 2, mid_y
+            return [(p1x, p1y), (p2x, p2y), (p3x, p3y)]
+        raise ValueError("Invalid direction")
