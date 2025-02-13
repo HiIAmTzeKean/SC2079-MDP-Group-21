@@ -8,7 +8,7 @@ from typing import Optional
 import requests
 from base_rpi import RaspberryPi
 from communication.android import AndroidMessage
-from communication.camera import snap_using_libcamera
+from communication.camera import snap_using_libcamera, snap_using_picamera
 from communication.pi_action import PiAction
 from constant.consts import Category, manual_commands, stm32_prefixes
 from constant.settings import URL
@@ -281,15 +281,15 @@ class TaskOne(RaspberryPi):
 
         filename = f"/home/pi/cam/{int(time.time())}_{obstacle_id}_{signal}.jpg"
         filename_send = f"{int(time.time())}_{obstacle_id}_{signal}.jpg"
-        results = snap_using_libcamera(
+        snap_using_picamera(
             obstacle_id=obstacle_id,
             signal=signal,
             filename=filename,
             filename_send=filename_send,
             url=url,
-            auto_callibrate=False,
+            # auto_callibrate=False,
         )
-        self.android_queue.put(AndroidMessage(cat=Category.IMAGE_REC.value, value=results))
+        self.android_queue.put(AndroidMessage(Category.IMAGE_REC.value, results))
 
     # TODO check if robot position and direction always the same
     def request_algo(self, data, robot_x=1, robot_y=1, robot_dir=0, retrying=False) -> None:
