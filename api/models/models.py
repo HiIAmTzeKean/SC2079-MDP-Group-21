@@ -3,9 +3,9 @@ from flask_restx import fields
 
 def get_models(api):
     obstacle = api.model('Obstacle', {
-        'x': fields.Integer(min=0, max=20),
-        'y': fields.Integer(min=0, max=20),
-        'd': fields.Integer(min=0, max=8, multiple=2),
+        'x': fields.Integer(min=0, max=19, default=10),
+        'y': fields.Integer(min=0, max=19, default=10),
+        'd': fields.Integer(min=0, max=8, multiple=2, default=4),
         'id': fields.Integer(min=1)
     })
 
@@ -18,10 +18,10 @@ def get_models(api):
 
     path_finding_request = api.model('PathFindingRequest', {
         'obstacles': fields.List(fields.Nested(obstacle), required=True),
-        'retrying': fields.Boolean(required=False),
-        'robot_dir': fields.Integer(required=False, min=0, max=8, multiple=2),
-        'robot_x': fields.Integer(required=False, min=0, max=20),
-        'robot_y': fields.Integer(required=False, min=0, max=20),
+        'retrying': fields.Boolean(required=False, default=False),
+        'robot_dir': fields.Integer(required=False, min=0, max=6, multiple=2, default=0),
+        'robot_x': fields.Integer(required=False, min=0, max=19, default=1),
+        'robot_y': fields.Integer(required=False, min=0, max=19, default=1),
         'num_runs': fields.Integer(required=False, min=1)
     })
 
