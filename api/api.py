@@ -50,6 +50,64 @@ class PathFinding(Resource):
         retrying = content.get('retrying', False)
         robot_x, robot_y = content.get('robot_x', 1), content.get('robot_y', 1)
         robot_direction = content.get('robot_dir', 0)
+
+        optimal_path, commands = None, None
+
+        # Initialize MazeSolver object with robot size of 20x20, bottom left corner of robot at (1,1), facing north.
+        maze_solver = MazeSolver(size_x=20, size_y=20, robot_x=robot_x,
+                                 robot_y=robot_y, robot_direction=robot_direction)
+        # Add each obstacle into the MazeSolver. Each obstacle is defined by its x,y positions, its direction, and its id
+        for ob in obstacles:
+            maze_solver.add_obstacle(ob['x'], ob['y'], ob['d'], ob['id'])
+
+        start = time.time()
+        # Get shortest path
+        optimal_path, cost = maze_solver.get_optimal_path()
+        runtime = time.time() - start
+        print(
+            f"Time taken to find shortest path using A* search: {runtime}s")
+        print(f"cost to travel: {cost} units")
+
+        # Based on the shortest path, generate commands for the robot
+        motions, obstacle_ids = maze_solver.optimal_path_to_motion_path(
+            optimal_path)
+        command_generator = CommandGenerator()
+        commands = command_generator.generate_commands(
+            motions, obstacle_ids)
+
+        # Get the starting location and add it to path_results
+        path_results = []
+        for pos in optimal_path:
+            path_results.append(pos.get_dict())
+
+        return {
+            "data": {
+                'path': path_results,
+                'commands': commands,
+            },
+            "error": None
+        }
+
+
+# FOR SIMULATOR TESTING ONLY
+@api.route('/simulator_path')
+class SimulatorPathFinding(Resource):
+    @api.expect(restx_models["SimulatorPathFindingRequest"])
+    @api.marshal_with(restx_models["SimulatorPathFindingResponse"])
+    def post(self):
+        """
+        FOR SIMULATOR TESTING ONLY. RPI SHOULD NOT BE USING THIS ENDPOINT
+        :return: a json object with a key "data" and value a dictionary with keys "distance", "path", and "commands"
+        """
+        # Get the json data from the request
+        content = request.json
+
+        # Get the obstacles, retrying, robot_x, robot_y, and robot_direction from the json data
+        obstacles = content['obstacles']
+        # TODO: use alternative algo for retrying?
+        retrying = content.get('retrying', False)
+        robot_x, robot_y = content.get('robot_x', 1), content.get('robot_y', 1)
+        robot_direction = content.get('robot_dir', 0)
         num_runs = content.get('num_runs', 1)  # for testing
 
         optimal_path, commands, total_cost, total_runtime, = None, None, 0, 0
@@ -94,6 +152,8 @@ class PathFinding(Resource):
             "error": None
         }
 
+# TODO
+
 
 @api.route('/image')
 class ImagePredict(Resource):
@@ -123,6 +183,8 @@ class ImagePredict(Resource):
             "image_id": image_id
         }
         return jsonify(result)
+
+# TODO
 
 
 @api.route('/stitch')

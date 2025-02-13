@@ -85,7 +85,7 @@ export const AlgorithmCore = () => {
 			num_runs: numberOfAlgoRuns,
 		};
 		try {
-			const algoOutput: AlgoOutput = await fetch.post("/path", algoInput);
+			const algoOutput: AlgoOutput = await fetch.post("/simulator_path", algoInput);
 			setRobotPositions(algoOutput.data.path);
 			setRobotCommands(algoOutput.data.commands);
 			setRobotMotions(algoOutput.data.motions);
