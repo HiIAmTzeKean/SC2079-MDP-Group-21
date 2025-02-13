@@ -6,6 +6,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -222,14 +223,24 @@ public class BluetoothActivity extends AppCompatActivity {
         }
     }
 
+    private void sendMessageToCanvas(String message) {
+        Intent intent = new Intent("BluetoothMessageReceived");
+        intent.putExtra("message", message);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+    }
+
     private void onMsgReceived(BluetoothMessage btMsg) {
         if (btMsg instanceof BluetoothMessage.PlainStringMessage m) {
+            sendMessageToCanvas(m.rawMsg());
             receivedMsgView.append(m.rawMsg() + "\n");
         } else if (btMsg instanceof BluetoothMessage.RobotStatusMessage m) {
+            sendMessageToCanvas(m.status());
             statusView.setText(m.status());
         } else if (btMsg instanceof BluetoothMessage.TargetFoundMessage m) {
+            sendMessageToCanvas(m.rawMsg());
             receivedMsgView.append("image-rec! " + m.rawMsg() + "\n"); // just print on ui for now
         } else if (btMsg instanceof BluetoothMessage.RobotPositionMessage m) {
+            sendMessageToCanvas(m.rawMsg());
             receivedMsgView.append("location! " + m.rawMsg() + "\n"); // just print on ui for now
         }
     }
