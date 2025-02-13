@@ -1,10 +1,13 @@
 package com.mdp25.forever21;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.view.View;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -19,7 +22,6 @@ import com.mdp25.forever21.canvas.CanvasView;
 public class CanvasActivity extends AppCompatActivity {
     private TextView receivedMessages;
     private ScrollView scrollReceivedMessages;
-    private final Handler handler = new Handler(Looper.getMainLooper());
     private final String TAG = "CanvasActivity";
     private MyApplication myApp; // my context for "static" var
     private CanvasView canvasView; // the "model-view" classes to define the UI
@@ -33,22 +35,30 @@ public class CanvasActivity extends AppCompatActivity {
 
         myApp = (MyApplication) getApplication();
 
-        canvasView = new CanvasView(this);
-        canvasTouchController = new CanvasTouchController();
+        canvasView = findViewById(R.id.canvasView);
+        canvasTouchController = new CanvasTouchController(canvasView);
         canvasGestureController = new CanvasGestureController();
 
         bindUI(); // Call bindUI to set up buttons and interactions
+
+        // Register the broadcast receiver
+        LocalBroadcastManager.getInstance(this).registerReceiver(bluetoothReceiver, new IntentFilter("BluetoothMessageReceived"));
     }
 
-    private void bindUI() {
-        // Bind robot movement buttons to Bluetooth commands
-        findViewById(R.id.btnRobotForward).setOnClickListener(view -> myApp.btConnection().sendMessage("f"));
-        findViewById(R.id.btnRobotBackward).setOnClickListener(view -> myApp.btConnection().sendMessage("r"));
-        findViewById(R.id.btnRobotRight).setOnClickListener(view -> myApp.btConnection().sendMessage("tr"));
-        findViewById(R.id.btnRobotLeft).setOnClickListener(view -> myApp.btConnection().sendMessage("tl"));
+    private final BroadcastReceiver bluetoothReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String message = intent.getStringExtra("message");
+            if (message != null) {
+                receiveBluetoothMessage(message); // Update the UI
+            }
+        }
+    };
 
-        receivedMessages = findViewById(R.id.receivedMessages);
-        scrollReceivedMessages = findViewById(R.id.scrollReceivedMessages);
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(bluetoothReceiver);
     }
 
     public void receiveBluetoothMessage(String message) {
@@ -58,4 +68,14 @@ public class CanvasActivity extends AppCompatActivity {
         });
     }
 
+    private void bindUI() {
+        // Bind robot movement buttons to Bluetooth commands
+        findViewById(R.id.btnRobotForward).setOnClickListener(view -> myApp.btConnection().sendMessage("f"));
+        findViewById(R.id.btnRobotBackward).setOnClickListener(view -> myApp.btConnection().sendMessage("r"));
+        findViewById(R.id.btnRobotRight).setOnClickListener(view -> myApp.btConnection().sendMessage("tr"));
+        findViewById(R.id.btnRobotLeft).setOnClickListener(view -> myApp.btConnection().sendMessage("tl"));
+
+        receivedMessages = findViewById(R.id.receivedMessagesDynamic);
+        scrollReceivedMessages = findViewById(R.id.scrollReceivedMessages);
+    }
 }
