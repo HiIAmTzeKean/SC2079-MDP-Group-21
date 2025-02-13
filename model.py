@@ -180,18 +180,18 @@ def stitch_image():
     return stitchedImg
 
 
-## Testing ##
-# Comment out Later # 
-model = YOLO(MODEL_CONFIG["path"])
-model.to(device)
+# ## Testing ##
+# # Comment out Later # 
+# model = YOLO(MODEL_CONFIG["path"])
+# model.to(device)
 
-# Input folder and Output Folder # 
-test_images_folder = Path("test_images")
-output_dir = Path("output")
-os.makedirs(output_dir, exist_ok=True)
+# # Input folder and Output Folder # 
+# test_images_folder = Path("test_images")
+# output_dir = Path("output")
+# os.makedirs(output_dir, exist_ok=True)
 
-for image_file in test_images_folder.glob("*.*"):  # This will match all files with image extensions
-    if image_file.suffix.lower() in ['.jpg', '.jpeg', '.png']:  # Check if it's a valid image format
-        # Call the prediction function
-        image_id = predict_image(model, image_file, output_dir)
+# for image_file in test_images_folder.glob("*.*"):  # This will match all files with image extensions
+#     if image_file.suffix.lower() in ['.jpg', '.jpeg', '.png']:  # Check if it's a valid image format
+#         # Call the prediction function
+#         image_id = predict_image(model, image_file, output_dir)
  
