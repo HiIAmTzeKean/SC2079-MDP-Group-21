@@ -50,7 +50,7 @@ public class Grid {
     /**
      * Helper function that checks if a position is out of the grid bounds.
      */
-    private boolean isOutOfBounds(int x, int y) {
+    public boolean isOutOfBounds(int x, int y) {
         return x < 0 || x >= rows || y < 0 || y >= cols;
     }
 
