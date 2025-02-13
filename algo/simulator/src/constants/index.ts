@@ -1,6 +1,6 @@
 import { Direction, Position } from "../schemas/entity";
 
-export const API_IP = "192.168.10.224"; // TODO: replace with your PC's local IP
+export const API_IP = ""; // TODO: replace with your PC's local IPv4 address
 export const PORT = "5000";
 
 // Robot's Environment - Grid Format
@@ -38,3 +38,7 @@ export const ROBOT_INITIAL_POSITION: Position = {
 
 // Grid Animation
 export const GRID_ANIMATION_SPEED = 100; // in milli-seconds
+
+if (!API_IP) {
+	throw Error("Update `API_IP` in `algo/simulator/src/constants/index.ts`");
+}

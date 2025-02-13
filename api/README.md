@@ -34,4 +34,4 @@ API Server for RPI to communicate with PC over Wifi. Used by Algo & Image Rec
     python api.py
     ```
 
-Server application and Swagger documentation will be running on http://localhost:5000 or http://{your local IP}:5000
+Server application and Swagger documentation will be running on http://localhost:5000 or http://{your local IP}:5000. Make sure to point the web simulator or RPI code to the URL that this server is running on.

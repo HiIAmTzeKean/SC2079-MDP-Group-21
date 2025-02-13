@@ -333,6 +333,7 @@ class MazeSolver:
         # Get list of possible valid cell states the robot can reach from its current position
         # Neighbors have the following format: {newX, newY, movement direction, safe cost, motion}
         """
+        # cell state already visited. significantly reduces algo runtime
         if (x, y, direction) in self.neighbor_cache:
             return self.neighbor_cache[(x, y, direction)]
         neighbors = []
@@ -649,7 +650,7 @@ class MazeSolver:
                              md, safe_cost, motion)
                         )
 
-        self.neighbor_cache[(x, y, direction)] = neighbors  # Store result
+        self.neighbor_cache[(x, y, direction)] = neighbors
         return neighbors
 
     def _calculate_safe_cost(self, new_x: int, new_y: int) -> int:

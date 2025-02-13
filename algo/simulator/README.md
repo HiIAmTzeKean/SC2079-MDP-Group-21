@@ -13,7 +13,7 @@ yarn
 ```
 
 ### React Web Dev Server (Frontend)
-1. In `algo/simulator/src/constants/index.ts`, change `API_IP` to your PC's local IP and `PORT` to the port used by the Flask API server.  the one you see on command prompt when running flask.
+1. In `algo/simulator/src/constants/index.ts`, change `API_IP` to your PC's local IPv4 address (can be found using ipconfig command in Command Prompt) and `PORT` to the port used by the Flask API server. 
 
 2. In the `algo/simulator` directory, start the application.
 
