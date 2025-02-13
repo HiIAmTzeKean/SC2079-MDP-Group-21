@@ -20,13 +20,12 @@ class MazeSolverSimulation:
     debug_save = 0
 
     def __init__(self, maze_solver: MazeSolver = None, grid_size_x: int = None, grid_size_y: int = None,
-                 robot_x: int = None, robot_y: int = None, robot_direction: int = None, big_turn: int = None):
+                 robot_x: int = None, robot_y: int = None, robot_direction: int = None):
         self.maze_solver = maze_solver if maze_solver else MazeSolver(size_x=grid_size_x,
                                                                       size_y=grid_size_y,
                                                                       robot_x=robot_x,
                                                                       robot_y=robot_y,
-                                                                      robot_direction=robot_direction,
-                                                                      big_turn=big_turn if big_turn else 0)
+                                                                      robot_direction=robot_direction)
 
     def add_obstacles(self, obstacles):
         for obstacle in obstacles:
@@ -105,7 +104,7 @@ class MazeSolverSimulation:
         return self.maze_solver.get_optimal_path(False)
 
     def plot_optimal_path_animation(self, verbose=False, testing=False):
-        num_points = 3 if self.maze_solver.big_turn == 1 else 2
+        num_points = 3
         robot_state = self.maze_solver.robot.get_start_state()
         obstacles = self.maze_solver.grid.obstacles
 

@@ -17,20 +17,50 @@ SAFE_COST = 1000
 
 # Cost of taking an image off center.
 # The higher the value, the less likely the robot takes pictures from a position that is not directly in front of image.
-SCREENSHOT_COST = 50
+SCREENSHOT_COST = 100
+TOO_CLOSE_COST = 50  # the cost for when the robot is too close to the obstacle
 
 # Cost of turning the robot.
 # The higher the value, the less likely the robot is to turn.
 TURN_FACTOR = 5
 
+# Cost of half-turning the robot.
+# The higher the value, the less likely the robot is to make half-turns.
+# weighted by 2 since it makes 2 half-turns in an offset motion
+HALF_TURN_FACTOR = 4 * 2
+
 # Cost of reversing the robot.
 # The higher the value, the less likely the robot is to reverse.
 REVERSE_FACTOR = 5
 
-# no. of units the robot turns
-TURN_RADIUS = 1
+"""
+No. of units the robot turns. This must be tuned based on real robot movement.
+eg. Motion.FORWARD_LEFT_TURN
+.  .   .  .  .
+.  .   .  .  .   
+X ←----┐  .  .  
+.  .   |  .  .   
+.  .   X  .  .
 
-TURN_WRT_BIG_TURNS = [[3 * TURN_RADIUS, TURN_RADIUS],
-                      [6 * TURN_RADIUS, 3 * TURN_RADIUS]]
-# The number of grid squares the robot moves for a half turn on each axis. This must be tuned based on real robot movement.
+0: long axis, 1: short axis
+"""
+TURN_RADIUS = 1
+TURN_DISPLACEMENT = [4 * TURN_RADIUS, TURN_RADIUS]
+
+# for collision checking. minimum padding from robot to obstacle position
+TURN_PADDING = 2 * EXPANDED_CELL
+MID_TURN_PADDING = 2 * EXPANDED_CELL
+PADDING = 2 * EXPANDED_CELL
+
+"""
+The number of grid squares the robot moves for TWO half turns on each axis. This must be tuned based on real robot movement.
+eg. Motion.FORWARD_OFFSET_LEFT: TWO half turns to end up diagonally in the specified direction
+.  . X .  .  .
+.  . ↑ .  .  .   
+.  . └o┐  .  .  
+.  .   |  .  .   
+.  .   X  .  .
+
+0: long axis, 1: short axis
+"""
 HALF_TURNS = [6 * TURN_RADIUS, 2 * TURN_RADIUS]

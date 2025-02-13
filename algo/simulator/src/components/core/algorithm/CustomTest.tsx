@@ -1,12 +1,6 @@
 import React, { useState } from "react";
 import { Button, ModalContainer } from "../../common";
-import {
-    FaBox,
-    FaCircle,
-    FaPlus,
-    FaRecycle,
-    FaTrash,
-} from "react-icons/fa";
+import { FaBox, FaPlus, FaRecycle, FaTrash } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import {
     AlgoTestDataInterface,
@@ -113,8 +107,19 @@ export const CustomTest = (props: CustomTestProps) => {
             return { x, y, id: i + 1, d };
         });
 
-        setSelectedTest({ obstacles })
+		setSelectedTest({ obstacles });
+	};
+
+	const validateObstaclePosition = (input: string) => {
+		const number = Math.round(Number(input));
+		if (number > 19) {
+			return 19;
+		} else if (number < 0) {
+			return 0;
+		} else {
+			return number;
     }
+	};
 
     return (
         <div>
@@ -180,42 +185,42 @@ export const CustomTest = (props: CustomTestProps) => {
 
                             {/* X */}
                             <div className="flex gap-2 items-center my-2">
-                                <label htmlFor="steps-range" className="font-bold">
-                                    X:{" "}
-                                </label>
+								<label className="font-bold">X: </label>
                                 <input
-                                    id="steps-range"
-                                    type="range"
+									type="number"
                                     min={0}
                                     max={19}
                                     value={customObstacle_X}
                                     onChange={(e) => {
-                                        setCustomObstacle_X(Number(e.target.value));
+										setCustomObstacle_X(
+											validateObstaclePosition(
+												e.target.value
+											)
+										);
                                     }}
                                     step={1}
-                                    className="w-full h-2 bg-gray-900 rounded-lg appearance-none cursor-pointer"
+									className="rounded-lg"
                                 />
-                                <span className="font-bold">{customObstacle_X}</span>
                             </div>
 
                             {/* Y */}
-                            <div className="flex gap-2 items-center mb-2">
-                                <label htmlFor="steps-range" className="font-bold">
-                                    Y:{" "}
-                                </label>
+							<div className="flex gap-2 items-center mb-4">
+								<label className="font-bold">Y: </label>
                                 <input
-                                    id="steps-range"
-                                    type="range"
+									type="number"
                                     min={0}
                                     max={19}
                                     value={customObstacle_Y}
                                     onChange={(e) => {
-                                        setCustomObstacle_Y(Number(e.target.value));
+										setCustomObstacle_Y(
+											validateObstaclePosition(
+												e.target.value
+											)
+										);
                                     }}
                                     step={1}
-                                    className="w-full h-2 bg-gray-900 rounded-lg appearance-none cursor-pointer"
+									className="rounded-lg"
                                 />
-                                <span className="font-bold">{customObstacle_Y}</span>
                             </div>
 
                             {/* Direction */}
@@ -229,7 +234,7 @@ export const CustomTest = (props: CustomTestProps) => {
                                         setCustomObstacle_Direction(Direction.NORTH)
                                     }
                                 >
-                                    N
+									N ↑
                                 </Button>
                                 <Button
                                     className={`${customObstacle_Direction === Direction.SOUTH &&
@@ -239,7 +244,7 @@ export const CustomTest = (props: CustomTestProps) => {
                                         setCustomObstacle_Direction(Direction.SOUTH)
                                     }
                                 >
-                                    S
+									S ↓
                                 </Button>
                                 <Button
                                     className={`${customObstacle_Direction === Direction.EAST &&
@@ -249,7 +254,7 @@ export const CustomTest = (props: CustomTestProps) => {
                                         setCustomObstacle_Direction(Direction.EAST)
                                     }
                                 >
-                                    E
+                                    E →
                                 </Button>
                                 <Button
                                     className={`${customObstacle_Direction === Direction.WEST &&
@@ -259,7 +264,17 @@ export const CustomTest = (props: CustomTestProps) => {
                                         setCustomObstacle_Direction(Direction.WEST)
                                     }
                                 >
-                                    W
+                                    W ←
+                                </Button>
+                                <Button
+                                    className={`${customObstacle_Direction === Direction.SKIP &&
+                                        "!text-gray-300"
+                                        }`}
+                                    onClick={() =>
+                                        setCustomObstacle_Direction(Direction.SKIP)
+                                    }
+                                >
+                                    SKIP
                                 </Button>
                             </div>
 
@@ -291,7 +306,7 @@ interface CustomObstacleItemProps {
 
 const CustomObstacleItem = (props: CustomObstacleItemProps) => {
     const { setSelectedTest, obstacle } = props;
-    const { x, y, d } = obstacle;
+	const { x, y, d, id } = obstacle;
 
     const handleRemoveObstacle = () => {
         setSelectedTest((prev) => {
@@ -308,7 +323,7 @@ const CustomObstacleItem = (props: CustomObstacleItemProps) => {
 
     return (
         <div className="flex items-center w-full gap-2 font-bold">
-            <FaCircle className="text-[8px]" />
+			<span>{id}.</span>
             <span>X: {x},</span>
             <span>Y: {y},</span>
             <span>Face: {DirectionStringMapping[d]}</span>
