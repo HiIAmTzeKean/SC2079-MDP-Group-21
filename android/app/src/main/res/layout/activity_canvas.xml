@@ -6,105 +6,148 @@
     android:layout_height="match_parent"
     tools:context=".CanvasActivity">
 
-    <ImageButton
-        android:id="@+id/btnRobotBackward"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:adjustViewBounds="true"
-        android:background="@null"
-        android:contentDescription="@string/move_backward"
-        android:padding="8dp"
-        android:scaleType="fitCenter"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/btnRobotRight"
-        app:srcCompat="@drawable/btn_backward_selector" />
+    <com.mdp25.forever21.canvas.CanvasView
+        android:id="@+id/canvasView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintHeight_percent="0.5"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/bottomLayout"/>
 
-    <ImageButton
-        android:id="@+id/btnRobotForward"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:adjustViewBounds="true"
-        android:background="@null"
-        android:contentDescription="@string/move_forward"
-        android:padding="8dp"
-        android:scaleType="fitCenter"
-        app:layout_constraintBottom_toTopOf="@+id/btnRobotRight"
-        app:layout_constraintEnd_toStartOf="@+id/btnRobotRight"
-        app:srcCompat="@drawable/btn_forward_selector" />
-
-    <ImageButton
-        android:id="@+id/btnRobotLeft"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:adjustViewBounds="true"
-        android:background="@null"
-        android:contentDescription="@string/move_left"
-        android:padding="8dp"
-        android:scaleType="fitCenter"
-        app:layout_constraintBottom_toTopOf="@+id/btnRobotBackward"
-        app:layout_constraintEnd_toStartOf="@+id/btnRobotBackward"
-        app:srcCompat="@drawable/btn_left_selector" />
-
-    <ImageButton
-        android:id="@+id/btnRobotRight"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:adjustViewBounds="true"
-        android:background="@null"
-        android:contentDescription="@string/move_right"
-        android:padding="8dp"
-        android:scaleType="fitCenter"
-        app:layout_constraintBottom_toTopOf="@+id/btnRobotBackward"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@drawable/btn_right_selector" />
-
-    <ScrollView
-        android:id="@+id/scrollReceivedMessages"
-        android:layout_width="785dp"
-        android:layout_height="81dp"
-        android:layout_margin="10dp"
-        android:layout_marginEnd="10dp"
-        android:scrollbars="vertical"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <TextView
-            android:id="@+id/receivedMessages"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="#EFEFEF"
-            android:padding="10dp"
-            android:text="@string/received_messages_title"
-            android:textColor="#000000"
-            android:textSize="16sp" />
-    </ScrollView>
-
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/bottomLayout"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
         android:orientation="vertical"
-        android:padding="10dp"
-        tools:layout_editor_absoluteX="75dp"
-        tools:layout_editor_absoluteY="1090dp">
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/canvasView"
+        tools:layout_editor_absoluteX="118dp">
 
-        <TextView
-            android:id="@+id/robot_status_static"
-            android:layout_width="185dp"
-            android:layout_height="wrap_content"
-            android:gravity="center_horizontal"
-            android:text="@string/robot_status_static"
-            android:textColor="@color/black"
-            android:textSize="24sp"
-            android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/robot_status_dynamic"
-            android:layout_width="185dp"
+        <ImageButton
+            android:id="@+id/btnRobotBackward"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:adjustViewBounds="true"
+            android:background="@null"
+            android:contentDescription="@string/move_backward"
+            android:padding="8dp"
+            android:scaleType="fitCenter"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/btnRobotRight"
+            app:srcCompat="@drawable/btn_backward_selector" />
+
+        <ImageButton
+            android:id="@+id/btnRobotForward"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:adjustViewBounds="true"
+            android:background="@null"
+            android:contentDescription="@string/move_forward"
+            android:padding="8dp"
+            android:scaleType="fitCenter"
+            app:layout_constraintBottom_toTopOf="@+id/btnRobotRight"
+            app:layout_constraintEnd_toStartOf="@+id/btnRobotRight"
+            app:srcCompat="@drawable/btn_forward_selector" />
+
+        <ImageButton
+            android:id="@+id/btnRobotLeft"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:adjustViewBounds="true"
+            android:background="@null"
+            android:contentDescription="@string/move_left"
+            android:padding="8dp"
+            android:scaleType="fitCenter"
+            app:layout_constraintBottom_toTopOf="@+id/btnRobotBackward"
+            app:layout_constraintEnd_toStartOf="@+id/btnRobotBackward"
+            app:srcCompat="@drawable/btn_left_selector" />
+
+        <ImageButton
+            android:id="@+id/btnRobotRight"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:adjustViewBounds="true"
+            android:background="@null"
+            android:contentDescription="@string/move_right"
+            android:padding="8dp"
+            android:scaleType="fitCenter"
+            app:layout_constraintBottom_toTopOf="@+id/btnRobotBackward"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:srcCompat="@drawable/btn_right_selector" />
+
+
+        <LinearLayout
+            android:id="@+id/linearLayout2"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center_horizontal"
-            android:text="@string/robot_status_dynamic"
-            android:textColor="@color/black"
-            android:textSize="24sp" />
-    </LinearLayout>
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/robotStatusStatic"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:text="@string/robot_status_static"
+                android:textColor="@color/black"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/robotStatusDynamic"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:text="@string/robot_status_dynamic"
+                android:textColor="@color/black"
+                android:textSize="24sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/linearLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toTopOf="@+id/linearLayout2"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.51"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.51">
+
+            <TextView
+                android:id="@+id/receivedMessagesStatic"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="@string/received_messages_title"
+                android:textColor="@color/black"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <ScrollView
+                android:id="@+id/scrollReceivedMessages"
+                android:layout_width="224dp"
+                android:layout_height="43dp">
+
+                <TextView
+                    android:id="@+id/receivedMessagesDynamic"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="#EFEFEF"
+                    android:padding="10dp"
+                    android:textColor="#000000"
+                    android:textSize="16sp" />
+            </ScrollView>
+
+        </LinearLayout>
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
