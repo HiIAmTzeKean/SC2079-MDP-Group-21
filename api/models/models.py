@@ -22,15 +22,11 @@ def get_models(api):
         'robot_dir': fields.Integer(required=False, min=0, max=6, multiple=2, default=0),
         'robot_x': fields.Integer(required=False, min=0, max=19, default=1),
         'robot_y': fields.Integer(required=False, min=0, max=19, default=1),
-        'num_runs': fields.Integer(required=False, min=1)
     })
 
     path_finding_data = api.model('PathFindingData', {
         'commands': fields.List(fields.String()),
-        'distance': fields.Float(),
         'path': fields.List(fields.Nested(position)),
-        'runtime': fields.Float(),
-        'motions': fields.List(fields.String()),
     })
 
     path_finding_response = api.model('PathFindingResponse', {
@@ -38,8 +34,32 @@ def get_models(api):
         'error': fields.String()
     })
 
+    simulator_path_finding_request = api.model('SimulatorPathFindingRequest', {
+        'obstacles': fields.List(fields.Nested(obstacle), required=True),
+        'retrying': fields.Boolean(required=False, default=False),
+        'robot_dir': fields.Integer(required=False, min=0, max=6, multiple=2, default=0),
+        'robot_x': fields.Integer(required=False, min=0, max=19, default=1),
+        'robot_y': fields.Integer(required=False, min=0, max=19, default=1),
+        'num_runs': fields.Integer(required=False, min=1)
+    })
+
+    simulator_path_finding_data = api.model('SimulatorPathFindingData', {
+        'commands': fields.List(fields.String()),
+        'distance': fields.Float(),
+        'path': fields.List(fields.Nested(position)),
+        'runtime': fields.Float(),
+        'motions': fields.List(fields.String()),
+    })
+
+    simulator_path_finding_response = api.model('SimulatorPathFindingResponse', {
+        'data': fields.Nested(simulator_path_finding_data),
+        'error': fields.String()
+    })
+
     return {
         "Obstacle": obstacle,
         "PathFindingRequest": path_finding_request,
-        "PathFindingResponse": path_finding_response
+        "PathFindingResponse": path_finding_response,
+        "SimulatorPathFindingRequest": simulator_path_finding_request,
+        "SimulatorPathFindingResponse": simulator_path_finding_response
     }
