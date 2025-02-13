@@ -79,7 +79,7 @@ class PathFinding(Resource):
                 motions, obstacle_ids)
 
         # Get the starting location and add it to path_results
-        path_results = [optimal_path[0].get_dict()]
+        path_results = []
         for pos in optimal_path:
             path_results.append(pos.get_dict())
 
