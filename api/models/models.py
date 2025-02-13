@@ -29,7 +29,8 @@ def get_models(api):
         'commands': fields.List(fields.String()),
         'distance': fields.Float(),
         'path': fields.List(fields.Nested(position)),
-        'runtime': fields.Float()
+        'runtime': fields.Float(),
+        'motions': fields.List(fields.String()),
     })
 
     path_finding_response = api.model('PathFindingResponse', {

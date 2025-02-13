@@ -89,6 +89,7 @@ class PathFinding(Resource):
                 'runtime': total_runtime / num_runs,
                 'path': path_results,
                 'commands': commands,
+                'motions': motions
             },
             "error": None
         }
