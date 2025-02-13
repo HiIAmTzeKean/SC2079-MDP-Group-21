@@ -220,6 +220,7 @@ export const NavigationGrid = (props: NavigationGridProps) => {
           const { x: x2, y: y2 } = getSVGCoords(robotPath[index]);
 
           return (
+						<>
             <line
               key={index}
               x1={x1}
@@ -230,6 +231,18 @@ export const NavigationGrid = (props: NavigationGridProps) => {
               strokeWidth="3"
               strokeOpacity={0.5}
             />
+
+							<line
+								key={`footprint-${index}`}
+								x1={x1}
+								y1={y1}
+								x2={x2}
+								y2={y2}
+								stroke="blue"
+								strokeWidth={ROBOT_ACTUAL_GRID_WIDTH * cellSize}
+								strokeOpacity={0.05}
+							/>
+						</>
           );
         })}
     </svg>
