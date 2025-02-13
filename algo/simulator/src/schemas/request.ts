@@ -15,6 +15,7 @@ export interface AlgoOutput {
 		distance: number;
 		runtime: number;
 		path: Position[];
+		motions: string[];
 	};
 	error: string | null;
 }

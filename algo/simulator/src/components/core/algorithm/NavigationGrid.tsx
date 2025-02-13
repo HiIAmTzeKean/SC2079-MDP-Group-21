@@ -219,30 +219,31 @@ export const NavigationGrid = (props: NavigationGridProps) => {
           const { x: x1, y: y1 } = getSVGCoords(robotPath[index - 1]);
           const { x: x2, y: y2 } = getSVGCoords(robotPath[index]);
 
+          // TODO: draw curves based on motion
           return (
-						<>
-            <line
-              key={index}
-              x1={x1}
-              y1={y1}
-              x2={x2}
-              y2={y2}
-              stroke="blue"
-              strokeWidth="3"
-              strokeOpacity={0.5}
-            />
+            <>
+              <line
+                key={index}
+                x1={x1}
+                y1={y1}
+                x2={x2}
+                y2={y2}
+                stroke="blue"
+                strokeWidth="3"
+                strokeOpacity={0.5}
+              />
 
-							<line
-								key={`footprint-${index}`}
-								x1={x1}
-								y1={y1}
-								x2={x2}
-								y2={y2}
-								stroke="blue"
-								strokeWidth={ROBOT_ACTUAL_GRID_WIDTH * cellSize}
-								strokeOpacity={0.05}
-							/>
-						</>
+              <line
+                key={`footprint-${index}`}
+                x1={x1}
+                y1={y1}
+                x2={x2}
+                y2={y2}
+                stroke="blue"
+                strokeWidth={ROBOT_ACTUAL_GRID_WIDTH * cellSize}
+                strokeOpacity={0.05}
+              />
+            </>
           );
         })}
     </svg>

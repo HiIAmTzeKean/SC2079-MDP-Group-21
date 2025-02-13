@@ -35,6 +35,7 @@ export const AlgorithmCore = () => {
 	const [robotPositions, setRobotPositions] = useState<Position[]>();
 	const totalSteps = robotPositions?.length ?? 0;
 	const [robotCommands, setRobotCommands] = useState<string[]>();
+	const [robotMotions, setRobotMotions] = useState<string[]>();
 
 	// Algorithm Runtime & Cost
 	const [algoRuntime, setAlgoRuntime] = useState<number | null>();
@@ -87,6 +88,7 @@ export const AlgorithmCore = () => {
 			const algoOutput: AlgoOutput = await fetch.post("/path", algoInput);
 			setRobotPositions(algoOutput.data.path);
 			setRobotCommands(algoOutput.data.commands);
+			setRobotMotions(algoOutput.data.motions);
 			setCurrentStep(0);
 
 			setAlgoRuntime(algoOutput.data.runtime);
@@ -148,6 +150,7 @@ export const AlgorithmCore = () => {
 		setCurrentRobotPosition(ROBOT_INITIAL_POSITION);
 		setRobotPositions(undefined);
 		setRobotCommands(undefined);
+		setRobotMotions(undefined);
 
 		setAlgoRuntime(null);
 		setAlgoCost(null);
@@ -178,106 +181,93 @@ export const AlgorithmCore = () => {
 	// TODO: REFACTOR!!! cleanup this magic spaghetti
 	const [currentCommands, setCurrentCommands] = useState<string[]>([]);
 	useEffect(() => {
-		if (!robotPositions || !robotCommands) return;
+		if (!robotCommands || !robotMotions) return;
 
 		// merge commands for the same motion
 		let mergedCommands = [];
 		for (let i = 0; i < robotCommands.length; i++) {
 			let currentCommand = robotCommands[i];
 
-			// merge "M0|0|0" + "SNAP" + (if present) "FIN"
 			if (currentCommand.startsWith("M0|0|0")) {
-				let temp = currentCommand; // Start building a merged command
+				let merged = [currentCommand]; // Collect parts of the merged command
 
-				// Check if the next command is a "SNAP" or "FIN"
-				while (
-					i + 1 < robotCommands.length &&
-					(robotCommands[i + 1].startsWith("SNAP") ||
-						robotCommands[i + 1] === "FIN")
-				) {
-					temp += " " + robotCommands[i + 1]; // Merge it into the temp string
-					i++; // Skip the merged command
+				// Check if the next commands are "SNAP" or "FIN"
+				while (i + 1 < robotCommands.length &&
+					(robotCommands[i + 1].startsWith("SNAP") || robotCommands[i + 1] === "FIN")) {
+					merged.push(robotCommands[++i]); // Add and move to the next
 				}
 
-				mergedCommands.push(temp); // Push the merged result
+				mergedCommands.push(merged.join(" ")); // Merge and store
 			} else {
-				// merge OFFSET commands which come in pairs
-				let matchCurrent = currentCommand.match(/\|(\d+|-\d+)\|45$/);
-
-				if (
-					matchCurrent &&
-					i + 1 < robotCommands.length &&
-					robotCommands[i + 1].match(/\|(\d+|-\d+)\|45$/)
-				) {
-					// If both current and next command end with 45, merge them
-					currentCommand += " " + robotCommands[i + 1];
-					i++; // Skip the next command since it is merged
-				}
-
 				mergedCommands.push(currentCommand);
 			}
 		}
 
-		let result: string[] = [];
+
+		// TODO: refactor to switch statement for ALL possible motions for easy change when there are extra commands for a motion after tuning
+		let result: string[] = [
+			"", // no motion at first robot position
+			`${mergedCommands[0]} (${robotMotions[0]})` // first motion
+		];
 		let cmdPtr = 0;
-		let prevPos = robotPositions[0];
-		result.push(mergedCommands[cmdPtr]);
-		for (let i = 1; i < robotPositions.length; i++) {
+		let prevMotion = robotMotions[0];
+
+		for (let i = 1; i < robotMotions.length; i++) {
+			const motion = robotMotions[i];
+			const nextMotion = robotMotions[i + 1];
+
+			if (motion == "CAPTURE") {
+				prevMotion = motion;
+				continue;
+			}
+
+			// continue with same FORWARD/REVERSE motion
 			if (
-				Math.abs(prevPos.x - robotPositions[i].x) <= 1 &&
-				Math.abs(prevPos.y - robotPositions[i].y) <= 1 &&
-				!robotPositions[i].s
+				["FORWARD", "REVERSE"].includes(motion) &&
+				motion === prevMotion
 			) {
-				if (prevPos.s) {
-					cmdPtr += 1;
+				if (nextMotion === "CAPTURE") {
+					result.push(`${mergedCommands[cmdPtr]} (${motion}), ${mergedCommands[cmdPtr + 1]} (${nextMotion})`);
+					cmdPtr += 1; // skip over CAPTURE commands
 				}
-				// continue with same FORWARD/REVERSE motion
-				result.push(mergedCommands[cmdPtr]);
-				prevPos = robotPositions[i];
-				continue;
-			}
-
-			if (
-				Math.abs(prevPos.x - robotPositions[i].x) <= 1 &&
-				Math.abs(prevPos.y - robotPositions[i].y) <= 1 &&
-				robotPositions[i].s
-			) {
-				result.push(
-					`${mergedCommands[cmdPtr]} ${mergedCommands[cmdPtr + 1]}`
-				);
-				cmdPtr += 1;
-				prevPos = robotPositions[i];
-				continue;
-			}
-
-			if (robotPositions[i].s) {
-				// TODO: align with MOTION instead of hardcoding bc these values may change with finetuning
-				if (
-					mergedCommands[cmdPtr].match(/.*\|0\|.*/) ||
-					i === robotPositions.length - 1
-				) {
-					cmdPtr += 1;
+				else {
+					result.push(`${mergedCommands[cmdPtr]} (${motion})`);
 				}
-
-				result.push(
-					`${mergedCommands[cmdPtr]} ${mergedCommands[cmdPtr + 1]}`
-				);
-				cmdPtr += 1;
-				prevPos = robotPositions[i];
+				prevMotion = motion;
 				continue;
 			}
 
-			// TODO: align with MOTION instead of hardcoding bc these values may change with finetuning
-			if (mergedCommands[cmdPtr].match(/.*\|0\|.*/)) {
-				cmdPtr += 1;
+			if (nextMotion === "CAPTURE") {
+				cmdPtr += 1; // new command
+				if (motion.includes("OFFSET")) {
+					// OFFSET comes in 2 commands
+					result.push(`${mergedCommands[cmdPtr]} ${mergedCommands[cmdPtr + 1]} (${motion}), ${mergedCommands[cmdPtr + 2]} (${nextMotion})`);
+					cmdPtr += 2 // skip over extra OFFSET command & CAPTURE commands
+				}
+				else {
+					result.push(`${mergedCommands[cmdPtr]} (${motion}), ${mergedCommands[cmdPtr + 1]} (${nextMotion})`);
+					cmdPtr += 1 // skip over CAPTURE commands
+				}
+				prevMotion = motion;
+				continue;
 			}
-			result.push(mergedCommands[cmdPtr]);
-			cmdPtr += 1;
-			prevPos = robotPositions[i];
-			continue;
+
+			if (motion.includes("OFFSET")) {
+				cmdPtr += 1; // new command
+				// OFFSET comes in 2 commands
+				result.push(`${mergedCommands[cmdPtr]} ${mergedCommands[cmdPtr + 1]} (${motion})`);
+				cmdPtr += 1; // skip over extra OFFSET command
+				prevMotion = motion;
+				continue;
+			}
+
+			// handle other motions
+			cmdPtr += 1; // new command
+			result.push(`${mergedCommands[cmdPtr]} (${motion})`);
+			prevMotion = motion;
 		}
 		setCurrentCommands(result);
-	}, [robotPositions]);
+	}, [robotMotions]);
 
 	return (
 		<CoreContainter title="Algorithm Simulator">
@@ -422,10 +412,14 @@ export const AlgorithmCore = () => {
 				</div>
 			)}
 
-			{/* TODO Current Command */}
+			{/* Current Command */}
 			{currentStep && currentCommands.length > 0 ? (
-				<span>{currentCommands[currentStep]}</span>
-			) : null}
+				<div className="mt-2 mb-4 flex flex-col justify-center items-center">
+					<span className="font-bold">Command (Motion):</span>
+					<span>{currentCommands[currentStep]}</span>
+				</div>
+			) : null
+			}
 
 			{/* Navigation Grid */}
 			<NavigationGrid
@@ -461,6 +455,6 @@ export const AlgorithmCore = () => {
 					</div>
 				)}
 			</div>
-		</CoreContainter>
+		</CoreContainter >
 	);
 };
