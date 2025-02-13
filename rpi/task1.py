@@ -303,7 +303,6 @@ class TaskOne(RaspberryPi):
 
         body = {
             **data,
-            "big_turn": "0",
             "robot_x": robot_x,
             "robot_y": robot_y,
             "robot_dir": robot_dir,
@@ -327,8 +326,8 @@ class TaskOne(RaspberryPi):
         self.clear_queues()
         for c in commands:
             self.command_queue.put(c)
-        # TODO check if algo team still sending the current postition of bot such that we have to ignore
-        for p in path[1:]:
+            
+        for p in path:
             self.path_queue.put(p)
 
         self.android_queue.put(
