@@ -25,7 +25,6 @@ class TaskOne(RaspberryPi):
         """Starts the RPi orchestrator"""
         try:
             ### Start up initialization ###
-
             self.android_link.connect()
             self.android_queue.put(AndroidMessage(cat="info", value="You are connected to the RPi!"))
             self.stm_link.connect()
@@ -69,10 +68,10 @@ class TaskOne(RaspberryPi):
                     self.obstacles[obs["id"]] = obs
                 self.request_algo(action.value)
 
-            elif action.cat == "snap":
+            elif action.cat == Category.SNAP.value:
                 self.recognize_image(obstacle_id_with_signal=action.value)
 
-            elif action.cat == "stitch":
+            elif action.cat == Category.STITCH.value:
                 self.request_stitch()
 
     # TODO
@@ -94,7 +93,6 @@ class TaskOne(RaspberryPi):
             logger.debug(f"Getting Prefix: {command}")
             if command.startswith(stm32_prefixes):
                 strings = str(command)
-                # strings += "\n"
                 parts = strings.split("|")
                 first_part = parts[0]
                 flag = first_part[0]
@@ -182,12 +180,10 @@ class TaskOne(RaspberryPi):
                 # blocks for 0.5 seconds to check if there are any messages
                 # in the queue
                 message = self.android_queue.get(timeout=0.5)
+                self.android_link.send(message)
             except queue.Empty:
                 logger.debug("Queue Empty!")
                 continue
-
-            try:
-                self.android_link.send(message)
             except OSError:
                 self.android_dropped.set()
                 logger.error("OSError. Event set: Android dropped")
@@ -200,40 +196,32 @@ class TaskOne(RaspberryPi):
         """
         while True:
             message: str = self.stm_link.wait_receive()
+            try:
+                # TODO check what is fD
+                if message.startswith("fD"):
+                    logger.debug("fD from STM32 received.")
+                    cur_location = self.path_queue.get_nowait()
 
-            # TODO check what is fD
-            if message.startswith("fD"):
-                logger.debug("fD from STM32 received.")
-                cur_location = self.path_queue.get_nowait()
-                logger.debug("Goes through cur_location")
-                logger.debug(f"Value of cur_location: {cur_location}")
-
-                self.current_location["x"] = cur_location["x"]
-                self.current_location["y"] = cur_location["y"]
-                self.current_location["d"] = cur_location["d"]
-                logger.info(f"self.current_location = {self.current_location}")
-                self.android_queue.put(
-                    AndroidMessage(
-                        Category.LOCATION.value,
-                        {
-                            "x": cur_location["x"],
-                            "y": cur_location["y"],
-                            "d": cur_location["d"],
-                        },
+                    self.current_location["x"] = cur_location["x"]
+                    self.current_location["y"] = cur_location["y"]
+                    self.current_location["d"] = cur_location["d"]
+                    logger.info(f"current location = {self.current_location}")
+                    self.android_queue.put(
+                        AndroidMessage(
+                            Category.LOCATION.value,
+                            {
+                                "x": cur_location["x"],
+                                "y": cur_location["y"],
+                                "d": cur_location["d"],
+                            },
+                        )
                     )
-                )
-                try:
-                    logger.debug("fD from STM32 received, releasing movement lock and retrylock.")
-                    self.movement_lock.release()
-                except:
-                    pass
-            else:
-                logger.warning(f"Ignored unknown message from STM: {message}")
-                try:
-                    logger.debug("unknown message from STM32 received, releasing movement lock and retrylock.")
-                    self.movement_lock.release()
-                except:
-                    pass
+                    logger.debug("fD from STM32 received\nReleasing movement lock.")
+                else:
+                    logger.warning(f"Ignored unknown message from STM: {message}\nReleasing movement lock.")
+            except Exception as e:
+                logger.error(f"Error in recv_stm: {e}\nMovement lock not released.")
+            self.movement_lock.release()
 
     def recv_android(self) -> None:
         """
@@ -267,12 +255,6 @@ class TaskOne(RaspberryPi):
             # TODO check with android team if they want to use control
             elif message["cat"] == "control":
                 if message["value"] == "start":
-                    # Check API
-                    # TODO handle the error
-                    if not self.check_api():
-                        logger.error("API is down! Start command aborted.")
-                        self.android_queue.put(AndroidMessage(Category.ERROR.value, "API is down, start command aborted."))
-
                     # Commencing path following
                     if not self.command_queue.empty():
                         self.unpause.set()
@@ -283,7 +265,7 @@ class TaskOne(RaspberryPi):
                         logger.warning("The command queue is empty, please set obstacles.")
                         self.android_queue.put(AndroidMessage(Category.ERROR.value, "Command queue empty (no obstacles)"))
 
-    # TODO fix this section
+    # TODO fix the library camera call
     def recognize_image(self, obstacle_id_with_signal: str) -> None:
         """
         RPi snaps an image and calls the API for image-rec.
@@ -308,16 +290,16 @@ class TaskOne(RaspberryPi):
         )
         self.android_queue.put(AndroidMessage(cat=Category.IMAGE_REC.value, value=results))
 
+    # TODO check if robot position and direction always the same
     def request_algo(self, data, robot_x=1, robot_y=1, robot_dir=0, retrying=False) -> None:
         """
         Requests for a series of commands and the path from the Algo API.
         The received commands and path are then queued in the respective queues
         """
-        logger.info("Requesting path from algo...")
+        logger.info(f"Requesting path from algo with data: {data}")
         # TODO check if line below is needed
         self.android_queue.put(AndroidMessage(cat=Category.INFO.value, value="Requesting path from algo..."))
 
-        logger.info(f"data: {data}")
         body = {
             **data,
             "big_turn": "0",
@@ -335,19 +317,17 @@ class TaskOne(RaspberryPi):
             self.android_queue.put(AndroidMessage(Category.ERROR.value, "Error when requesting path from Algo API."))
             return
 
-        # Parse response
+
         result = json.loads(response.content)["data"]
         commands = result["commands"]
         path = result["path"]
-
-        # Log commands received
         logger.debug(f"Commands received from API: {commands}")
 
-        # Put commands and paths into respective queues
         self.clear_queues()
         for c in commands:
             self.command_queue.put(c)
-        for p in path[1:]:  # ignore first element as it is the starting position of the robot
+        # TODO check if algo team still sending the current postition of bot such that we have to ignore
+        for p in path[1:]:
             self.path_queue.put(p)
 
         self.android_queue.put(
@@ -356,19 +336,20 @@ class TaskOne(RaspberryPi):
                 value="Commands and path received Algo API. Robot is ready to move.",
             )
         )
-        logger.info("Commands and path received Algo API. Robot is ready to move.")
+        logger.info("Robot is ready to move.")
 
     def request_stitch(self) -> None:
         """Sends stitch request to the image recognition API to stitch the different images together
 
         if the API is down, an error message is sent to the Android
         """
-        response = requests.get(f"http://{API_IP}:{API_PORT}/stitch")
+        response = requests.get(f"http://{URL}/stitch")
 
+        # TODO should retry if the response fails
         if response.status_code != 200:
             self.android_queue.put(AndroidMessage(Category.ERROR.value, "Error when requesting stitch from the API."))
             logger.error("Error when requesting stitch from the API.")
             return
 
-        logger.info("Images stitched!")
         self.android_queue.put(AndroidMessage(Category.INFO.value, "Images stitched!"))
+        logger.info("Images stitched!")
