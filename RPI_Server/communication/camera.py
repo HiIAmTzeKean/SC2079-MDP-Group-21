@@ -157,23 +157,26 @@ def snap_using_libcamera(
 
 
 
-# def snap_using_picamera(
-#     self,
-#     obstacle_id: str,
-#     signal: str,
-#     filename: str,
-#     filename_send: str,
-#     url: str,
-# ) -> None:
-#     my_file = open(filename, "wb")
-#     with PiCamera() as camera:
-#         camera.resolution = (640, 480)
-#         camera.start_preview()
-#         camera.capture(my_file)
-#         camera.stop_preview()
+def snap_using_picamera(
+    obstacle_id: str,
+    signal: str,
+    filename: str,
+    filename_send: str,
+    url: str,
+) -> str:
+    my_file = open(filename, "wb")
+    with PiCamera() as camera:
+        camera.resolution = (640, 480)
+        camera.start_preview()
+        camera.capture(my_file)
+        camera.stop_preview()
 
-#     my_file.close()
-#     response = requests.post(url, files={"file": (filename_send, open(filename, "rb"))})
-#     if response.status_code != 200:
-#         logger.error("Something went wrong when requesting path from image-rec API. Please try again.")
-#         return
+    my_file.close()
+    response = requests.post(url, files={"file": (filename_send, open(filename, "rb"))})
+    
+    if response.status_code != 200:
+        logger.error("Error from image-rec API.")
+        raise OSError("API Error")
+
+    results = json.loads(response.content)
+    return results
