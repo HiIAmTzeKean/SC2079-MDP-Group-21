@@ -102,7 +102,7 @@ export const AlgorithmCore = () => {
 	// Animation
 	const [isManualAnimation, setIsManualAnimation] = useState(false);
 	const [startAnimation, setStartAnimation] = useState(false);
-	const [currentStep, setCurrentStep] = useState(0);
+	const [currentStep, setCurrentStep] = useState(-1);
 	const [currentRobotPosition, setCurrentRobotPosition] =
 		useState<Position>();
 
@@ -144,7 +144,7 @@ export const AlgorithmCore = () => {
 	}, [currentStep, totalSteps, startAnimation, isManualAnimation]);
 
 	const resetNavigationGrid = () => {
-		setCurrentStep(0);
+		setCurrentStep(-1);
 		setCurrentRobotPosition(ROBOT_INITIAL_POSITION);
 		setRobotPositions(undefined);
 		setRobotCommands(undefined);
@@ -174,6 +174,110 @@ export const AlgorithmCore = () => {
 		}
 		setCommandsOutput(STMCommands);
 	};
+
+	// TODO: REFACTOR!!! cleanup this magic spaghetti
+	const [currentCommands, setCurrentCommands] = useState<string[]>([]);
+	useEffect(() => {
+		if (!robotPositions || !robotCommands) return;
+
+		// merge commands for the same motion
+		let mergedCommands = [];
+		for (let i = 0; i < robotCommands.length; i++) {
+			let currentCommand = robotCommands[i];
+
+			// merge "M0|0|0" + "SNAP" + (if present) "FIN"
+			if (currentCommand.startsWith("M0|0|0")) {
+				let temp = currentCommand; // Start building a merged command
+
+				// Check if the next command is a "SNAP" or "FIN"
+				while (
+					i + 1 < robotCommands.length &&
+					(robotCommands[i + 1].startsWith("SNAP") ||
+						robotCommands[i + 1] === "FIN")
+				) {
+					temp += " " + robotCommands[i + 1]; // Merge it into the temp string
+					i++; // Skip the merged command
+				}
+
+				mergedCommands.push(temp); // Push the merged result
+			} else {
+				// merge OFFSET commands which come in pairs
+				let matchCurrent = currentCommand.match(/\|(\d+|-\d+)\|45$/);
+
+				if (
+					matchCurrent &&
+					i + 1 < robotCommands.length &&
+					robotCommands[i + 1].match(/\|(\d+|-\d+)\|45$/)
+				) {
+					// If both current and next command end with 45, merge them
+					currentCommand += " " + robotCommands[i + 1];
+					i++; // Skip the next command since it is merged
+				}
+
+				mergedCommands.push(currentCommand);
+			}
+		}
+
+		let result: string[] = [];
+		let cmdPtr = 0;
+		let prevPos = robotPositions[0];
+		result.push(mergedCommands[cmdPtr]);
+		for (let i = 1; i < robotPositions.length; i++) {
+			if (
+				Math.abs(prevPos.x - robotPositions[i].x) <= 1 &&
+				Math.abs(prevPos.y - robotPositions[i].y) <= 1 &&
+				!robotPositions[i].s
+			) {
+				if (prevPos.s) {
+					cmdPtr += 1;
+				}
+				// continue with same FORWARD/REVERSE motion
+				result.push(mergedCommands[cmdPtr]);
+				prevPos = robotPositions[i];
+				continue;
+			}
+
+			if (
+				Math.abs(prevPos.x - robotPositions[i].x) <= 1 &&
+				Math.abs(prevPos.y - robotPositions[i].y) <= 1 &&
+				robotPositions[i].s
+			) {
+				result.push(
+					`${mergedCommands[cmdPtr]} ${mergedCommands[cmdPtr + 1]}`
+				);
+				cmdPtr += 1;
+				prevPos = robotPositions[i];
+				continue;
+			}
+
+			if (robotPositions[i].s) {
+				// TODO: align with MOTION instead of hardcoding bc these values may change with finetuning
+				if (
+					mergedCommands[cmdPtr].match(/.*\|0\|.*/) ||
+					i === robotPositions.length - 1
+				) {
+					cmdPtr += 1;
+				}
+
+				result.push(
+					`${mergedCommands[cmdPtr]} ${mergedCommands[cmdPtr + 1]}`
+				);
+				cmdPtr += 1;
+				prevPos = robotPositions[i];
+				continue;
+			}
+
+			// TODO: align with MOTION instead of hardcoding bc these values may change with finetuning
+			if (mergedCommands[cmdPtr].match(/.*\|0\|.*/)) {
+				cmdPtr += 1;
+			}
+			result.push(mergedCommands[cmdPtr]);
+			cmdPtr += 1;
+			prevPos = robotPositions[i];
+			continue;
+		}
+		setCurrentCommands(result);
+	}, [robotPositions]);
 
 	return (
 		<CoreContainter title="Algorithm Simulator">
@@ -317,6 +421,11 @@ export const AlgorithmCore = () => {
 					/>
 				</div>
 			)}
+
+			{/* TODO Current Command */}
+			{currentStep && currentCommands.length > 0 ? (
+				<span>{currentCommands[currentStep]}</span>
+			) : null}
 
 			{/* Navigation Grid */}
 			<NavigationGrid
