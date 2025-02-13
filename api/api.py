@@ -14,7 +14,7 @@ from algo.tools.commands import CommandGenerator  # nopep8
 
 app = Flask(__name__)
 
-api = Api(app)
+api = Api(app, validate=True)
 restx_models = get_models(api)
 
 CORS(app)
@@ -35,6 +35,7 @@ class Status(Resource):
 @api.route('/path')
 class PathFinding(Resource):
     @api.expect(restx_models["PathFindingRequest"])
+    @api.marshal_with(restx_models["PathFindingResponse"])
     def post(self):
         """
         This is the main endpoint for the path finding algorithm
@@ -46,42 +47,52 @@ class PathFinding(Resource):
         # Get the obstacles, big_turn, retrying, robot_x, robot_y, and robot_direction from the json data
         obstacles = content['obstacles']
         big_turn = content.get('big_turn', 1)
-        retrying = content['retrying']
-        robot_x, robot_y = content['robot_x'], content['robot_y']
-        robot_direction = content['robot_dir']
-        # Initialize MazeSolver object with robot size of 20x20, bottom left corner of robot at (1,1), facing north, and whether to use a big turn or not.
-        maze_solver = MazeSolver(size_x=20, size_y=20, robot_x=robot_x,
-                                 robot_y=robot_y, robot_direction=robot_direction, big_turn=big_turn)
-        # Add each obstacle into the MazeSolver. Each obstacle is defined by its x,y positions, its direction, and its id
-        for ob in obstacles:
-            maze_solver.add_obstacle(ob['x'], ob['y'], ob['d'], ob['id'])
+        retrying = content.get('retrying', False)
+        robot_x, robot_y = content.get('robot_x', 1), content.get('robot_y', 1)
+        robot_direction = content.get('robot_dir', 0)
+        num_runs = content.get('num_runs', 1)  # for testing
 
-        start = time.time()
-        # Get shortest path
-        optimal_path, cost = maze_solver.get_optimal_path(retrying=retrying)
-        print(
-            f"Time taken to find shortest path using A* search: {time.time() - start}s")
-        print(f"cost to travel: {cost} units")
+        optimal_path, commands, total_cost, total_runtime, = None, None, 0, 0
+        for _ in range(num_runs):
+            # Initialize MazeSolver object with robot size of 20x20, bottom left corner of robot at (1,1), facing north, and whether to use a big turn or not.
+            maze_solver = MazeSolver(size_x=20, size_y=20, robot_x=robot_x,
+                                     robot_y=robot_y, robot_direction=robot_direction, big_turn=big_turn)
+            # Add each obstacle into the MazeSolver. Each obstacle is defined by its x,y positions, its direction, and its id
+            for ob in obstacles:
+                maze_solver.add_obstacle(ob['x'], ob['y'], ob['d'], ob['id'])
 
-        # Based on the shortest path, generate commands for the robot
-        motions, obstacle_ids = maze_solver.optimal_path_to_motion_path(
-            optimal_path)
-        command_generator = CommandGenerator()
-        commands = command_generator.generate_commands(motions, obstacle_ids)
+            start = time.time()
+            # Get shortest path
+            optimal_path, cost = maze_solver.get_optimal_path(
+                retrying=retrying)
+            runtime = time.time() - start
+            total_runtime += runtime
+            total_cost += cost
+            print(
+                f"Time taken to find shortest path using A* search: {runtime}s")
+            print(f"cost to travel: {cost} units")
+
+            # Based on the shortest path, generate commands for the robot
+            motions, obstacle_ids = maze_solver.optimal_path_to_motion_path(
+                optimal_path)
+            command_generator = CommandGenerator()
+            commands = command_generator.generate_commands(
+                motions, obstacle_ids)
 
         # Get the starting location and add it to path_results
         path_results = [optimal_path[0].get_dict()]
         for pos in optimal_path:
             path_results.append(pos.get_dict())
 
-        return jsonify({
+        return {
             "data": {
-                'distance': cost,
+                'distance': total_cost / num_runs,
+                'runtime': total_runtime / num_runs,
                 'path': path_results,
-                'commands': commands
+                'commands': commands,
             },
             "error": None
-        })
+        }
 
 
 @api.route('/image')
