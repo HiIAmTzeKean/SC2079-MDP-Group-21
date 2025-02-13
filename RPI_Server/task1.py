@@ -235,6 +235,7 @@ class TaskOne(RaspberryPi):
                 self.android_dropped.set()
                 logger.debug("OSError. Event set: Android dropped")
 
+            # TODO we should do something here to handle this error
             if android_str is None:
                 continue
 
