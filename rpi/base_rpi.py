@@ -24,16 +24,18 @@ class RaspberryPi(ABC):
         self.manager = Manager()
 
         self.android_dropped = self.manager.Event()
+        """Event to indicate that the connection with Android has been dropped"""
         self.unpause = self.manager.Event()
+        """Event to indicate that the robot has been unpaused"""
 
         self.movement_lock = self.manager.Lock()
         """locks the movement"""
-        self.android_queue : Queue[AndroidMessage] = self.manager.Queue()
+        self.android_queue: Queue[AndroidMessage] = self.manager.Queue()
         """Messages to send to Android"""
-        self.rpi_action_queue : Queue[PiAction] = self.manager.Queue()
+        self.rpi_action_queue: Queue[PiAction] = self.manager.Queue()
         """Messages that need to be processed by RPi"""
         self.command_queue = self.manager.Queue()
-        """Messages that need to be processed by STM32, as well as snap commands"""
+        """Commands that need to be exec by STM32 & snap from ALGO"""
         self.path_queue = self.manager.Queue()
         """X,Y,D coordinates of the robot passed from the command_queue"""
 
@@ -51,11 +53,11 @@ class RaspberryPi(ABC):
         self.success_obstacles = self.manager.list()
         self.failed_obstacles = self.manager.list()
         self.obstacles = self.manager.dict()
-        
+
         self.current_location = self.manager.dict()
-        
+
         self.failed_attempt = False
-    
+
     @abstractmethod
     def start(self) -> None:
         pass
@@ -66,7 +68,6 @@ class RaspberryPi(ABC):
         self.stm_link.disconnect()
         self.clear_queues()
         logger.info("Program exited!")
-
 
     def clear_queues(self) -> None:
         """Clear both command and path queues"""

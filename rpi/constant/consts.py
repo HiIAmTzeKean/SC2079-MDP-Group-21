@@ -39,6 +39,7 @@ class Category(Enum):
     INFO = 'info'
     MODE = 'mode' # the current mode of the robot (`manual` or `path`)
     PATH = 'path'
+    MANUAL = 'manual'
     SNAP = 'snap'
     LOCATION = 'location' # the current location of the robot (in Path mode)
     FAILED = 'failed'
@@ -47,6 +48,7 @@ class Category(Enum):
     OBSTACLE = 'obstacle' # list of obstacles
     IMAGE_REC = 'image-rec' # image recognition results
     STATUS = 'status' # status updates of the robot (`running` or `finished`)
+    STITCH = 'stitch'
 
 manual_commands = {
     "front": ("T", 50, 0, 10),
@@ -56,3 +58,5 @@ manual_commands = {
     "bright": ("t", 30, 20, 90),
     "bleft": ("t", 30, -20, 90)
 }
+
+stm32_prefixes = ("T", "t", "w", "W", "D", "d")

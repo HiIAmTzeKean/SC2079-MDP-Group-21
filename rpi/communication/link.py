@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Union
 
 
 logger = logging.getLogger(__name__)
