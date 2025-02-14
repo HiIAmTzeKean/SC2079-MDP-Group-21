@@ -11,8 +11,8 @@ from ultralytics import YOLO
 from pathlib import Path
 from datetime import datetime
 
-MODEL_CONFIG = {"conf": 0.3, "path": Path("best.pt")}
-# confidence threshold for the YOLO model during inderence. 
+MODEL_CONFIG = {"conf": 0.3, "path": Path(__file__).parent / "best.pt"}
+# confidence threshold for the YOLO model during inderence.
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -49,6 +49,13 @@ id_map = {
     "left": 39,
     "dot": 40
 }
+
+
+def load_model():
+    model = YOLO(MODEL_CONFIG["path"])
+    model.to(device)
+    return model
+
 
 def get_random_string(length):
     result = ''.join(random.choice(string.ascii_letters) for i in range(length))
