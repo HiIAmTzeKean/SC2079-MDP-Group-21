@@ -159,6 +159,7 @@ public class BluetoothInterface {
             this.serverSocket = tmp;
         }
 
+        @SuppressLint("MissingPermission")
         @Override
         public void run() {
             Log.d(TAG, "AcceptThread: Running.");
@@ -172,6 +173,8 @@ public class BluetoothInterface {
                 }
 
                 if (socket != null) {
+                    Log.d(TAG, "Socket Addr:" + socket.getRemoteDevice().getAddress());
+                    Log.d(TAG, "Socket Name:" + socket.getRemoteDevice().getName());
                     onConnected(socket, socket.getRemoteDevice());
                     try {
                         serverSocket.close();
@@ -222,6 +225,9 @@ public class BluetoothInterface {
 
             try {
                 socket.connect();
+                Log.d(TAG, "Socket Addr:" + socket.getRemoteDevice().getAddress());
+                Log.d(TAG, "Socket Name:" + socket.getRemoteDevice().getName());
+                onConnected(socket, device);
             } catch (IOException connectException) {
                 // unable to connect
                 try {
@@ -233,10 +239,7 @@ public class BluetoothInterface {
                 } catch (IOException closeException) {
                     Log.e(TAG, "Could not close the client socket", closeException);
                 }
-                return;
             }
-
-            onConnected(socket, device);
         }
 
         public void cancel() {
