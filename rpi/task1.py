@@ -248,9 +248,9 @@ class TaskOne(RaspberryPi):
 
             elif message["cat"] == Category.MANUAL.value:
                 command = manual_commands.get(message["value"])
-                if not command:
+                if command is None:
                     logger.error("Invalid manual command!")
-                self.stm_link.send_cmd(*command)
+                self.stm_link.send_cmd(**command)
                 
             ## Command: Start Moving ##
             # TODO check with android team if they want to use control
@@ -281,7 +281,7 @@ class TaskOne(RaspberryPi):
 
         filename = f"/home/pi/cam/{int(time.time())}_{obstacle_id}_{signal}.jpg"
         filename_send = f"{int(time.time())}_{obstacle_id}_{signal}.jpg"
-        snap_using_picamera(
+        results = snap_using_picamera(
             obstacle_id=obstacle_id,
             signal=signal,
             filename=filename,
