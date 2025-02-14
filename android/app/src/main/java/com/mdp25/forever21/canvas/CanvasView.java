@@ -119,7 +119,7 @@ public class CanvasView extends View {
     public void addObstacle(int x, int y) {
         if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) {
             String key = x + "," + y;
-            obstacles.put(key, new GridObstacle(x, y));
+            obstacles.put(key, GridObstacle.of(x, y));
             invalidate();  // Redraw canvas
         }
     }

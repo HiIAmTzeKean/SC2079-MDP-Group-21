@@ -9,6 +9,21 @@ public class Position {
     private double x;
     private double y;
 
+    public Position(double x, double y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    public Position(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    // this is called a static factory method
+    public static Position of(double x, double y) {
+        return new Position(x, y);
+    }
+
     public double getX() {
         return x;
     }
