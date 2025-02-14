@@ -3,6 +3,7 @@ import time
 from flask_restx import Resource, Api
 from flask_cors import CORS
 from flask import Flask, request, jsonify
+from model import predict_image
 from models.models import get_models
 
 import sys
@@ -155,35 +156,30 @@ class SimulatorPathFinding(Resource):
 # TODO
 
 
+model = YOLO('best.pt')
+model.to('cuda' if torch.cuda.is_available() else 'cpu')
+
+# Example usage in the API
+
+
 @api.route('/image')
 class ImagePredict(Resource):
-    def post():
-        """
-        This is the main endpoint for the image prediction algorithm
-        :return: a json object with a key "result" and value a dictionary with keys "obstacle_id" and "image_id"
-        """
+    def post(self):
         file = request.files['file']
         filename = file.filename
-        file.save(os.path.join('uploads', filename))
-        # filename format: "<timestamp>_<obstacle_id>_<signal>.jpeg"
-        constituents = file.filename.split("_")
-        obstacle_id = constituents[1]
 
-        ## Week 8 ##
-        # signal = constituents[2].strip(".jpg")
-        # image_id = predict_image(filename, model, signal)
+        upload_dir = Path("uploads")
+        upload_dir.mkdir(exist_ok=True)
+        file_path = upload_dir / filename
+        file.save(file_path)
 
-        ## Week 9 ##
-        # We don't need to pass in the signal anymore
-        image_id = predict_image_week_9(filename, model)
+        # Call the predict_image function
+        output_dir = Path("output")
+        os.makedirs(output_dir, exist_ok=True)
 
-        # Return the obstacle_id and image_id
-        result = {
-            "obstacle_id": obstacle_id,
-            "image_id": image_id
-        }
-        return jsonify(result)
+        image_id = predict_image(model, file_path, output_dir)
 
+        return jsonify({"image_id": image_id})
 # TODO
 
 
