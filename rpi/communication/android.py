@@ -250,7 +250,7 @@ class AndroidLink(Link):
             # Advertise
             bluetooth.advertise_service(
                 self.server_sock,
-                "MDP-Group21-RPi",
+                uuid,
                 service_id=uuid,
                 service_classes=[uuid, bluetooth.SERIAL_PORT_CLASS],
                 profiles=[bluetooth.SERIAL_PORT_PROFILE],

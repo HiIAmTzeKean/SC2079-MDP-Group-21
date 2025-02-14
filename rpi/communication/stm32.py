@@ -3,6 +3,7 @@ from typing import Optional
 
 import serial
 from communication.link import Link
+from constant.consts import stm32_prefixes
 from constant.settings import BAUD_RATE, SERIAL_PORT
 
 
@@ -65,6 +66,8 @@ class STMLink(Link):
         logger.debug(f"Receive from STM: {message}")
         return message
 
+    
+    # TODO clarify what is the ack message
     def wait_receive(self) -> Optional[str]:
         while self.serial_link.in_waiting < 0:
             pass
@@ -80,7 +83,7 @@ class STMLink(Link):
         val: int,
     ) -> None:
         cmd = flag
-        if flag not in ["S", "D", "M"]:
+        if flag in stm32_prefixes:
             cmd += f"{speed}|{round(angle, 2)}|{round(val, 2)}" + "\n"
         self.serial_link.write(f"{cmd}\n".encode("utf-8"))
         logger.debug(f"Sent to STM32: {cmd}")
