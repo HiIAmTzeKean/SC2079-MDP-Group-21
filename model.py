@@ -161,7 +161,7 @@ def predict_image(model, image_path, output_dir, selection_mode='largest'):
 #         image_id = '39'
 #     return image_id
 
-def stitch_image():
+def stitch_image(): ## WIP
     ## stitch the images together
     imageFolder = 'our_results'
     imagePaths = glob.glob(os.path.join(imageFolder+"/annotated_image_*.jpg"))
@@ -180,7 +180,7 @@ def stitch_image():
     return stitchedImg
 
 
-# ## Testing ##
+# ## Testing With Images From Folder##
 # # Comment out Later # 
 # model = YOLO(MODEL_CONFIG["path"])
 # model.to(device)
