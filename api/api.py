@@ -1,4 +1,5 @@
 
+from werkzeug.datastructures import FileStorage
 import time
 from flask_restx import Resource, Api
 from flask_cors import CORS
@@ -156,31 +157,44 @@ class SimulatorPathFinding(Resource):
         }
 
 
+# for API validation to allow only file upload in POST request
+file_upload_parser = api.parser()
+file_upload_parser.add_argument('file', location='files',
+                                type=FileStorage, required=True)
+
+
 @api.route('/image')
 class ImagePredict(Resource):
+    @api.expect(file_upload_parser)
+    @api.marshal_with(restx_models["ImagePredictResponse"])
     def post(self):
+        """
+        This is the main endpoint for the image prediction algorithm
+        :return: a json object of a dictionary with keys "obstacle_id" and "image_id"
+        """
         file = request.files['file']
         filename = file.filename
 
         # RPI sends image file in format eg. "1739516818_1_C.jpg"
         _, obstacle_id, signal = file.filename.strip(".jpg").split("_")
 
+        # Store image sent from RPI into uploads folder
         upload_dir = Path("image_rec_files/uploads")
         upload_dir.mkdir(exist_ok=True)
         file_path = upload_dir / filename
         file.save(file_path)
 
         # Call the predict_image function
+        # Store processed image with bounding box into output folder
         output_dir = Path("image_rec_files/output")
         os.makedirs(output_dir, exist_ok=True)
 
         image_id = predict_image(model, file_path, output_dir)
 
-        return jsonify(
-            {
-                "obstacle_id": obstacle_id,
-                "image_id": image_id
-            })
+        return {
+            "obstacle_id": obstacle_id,
+            "image_id": image_id
+        }
 
 
 @api.route('/stitch')
