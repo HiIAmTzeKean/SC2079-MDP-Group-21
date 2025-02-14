@@ -52,9 +52,14 @@ class Category(Enum):
 
 manual_commands = {
     "front": ("T", 50, 0, 10),
+    "frontuntil": ("W", 50, 0, 30),
     "back": ("t", 50, 0, 10),
     "left": ("T", 50, -25, 90),
+    "left60": ("T", 50, -25, 60),
+    "left120": ("T", 50, -25, 120),
     "right": ("T", 50, 25, 90),
+    "right60": ("T", 50, 25, 60),
+    "right120": ("T", 50, 25, 120),
     "bright": ("t", 30, 20, 90),
     "bleft": ("t", 30, -20, 90)
 }
