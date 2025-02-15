@@ -10,8 +10,8 @@ import com.mdp25.forever21.Target;
  * <p> Default facing is set to NORTH and target to null.
  */
 public class GridObstacle {
-    private static int idGen = 0; //incrementing id
-    private int id; // id of obstacle
+    private static int idGen = 1; //incrementing id
+    private final int id; // id of obstacle
     private Facing facing;
     private Target target;
     private final Position position;
@@ -30,37 +30,24 @@ public class GridObstacle {
         return new GridObstacle(x, y, Facing.NORTH);
     }
 
-    public static GridObstacle of(int x, int y, Facing facing) {
-        return new GridObstacle(x, y, facing);
-    }
-
-    public void updateFacing(Facing facing){
-        this.facing = facing;
-    }
-
-    public void updateTarget(Target target){
-        this.target = target;
-    }
-
-    public void updatePosition(double x, double y) {
-        this.position.setX(x);
-        this.position.setY(y);
-    }
-
     public int getId() {
         return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 
     public Facing getFacing() {
         return facing;
     }
 
+    public void setFacing(Facing facing){
+        this.facing = facing;
+    }
+
     public Target getTarget() {
         return target;
+    }
+
+    public void setTarget(Target target){
+        this.target = target;
     }
 
     public Position getPosition() {
