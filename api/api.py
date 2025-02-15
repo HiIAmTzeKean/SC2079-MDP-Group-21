@@ -180,7 +180,7 @@ class ImagePredict(Resource):
 
         # Store image sent from RPI into uploads folder
         upload_dir = Path("image_rec_files/uploads")
-        upload_dir.mkdir(exist_ok=True)
+        upload_dir.mkdir(parents=True, exist_ok=True)
         file_path = upload_dir / filename
         file.save(file_path)
 
