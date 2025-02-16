@@ -132,7 +132,9 @@ public class BluetoothInterface {
             bluetoothAdapter.cancelDiscovery();
         }
         boolean res = bluetoothAdapter.startDiscovery();
-        Log.d(TAG, "Starting Bluetooth discovery: " + res);
+        if (!res) {
+            Log.e(TAG, "bluetoothAdapter.startDiscovery() was false");
+        }
         Toast.makeText(context, "Scanning for devices...", Toast.LENGTH_SHORT).show();
     }
 

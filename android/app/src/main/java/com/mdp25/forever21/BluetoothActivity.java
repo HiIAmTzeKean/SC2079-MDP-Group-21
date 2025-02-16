@@ -20,6 +20,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -72,7 +73,9 @@ public class BluetoothActivity extends AppCompatActivity {
         String[] permissions = new String[]{
                 Manifest.permission.BLUETOOTH_SCAN,
                 Manifest.permission.BLUETOOTH_CONNECT,
-                Manifest.permission.BLUETOOTH_ADVERTISE
+                Manifest.permission.BLUETOOTH_ADVERTISE,
+                Manifest.permission.ACCESS_FINE_LOCATION, // need location for scanning devices
+                Manifest.permission.ACCESS_COARSE_LOCATION, // need location for scanning devices
         };
         requestPermissions(permissions, BLUETOOTH_PERMISSIONS_REQUEST_CODE);
 
@@ -108,6 +111,13 @@ public class BluetoothActivity extends AppCompatActivity {
         // register message receiver
         msgReceiver = new BluetoothMessageReceiver(BluetoothMessageParser.ofDefault(), this::onMsgReceived);
         getApplicationContext().registerReceiver(msgReceiver, new IntentFilter(BluetoothMessageReceiver.ACTION_MSG_READ), RECEIVER_NOT_EXPORTED);
+
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        boolean isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        if (!isGpsEnabled) {
+            Log.d(TAG, "GPS / Location is not on, won't be able to discover non-paired devices.");
+            Toast.makeText(this,"Turn on Location to Scan for devices.", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void bindUI() {
