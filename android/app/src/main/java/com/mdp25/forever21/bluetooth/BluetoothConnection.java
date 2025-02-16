@@ -26,6 +26,11 @@ public class BluetoothConnection {
     public static final int READ_BUF_SIZE = 1024;
     public final static String ACTION_MSG_READ = BluetoothConnection.class.getPackageName() + "." + BluetoothConnection.class.getName() + ".ACTION_MSG_READ";
     public final static String EXTRA_MSG_READ = "EXTRA_MSG_READ";
+    public final static String ACTION_CONNECTED = BluetoothConnection.class.getPackageName() + "." + BluetoothConnection.class.getName() + ".ACTION_CONNECTED";
+    /** Boolean value, false for disconnected */
+    public final static String EXTRA_CONNECTED = "EXTRA_CONNECTED";
+    /** Equivalent to {@link BluetoothDevice#EXTRA_DEVICE } */
+    public final static String EXTRA_DEVICE = BluetoothDevice.EXTRA_DEVICE;
 
     private final Context appContext;
     private final MessageThread messageThread;
@@ -75,8 +80,7 @@ public class BluetoothConnection {
             this.readBuffer = new byte[READ_BUF_SIZE];
 
             handler.post(() -> {
-                Toast.makeText(appContext, "Connected to " + device.getName(), Toast.LENGTH_SHORT).show();
-                // broadcast this TODO
+                connectedBroadcast(true, device);
             });
         }
 
@@ -88,12 +92,9 @@ public class BluetoothConnection {
                 shldQuit = read();
             }
             handler.post(() -> {
-                Toast.makeText(appContext, "Disconnected from " + device.getName(), Toast.LENGTH_SHORT).show();
-                // broadcast this...
-                // either accept incoming for reconnection
-                // or send connection to prev device
+                connectedBroadcast(false, device);
+                cancel(); // close the socket
             });
-            cancel();
         }
 
         public boolean read() {
@@ -112,9 +113,9 @@ public class BluetoothConnection {
                     // build string and split by delimiter
                     String[] messages = builtStr.split("\n");
                     Log.d(TAG, "Sending broadcast.");
-                    sendBroadcast(messages);
+                    readMsgBroadcast(messages);
                 } else {
-                    sendBroadcast(new String[]{builtStr});
+                    readMsgBroadcast(new String[]{builtStr});
                 }
             } catch (IOException e) {
                 Log.e(TAG, "Error reading input stream. " + e.getMessage());
@@ -142,7 +143,7 @@ public class BluetoothConnection {
         }
 
         // sends the received message and broadcast it on main thread
-        void sendBroadcast(String[] messages) {
+        void readMsgBroadcast(String[] messages) {
             handler.post(() -> {
                 for (String message : messages) {
                     Intent intent = new Intent(ACTION_MSG_READ)
@@ -150,6 +151,16 @@ public class BluetoothConnection {
                             .putExtra(EXTRA_MSG_READ, message);
                     appContext.sendBroadcast(intent);
                 }
+            });
+        }
+
+        void connectedBroadcast(boolean connected, BluetoothDevice device) {
+            handler.post(() -> {
+                Intent intent = new Intent(ACTION_CONNECTED)
+                        .setPackage(appContext.getPackageName())
+                        .putExtra(EXTRA_CONNECTED, connected)
+                        .putExtra(EXTRA_DEVICE, device);
+                appContext.sendBroadcast(intent);
             });
         }
     }

@@ -30,6 +30,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.textfield.TextInputEditText;
+import com.mdp25.forever21.bluetooth.BluetoothConnection;
 import com.mdp25.forever21.bluetooth.BluetoothDeviceAdapter;
 import com.mdp25.forever21.bluetooth.BluetoothInfoReceiver;
 import com.mdp25.forever21.bluetooth.BluetoothMessage;
@@ -45,7 +46,7 @@ public class BluetoothActivity extends AppCompatActivity {
     private static final int DISCOVERABLE_DURATION = 30;
     private MyApplication myApp; // my context for "static" vars
     private BroadcastReceiver infoReceiver; //main receiver for all bt intents
-    private BluetoothMessageReceiver msgReceiver; //receive bluetooth messages
+    private BroadcastReceiver msgReceiver; //receive bluetooth messages
     private BluetoothDeviceAdapter bluetoothDeviceAdapter; // to inflate recycler view
 
     private ActivityResultLauncher<Intent> requestEnableBluetooth; // to enable bluetooth
@@ -118,7 +119,7 @@ public class BluetoothActivity extends AppCompatActivity {
             myApp.btInterface().connectAsClient(device.btDevice());
         });
         recyclerView.setAdapter(bluetoothDeviceAdapter);
-        findViewById(R.id.btnScan).setOnClickListener(view -> myApp.btInterface().scanForDevices());
+        findViewById(R.id.btnScan).setOnClickListener(view -> refreshDeviceList());
         findViewById(R.id.btnDiscover).setOnClickListener(view -> enableDeviceDiscovery());
 
         // these should be moved to CanvasActivity eventually
@@ -183,6 +184,12 @@ public class BluetoothActivity extends AppCompatActivity {
         myApp.btInterface().acceptIncomingConnection();
     }
 
+    private void refreshDeviceList() {
+        // refresh paired devices and scan for new
+        bluetoothDeviceAdapter.initPairedDevices(myApp.btInterface().getBondedDevices());
+        myApp.btInterface().scanForDevices();
+    }
+
 
     // starts scanning / connecting to devices
     private void startBluetooth() {
@@ -219,6 +226,19 @@ public class BluetoothActivity extends AppCompatActivity {
                 String deviceHardwareAddress = device.getAddress(); // MAC address
                 Log.d(TAG, "Discovered " + deviceName + " (" + deviceHardwareAddress + ")");
                 bluetoothDeviceAdapter.addDiscoveredDevice(device);
+            }
+        } else if (action.equals(BluetoothConnection.ACTION_CONNECTED)) {
+            boolean connected = intent.getBooleanExtra(BluetoothConnection.EXTRA_CONNECTED, false);
+            BluetoothDevice device = intent.getParcelableExtra(BluetoothConnection.EXTRA_DEVICE, BluetoothDevice.class);
+            if (device != null) {
+                Log.d(TAG, "Connected to " + device.getName() + ": " + connected);
+                if (!connected) {
+                    // let other device reconnect
+                    // enableDeviceDiscovery();
+                    // and also initiate reconnection
+                    Toast.makeText(this, "Reconnecting to " + device.getName(), Toast.LENGTH_SHORT).show();
+                    myApp.btInterface().connectAsClient(device);
+                }
             }
         }
     }

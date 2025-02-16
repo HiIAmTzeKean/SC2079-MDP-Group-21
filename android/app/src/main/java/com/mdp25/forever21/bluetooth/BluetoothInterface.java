@@ -56,17 +56,14 @@ public class BluetoothInterface {
         threadLock.lock();
         // close un-needed server sockets and resources
         // but importantly do not close BluetoothSocket!
-        try {
-            if (acceptThread != null) {
-                acceptThread.cancel();
-                acceptThread = null;
-            }
-            if (connectThread != null) {
-                connectThread.cancel();
-                connectThread = null;
-            }
-        } finally {
-            threadLock.unlock();
+
+        if (acceptThread != null) {
+            acceptThread.cancel();
+            acceptThread = null;
+        }
+        if (connectThread != null) {
+            connectThread.cancel();
+            connectThread = null;
         }
 
         connectionLock.lock();
@@ -78,6 +75,8 @@ public class BluetoothInterface {
         } finally {
             connectionLock.unlock();
         }
+
+        threadLock.unlock();
     }
 
     public boolean isBluetoothEnabled() {
