@@ -6,12 +6,12 @@ from multiprocessing import Process
 from typing import Optional
 
 import requests
-from base_rpi import RaspberryPi
-from communication.android import AndroidMessage
-from communication.camera import snap_using_libcamera, snap_using_picamera
-from communication.pi_action import PiAction
-from constant.consts import Category, manual_commands, stm32_prefixes
-from constant.settings import URL
+from .base_rpi import RaspberryPi
+from .communication.android import AndroidMessage
+from .communication.camera import snap_using_libcamera, snap_using_picamera
+from .communication.pi_action import PiAction
+from .constant.consts import Category, manual_commands, stm32_prefixes
+from .constant.settings import URL
 
 
 logger = logging.getLogger(__name__)
@@ -23,6 +23,7 @@ class TaskOne(RaspberryPi):
 
     def start(self) -> None:
         """Starts the RPi orchestrator"""
+        logger.info("starting the start function")
         try:
             ### Start up initialization ###
             self.android_link.connect()
@@ -74,14 +75,17 @@ class TaskOne(RaspberryPi):
                     action.value,
                     int(action.value["robot_x"]),
                     int(action.value["robot_y"]),
-                    int(action.value["robot_x"])
+                    int(action.value["robot_dir"])
                 )
 
             elif action.cat == Category.SNAP.value:
+                self.unpause.wait()
                 self.recognize_image(obstacle_id_with_signal=action.value)
 
             elif action.cat == Category.STITCH.value:
+                self.unpause.wait()
                 self.request_stitch()
+            self.unpause.set()
 
     # TODO
     def command_follower(self) -> None:
@@ -92,7 +96,6 @@ class TaskOne(RaspberryPi):
             command: str = self.command_queue.get()
             logger.debug(f"Command Dequeued: {command}")
 
-            # Wait for unpause event to be true [Main Trigger]
             self.unpause.wait()
 
             # Acquire lock first (needed for both moving, and snapping pictures)
@@ -119,14 +122,13 @@ class TaskOne(RaspberryPi):
                 time.sleep(1)
                 try:
                     self.movement_lock.release()
-                    logger.debug("movement_lock and retrylock released")
+                    logger.debug("movement_lock released")
                 except:
                     pass
 
             elif command == Category.FIN.value:
                 logger.info(
-                        f"At FIN, self.failed_obstacles: {self.failed_obstacles}"
-                        f"\nself.current_location: {self.current_location}"
+                        f"At FIN->self.current_location: {self.current_location}"
                 )
                 self.unpause.clear()
                 logger.debug("unpause cleared")
@@ -138,6 +140,7 @@ class TaskOne(RaspberryPi):
                 logger.info("Commands queue finished.")
                 self.android_queue.put(AndroidMessage(Category.STATUS.value, "finished"))
                 self.rpi_action_queue.put(PiAction(cat=Category.STITCH, value=""))
+                self.stop()
             else:
                 raise Exception(f"Unknown command: {command}")
 
@@ -191,7 +194,6 @@ class TaskOne(RaspberryPi):
                 message = self.android_queue.get(timeout=0.5)
                 self.android_link.send(message)
             except queue.Empty:
-                logger.debug("Queue Empty!")
                 continue
             except OSError:
                 self.android_dropped.set()
@@ -204,11 +206,13 @@ class TaskOne(RaspberryPi):
         [Child Process] Receive acknowledgement messages from STM32, and release the movement lock
         """
         while True:
-            message: str = self.stm_link.wait_receive()
+            message: Optional[str] = self.stm_link.wait_receive()
+            
+            if "CMD Received!" in message:
+                continue
+            
             try:
-                # TODO check what is fD
-                if message.startswith("fD"):
-                    logger.debug("fD from STM32 received.")
+                if message.startswith("f"):
                     cur_location = self.path_queue.get_nowait()
 
                     self.current_location["x"] = cur_location["x"]
@@ -225,13 +229,13 @@ class TaskOne(RaspberryPi):
                             },
                         )
                     )
-                    logger.debug("fD from STM32 received\nReleasing movement lock.")
+                    logger.debug(f"stm sent {message}\nReleasing movement lock.")
                 else:
                     logger.warning(f"Ignored unknown message from STM: {message}\nReleasing movement lock.")
             except Exception as e:
                 logger.error(f"Error in recv_stm: {e}\nMovement lock not released.")
             self.movement_lock.release()
-
+            
     def recv_android(self) -> None:
         """
         [Child Process] Processes the messages received from Android
@@ -251,8 +255,9 @@ class TaskOne(RaspberryPi):
             message: dict = json.loads(android_str)
 
             ## Command: Set obstacles ##
+            logger.info(f"message obtained is {message['cat']}")
             if message["cat"] == Category.OBSTACLE.value:
-                self.rpi_action_queue.put(PiAction(**message))
+                self.rpi_action_queue.put(PiAction(cat=Category.OBSTACLE, value=message["value"]))
                 logger.debug(f"PiAction obstacles appended to queue: {message}")
 
             elif message["cat"] == Category.MANUAL.value:
@@ -288,7 +293,7 @@ class TaskOne(RaspberryPi):
         self.android_queue.put(AndroidMessage(Category.INFO.value, f"Capturing image for obstacle id: {obstacle_id}"))
         url = f"{URL}/image"
 
-        filename = f"/home/pi/cam/{int(time.time())}_{obstacle_id}_{signal}.jpg"
+        filename = f"/home/rpi21/cam/{int(time.time())}_{obstacle_id}_{signal}.jpg"
         filename_send = f"{int(time.time())}_{obstacle_id}_{signal}.jpg"
         results = snap_using_picamera(
             obstacle_id=obstacle_id,
@@ -306,7 +311,7 @@ class TaskOne(RaspberryPi):
         Requests for a series of commands and the path from the Algo API.
         The received commands and path are then queued in the respective queues
         """
-        logger.info(f"Requesting path from algo with data: {data}")
+        logger.debug(f"Requesting path from algo")
         # TODO check if line below is needed
         self.android_queue.put(AndroidMessage(cat=Category.INFO.value, value="Requesting path from algo..."))
 
@@ -317,10 +322,10 @@ class TaskOne(RaspberryPi):
             "robot_dir": robot_dir,
             "retrying": retrying,
         }
+        logger.debug(f"{body}")
+        response = requests.post(url=f"{URL}/path", json=body, timeout=2.0)
 
-        response = requests.post(url=f"{URL}/path", json=body)
-
-        # TODO if the response fails, we should retry
+        # TODO if the response fails, we should retry max times if not we stall
         if response.status_code != 200:
             logger.error("Error when requesting path from Algo API.")
             self.android_queue.put(AndroidMessage(Category.ERROR.value, "Error when requesting path from Algo API."))
@@ -331,8 +336,13 @@ class TaskOne(RaspberryPi):
         commands = result["commands"]
         path = result["path"]
         logger.debug(f"Commands received from API: {commands}")
-
+        
         self.clear_queues()
+        
+        # TODO check empty list
+        if commands == []:
+            logger.error("Command queue is empty")
+
         for c in commands:
             self.command_queue.put(c)
             
@@ -352,7 +362,7 @@ class TaskOne(RaspberryPi):
 
         if the API is down, an error message is sent to the Android
         """
-        response = requests.get(f"http://{URL}/stitch")
+        response = requests.get(f"http://{URL}/stitch", timeout = 2.0)
 
         # TODO should retry if the response fails
         if response.status_code != 200:
@@ -362,3 +372,4 @@ class TaskOne(RaspberryPi):
 
         self.android_queue.put(AndroidMessage(Category.INFO.value, "Images stitched!"))
         logger.info("Images stitched!")
+

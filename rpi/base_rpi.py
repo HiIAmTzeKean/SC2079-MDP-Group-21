@@ -4,10 +4,10 @@ from multiprocessing import Manager, Process
 from queue import Queue
 
 import requests
-from communication.android import AndroidLink, AndroidMessage
-from communication.pi_action import PiAction
-from communication.stm32 import STMLink
-from constant.settings import API_IP, API_PORT
+from .communication.android import AndroidLink, AndroidMessage
+from .communication.pi_action import PiAction
+from .communication.stm32 import STMLink
+from .constant.settings import API_IP, API_PORT
 
 
 logger = logging.getLogger(__name__)
@@ -67,8 +67,16 @@ class RaspberryPi(ABC):
         self.android_link.disconnect()
         self.stm_link.disconnect()
         self.clear_queues()
+        self.clear_proccess()
         logger.info("Program exited!")
 
+    def clear_proccess(self) -> None:
+        self.proc_recv_android.kill()
+        self.proc_recv_stm32.kill()
+        self.proc_android_controller.kill()
+        self.proc_command_follower.kill()
+        self.proc_rpi_action.kill()
+    
     def clear_queues(self) -> None:
         """Clear both command and path queues"""
         while not self.command_queue.empty():

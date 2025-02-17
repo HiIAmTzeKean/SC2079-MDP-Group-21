@@ -2,9 +2,9 @@ import logging
 from typing import Optional
 
 import serial
-from communication.link import Link
-from constant.consts import stm32_prefixes
-from constant.settings import BAUD_RATE, SERIAL_PORT
+from .link import Link
+from rpi.constant.consts import stm32_prefixes
+from rpi.constant.settings import BAUD_RATE, SERIAL_PORT
 
 
 logger = logging.getLogger(__name__)
@@ -54,7 +54,7 @@ class STMLink(Link):
         :type message: str
         """
         self.serial_link.write(f"{message}\n".encode("utf-8"))
-        logger.debug(f"Sent to STM32: {message}")
+        logger.debug(f"send stm: {message}")
 
     def recv(self) -> Optional[str]:
         """Receive a message from STM32, utf-8 decoded
@@ -63,16 +63,16 @@ class STMLink(Link):
         :rtype: Optional[str]
         """
         message = self.serial_link.readline().strip().decode("utf-8")
-        logger.debug(f"Receive from STM: {message}")
+        logger.debug(f"recv stm: {message}")
         return message
 
     
     # TODO clarify what is the ack message
     def wait_receive(self) -> Optional[str]:
-        while self.serial_link.in_waiting < 0:
+        while self.serial_link.in_waiting <= 0:
             pass
         message = str(self.serial_link.read_all(), "utf-8")
-        logger.debug(f"Message Received All: {message}")
+        logger.debug(f"wait recv stm: {message}")
         return message
 
     def send_cmd(
@@ -86,4 +86,4 @@ class STMLink(Link):
         if flag in stm32_prefixes:
             cmd += f"{speed}|{round(angle, 2)}|{round(val, 2)}" + "\n"
         self.serial_link.write(f"{cmd}\n".encode("utf-8"))
-        logger.debug(f"Sent to STM32: {cmd}")
+        logger.debug(f"send_cmd stm: {cmd}")
