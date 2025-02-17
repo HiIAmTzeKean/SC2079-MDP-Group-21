@@ -207,7 +207,7 @@ class TaskOne(RaspberryPi):
             message: str = self.stm_link.wait_receive()
             
             try:
-                if message.startswith(("f","r")):
+                if message.startswith("f"):
                     cur_location = self.path_queue.get_nowait()
 
                     self.current_location["x"] = cur_location["x"]
@@ -224,7 +224,9 @@ class TaskOne(RaspberryPi):
                             },
                         )
                     )
-                    logger.debug(f"stm sent {message}")
+                    logger.debug(f"stm finish {message}")
+                elif message.startswith("r"):
+                    logger.debug(f"stm ack {message}")
                 else:
                     logger.warning(f"Ignored unknown message from STM: {message}")
             except Exception as e:
