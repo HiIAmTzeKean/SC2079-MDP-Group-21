@@ -225,14 +225,15 @@ class TaskOne(RaspberryPi):
                         )
                     )
                     logger.debug(f"stm finish {message}")
+                    logger.info("Releasing movement lock.")
+                    self.movement_lock.release()
                 elif message.startswith("r"):
                     logger.debug(f"stm ack {message}")
                 else:
                     logger.warning(f"Ignored unknown message from STM: {message}")
             except Exception as e:
                 logger.error(f"Error in recv_stm: {e}")
-            logger.info("Releasing movement lock.")
-            self.movement_lock.release()
+            
             
     def recv_android(self) -> None:
         """
