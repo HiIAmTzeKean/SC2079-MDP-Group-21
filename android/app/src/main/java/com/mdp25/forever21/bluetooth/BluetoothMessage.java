@@ -2,6 +2,8 @@ package com.mdp25.forever21.bluetooth;
 
 import android.util.Log;
 
+import com.mdp25.forever21.Facing;
+import com.mdp25.forever21.Position;
 import com.mdp25.forever21.canvas.GridObstacle;
 
 import org.json.JSONArray;
@@ -21,7 +23,7 @@ public sealed interface BluetoothMessage permits BluetoothMessage.CustomMessage,
     public static final String TAG = "BluetoothMessage";
 
     /**
-     * Received from RPI.
+     * Received from RPI
      */
     public record RobotStatusMessage(String rawMsg, String status) implements BluetoothMessage {}
     public static BluetoothMessage ofRobotStatusMessage(String rawMsg, String status) {
@@ -58,7 +60,7 @@ public sealed interface BluetoothMessage permits BluetoothMessage.CustomMessage,
     public record RobotMoveMessage(RobotMoveCommand cmd) implements BluetoothMessage, JsonMessage {
         @Override
         public String getAsJson() {
-            return getFormatted("control", cmd.value());
+            return getFormatted("manual", cmd.value());
         }
     }
     public static BluetoothMessage ofRobotMoveMessage(RobotMoveCommand cmd) {
@@ -66,7 +68,7 @@ public sealed interface BluetoothMessage permits BluetoothMessage.CustomMessage,
     }
 
     /**
-     * Sent to RPI.
+     * Sent to RPI. Tells the robot to start moving (Task 1)
      */
     public record RobotStartMessage() implements BluetoothMessage, JsonMessage {
         @Override
@@ -79,13 +81,16 @@ public sealed interface BluetoothMessage permits BluetoothMessage.CustomMessage,
     }
 
     /**
-     * Sent to RPI.
+     * Sent to RPI. Sends robot the obstacle list and initial robot pos
      */
-    public record ObstaclesMessage(List<GridObstacle> obstacleList) implements BluetoothMessage, JsonMessage {
+    public record ObstaclesMessage(Position robotInitPos, Facing robotInitDir, List<GridObstacle> obstacleList) implements BluetoothMessage, JsonMessage {
         @Override
         public String getAsJson() {
             JSONObject jsonObject = new JSONObject();
             try {
+                jsonObject.put("robot_x", robotInitPos.getXInt());
+                jsonObject.put("robot_y", robotInitPos.getYInt());
+                jsonObject.put("robot_dir", robotInitDir.getMappedCode());
                 jsonObject.put("mode", "0");
                 JSONArray arr = new JSONArray();
                 for (GridObstacle obst : obstacleList) {
@@ -104,8 +109,8 @@ public sealed interface BluetoothMessage permits BluetoothMessage.CustomMessage,
             return getFormatted("obstacles", jsonObject.toString());
         }
     }
-    public static BluetoothMessage ofObstaclesMessage(List<GridObstacle> obstacleList) {
-        return new ObstaclesMessage(obstacleList);
+    public static BluetoothMessage ofObstaclesMessage(Position robotInitPos, Facing robotInitDir, List<GridObstacle> obstacleList) {
+        return new ObstaclesMessage(robotInitPos, robotInitDir, obstacleList);
     }
 
     /**
