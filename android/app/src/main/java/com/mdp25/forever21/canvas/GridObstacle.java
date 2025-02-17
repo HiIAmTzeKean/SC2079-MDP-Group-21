@@ -10,7 +10,7 @@ import com.mdp25.forever21.Target;
  * <p> Default facing is set to NORTH and target to null.
  */
 public class GridObstacle {
-    private static int idGen = 0; //incrementing id
+    private static int idGen = 1; //incrementing id
     private int id; // id of obstacle
     private Facing facing;
     private Target target;
