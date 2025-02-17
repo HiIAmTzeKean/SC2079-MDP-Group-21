@@ -1,0 +1,156 @@
+
+from enum import Enum
+
+
+class Direction(int, Enum):
+    NORTH = 0
+    EAST = 2
+    SOUTH = 4
+    WEST = 6
+    SKIP = 8
+
+    def __int__(self):
+        return self.value
+
+    @staticmethod
+    def rotation_cost(d1, d2):
+        """
+        Calculate the cost of turning from direction d1 to direction d2
+        If the robot does not turn, the cost is 0.
+        """
+        if d1 == Direction.NORTH:
+            if d2 in [Direction.EAST, Direction.WEST]:
+                return 1
+            elif d2 == Direction.NORTH:
+                return 0
+            else:
+                raise ValueError("Robot cannot turn from north to south")
+
+        elif d1 == Direction.SOUTH:
+            if d2 in [Direction.EAST, Direction.WEST]:
+                return 1
+            elif d2 == Direction.SOUTH:
+                return 0
+            else:
+                raise ValueError("Robot cannot turn from south to north")
+
+        elif d1 == Direction.EAST:
+            if d2 in [Direction.NORTH, Direction.SOUTH]:
+                return 1
+            elif d2 == Direction.EAST:
+                return 0
+            else:
+                raise ValueError("Robot cannot turn from east to west")
+
+        elif d1 == Direction.WEST:
+            if d2 in [Direction.NORTH, Direction.SOUTH]:
+                return 1
+            elif d2 == Direction.WEST:
+                return 0
+            else:
+                raise ValueError("Robot cannot turn from west to east")
+
+        else:
+            raise ValueError(f"direction {d1} is not a valid direction.")
+
+    def __repr__(self):
+        return self.name
+
+    def __str__(self):
+        return self.name
+
+
+# move direction is a list of the possible moves the robot can make
+MOVE_DIRECTION = [
+    (1, 0, Direction.EAST),
+    (-1, 0, Direction.WEST),
+    (0, 1, Direction.NORTH),
+    (0, -1, Direction.SOUTH),
+]
+
+
+class Motion(int, Enum):
+    """
+    Enum class for the motion of the robot between two cells
+
+    For OFFSET, make two half turns to end up diagonally in the specified direction
+    eg. FORWARD_OFFSET_LEFT 
+    .  . X .  .  .
+    .  . ↑ .  .  .   
+    .  . └o┐  .  .  
+    .  .   |  .  .   
+    .  .   X  .  .
+    """
+    # the robot can move in 10 different ways from one cell to another
+    # designed so that 10 - motion = opposite motion
+    FORWARD_LEFT_TURN = 0
+    FORWARD_OFFSET_LEFT = 1
+    FORWARD = 2
+    FORWARD_OFFSET_RIGHT = 3
+    FORWARD_RIGHT_TURN = 4
+
+    REVERSE_LEFT_TURN = 10
+    REVERSE_OFFSET_RIGHT = 9
+    REVERSE = 8
+    REVERSE_OFFSET_LEFT = 7
+    REVERSE_RIGHT_TURN = 6
+
+    CAPTURE = 1000
+
+    def __int__(self):
+        return self.value
+
+    def __repr__(self):
+        return self.name
+
+    def __str__(self):
+        return self.name
+
+    def __eq__(self, other: 'Motion'):
+        return self.value == other.value
+
+    def opposite_motion(self):
+        if self == Motion.CAPTURE:
+            return Motion.CAPTURE
+
+        opp_val = 10 - self.value
+        if opp_val == 5 or opp_val < 0 or opp_val > 10:
+            raise ValueError(
+                f"Invalid motion {self}. This should never happen.")
+
+        return Motion(opp_val)
+
+    def is_combinable(self):
+        if self == Motion.CAPTURE:
+            return False
+        return self in [Motion.REVERSE, Motion.FORWARD]
+
+    def reverse_cost(self):
+        if self == Motion.CAPTURE:
+            raise ValueError("Capture motion does not have a reverse cost")
+        elif self in [
+            Motion.REVERSE_OFFSET_LEFT,
+            Motion.REVERSE_OFFSET_RIGHT,
+            Motion.REVERSE_LEFT_TURN,
+            Motion.REVERSE_RIGHT_TURN,
+            Motion.REVERSE
+        ]:
+            return 1
+        else:
+            return 0
+
+    def half_turn_cost(self):
+        """
+        If the motion is a half turn motion, return the cost of the motion.
+        Returns:
+            int:
+        """
+        if self in [
+            Motion.FORWARD_OFFSET_LEFT,
+            Motion.FORWARD_OFFSET_RIGHT,
+            Motion.REVERSE_OFFSET_LEFT,
+            Motion.REVERSE_OFFSET_RIGHT,
+        ]:
+            return 1
+        else:
+            return 0

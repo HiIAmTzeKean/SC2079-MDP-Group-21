@@ -11,8 +11,8 @@ from ultralytics import YOLO
 from pathlib import Path
 from datetime import datetime
 
-MODEL_CONFIG = {"conf": 0.3, "path": Path("best.pt")}
-# confidence threshold for the YOLO model during inderence. 
+MODEL_CONFIG = {"conf": 0.3, "path": Path(__file__).parent / "best.pt"}
+# confidence threshold for the YOLO model during inderence.
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -49,6 +49,13 @@ id_map = {
     "left": 39,
     "dot": 40
 }
+
+
+def load_model():
+    model = YOLO(MODEL_CONFIG["path"])
+    model.to(device)
+    return model
+
 
 def get_random_string(length):
     result = ''.join(random.choice(string.ascii_letters) for i in range(length))
@@ -161,37 +168,47 @@ def predict_image(model, image_path, output_dir, selection_mode='largest'):
 #         image_id = '39'
 #     return image_id
 
-def stitch_image(): ## WIP
-    ## stitch the images together
-    imageFolder = 'our_results'
-    imagePaths = glob.glob(os.path.join(imageFolder+"/annotated_image_*.jpg"))
-    imgTimestamps = [imgPath.split("_")[-1][:-4] for imgPath in imagePaths]
-    timestampImages = sorted(zip(imagePaths, imgTimestamps), key=lambda x: x[1])
-    images = [Image.open(x[0]) for x in timestampImages]
-    width, height = zip(*(i.size for i in images))
-    x_offset = 0
-    total_width = sum(width)
-    max_height = max(height)
-    stitchedImg = Image.new('RGB', (total_width, max_height))
-    for im in images:
-        stitchedImg.paste(im, (x_offset, 0))
-        x_offset += im.size[0]
-    stitchedImg.save(os.path.join(imageFolder, f'stitched-{int(time.time())}.jpeg'))
-    return stitchedImg
+def stitch_image():
+    image_folder = "../api/image_rec_files/output"  
+    output_name = "concatenated.jpg"
 
+    try:
+        image_files = [f for f in os.listdir(image_folder) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+        if not image_files:  # Handle the case where no images are found
+            print(f"No image files found in '{image_folder}'.")
+            return
 
-# ## Testing With Images From Folder##
-# # Comment out Later # 
-# model = YOLO(MODEL_CONFIG["path"])
-# model.to(device)
+        images = []
+        for file in image_files:
+            img_path = os.path.join(image_folder, file)
+            try:
+                img = Image.open(img_path)
+                images.append(img)
+            except Exception as e:
+                print(f"Error opening image {file}: {e}")
+                return # Exit early if an image can't be opened
 
-# # Input folder and Output Folder # 
-# test_images_folder = Path("test_images")
-# output_dir = Path("output")
-# os.makedirs(output_dir, exist_ok=True)
+        if not images:  # Check if any images were successfully loaded
+            print("No images could be loaded.")
+            return
 
-# for image_file in test_images_folder.glob("*.*"):  # This will match all files with image extensions
-#     if image_file.suffix.lower() in ['.jpg', '.jpeg', '.png']:  # Check if it's a valid image format
-#         # Call the prediction function
-#         image_id = predict_image(model, image_file, output_dir)
- 
+        widths, heights = zip(*(i.size for i in images))
+
+        total_width = sum(widths)
+        max_height = max(heights)
+
+        new_img = Image.new('RGB', (total_width, max_height))  # RGB for JPG compatibility
+
+        x_offset = 0
+        for img in images:
+            new_img.paste(img, (x_offset, 0))
+            x_offset += img.width
+
+        output_path = os.path.join(image_folder, output_name)
+        new_img.save(output_path)
+        print(f"Concatenated image saved to: {output_path}")
+        
+        return new_img 
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
