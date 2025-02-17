@@ -1,9 +1,11 @@
 import logging
+import multiprocessing as mp
 from abc import ABC, abstractmethod
 from multiprocessing import Manager, Process
 from queue import Queue
 
 import requests
+
 from .communication.android import AndroidLink, AndroidMessage
 from .communication.pi_action import PiAction
 from .communication.stm32 import STMLink
@@ -25,6 +27,8 @@ class RaspberryPi(ABC):
 
         self.android_dropped = self.manager.Event()
         """Event to indicate that the connection with Android has been dropped"""
+        self.outstanding_stm_instructions = self.manager.Value("i", 0)
+        """Number of outstanding instructions for STM32"""
         self.unpause = self.manager.Event()
         """Event to indicate that the robot has been unpaused"""
 
@@ -50,9 +54,8 @@ class RaspberryPi(ABC):
         self.proc_rpi_action: Process
         """proc action"""
 
-        self.success_obstacles = self.manager.list()
-        self.failed_obstacles = self.manager.list()
-        self.obstacles = self.manager.dict()
+        self.obstacles = self.manager.Value("i", 0)
+        """Number of obstacles left to detect by the robot"""
 
         self.current_location = self.manager.dict()
 
@@ -71,11 +74,13 @@ class RaspberryPi(ABC):
         logger.info("Program exited!")
 
     def clear_proccess(self) -> None:
-        self.proc_recv_android.kill()
-        self.proc_recv_stm32.kill()
-        self.proc_android_controller.kill()
-        self.proc_command_follower.kill()
-        self.proc_rpi_action.kill()
+        # get all self attributes that start with 'proc_'
+        processes = [getattr(self, attr) for attr in dir(self) if attr.startswith("proc_")]
+        for process in processes:
+            try:
+                process.kill()
+            except Exception as e:
+                logger.error(f"Error killing process: {e}")
     
     def clear_queues(self) -> None:
         """Clear both command and path queues"""
