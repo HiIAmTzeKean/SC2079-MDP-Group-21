@@ -301,7 +301,8 @@ class TaskOne(RaspberryPi):
             # auto_callibrate=False,
         )
         self.android_queue.put(AndroidMessage(Category.IMAGE_REC.value, results))
-        self.success_obstacles.append(obstacle_id)
+        with self.obstacles.get_lock():
+            self.obstacles.value -= 1
 
     # TODO implement retrying flag
     def request_algo(self, data: dict, retrying=False) -> None:
