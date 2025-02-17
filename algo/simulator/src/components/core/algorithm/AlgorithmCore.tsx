@@ -188,12 +188,12 @@ export const AlgorithmCore = () => {
 		for (let i = 0; i < robotCommands.length; i++) {
 			let currentCommand = robotCommands[i];
 
-			if (currentCommand.startsWith("M0|0|0")) {
+			if (currentCommand.startsWith("SNAP")) {
 				let merged = [currentCommand]; // Collect parts of the merged command
 
-				// Check if the next commands are "SNAP" or "FIN"
+				// Check if the next command is "FIN"
 				while (i + 1 < robotCommands.length &&
-					(robotCommands[i + 1].startsWith("SNAP") || robotCommands[i + 1] === "FIN")) {
+					(robotCommands[i + 1] === "FIN")) {
 					merged.push(robotCommands[++i]); // Add and move to the next
 				}
 

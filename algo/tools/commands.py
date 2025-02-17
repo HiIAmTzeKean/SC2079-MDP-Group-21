@@ -28,8 +28,7 @@ class CommandGenerator:
     END = "\n"
     # RCV = 'r'
     FIN = 'FIN'
-    # signal command has been passed. (used for tracking)
-    INFO_MARKER = 'M'
+    # INFO_MARKER = 'M'              # signal command has been passed. (used for tracking)
     # INFO_DIST = 'D'                # signal start/stop of accumulative distance tracking
 
     # Flags
@@ -147,7 +146,6 @@ class CommandGenerator:
             # convert prev motion to command
             else:
                 if prev_motion == Motion.CAPTURE:
-                    commands.append(f"{self.INFO_MARKER}0|0|0")
                     commands.append(f"SNAP{obstacle_ids[snap_count]}")
                     snap_count += 1
                     prev_motion = motion
@@ -161,7 +159,6 @@ class CommandGenerator:
 
         # add the last command
         if prev_motion == Motion.CAPTURE:
-            commands.append(f"{self.INFO_MARKER}0|0|0")
             commands.append(f"SNAP{obstacle_ids[snap_count]}")
         else:
             cur_cmd = self._generate_command(prev_motion, num_motions)
