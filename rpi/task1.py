@@ -64,9 +64,18 @@ class TaskOne(RaspberryPi):
             logger.debug(f"PiAction retrieved from queue: {action.cat} {action.value}")
             ## obstacle ID
             if action.cat == Category.OBSTACLE.value:
+                
                 for obs in action.value[Category.OBSTACLE.value]:
                     self.obstacles[obs["id"]] = obs
-                self.request_algo(action.value)
+                self.current_location["x"] = int(action.value["robot_x"])
+                self.current_location["y"] = int(action.value["robot_y"])
+                self.current_location["d"] = int(action.value["robot_dir"])
+                self.request_algo(
+                    action.value,
+                    int(action.value["robot_x"]),
+                    int(action.value["robot_y"]),
+                    int(action.value["robot_x"])
+                )
 
             elif action.cat == Category.SNAP.value:
                 self.recognize_image(obstacle_id_with_signal=action.value)
@@ -110,11 +119,11 @@ class TaskOne(RaspberryPi):
                 time.sleep(1)
                 try:
                     self.movement_lock.release()
-                    logger.debug(f"movement_lock and retrylock released")
+                    logger.debug("movement_lock and retrylock released")
                 except:
                     pass
 
-            elif command == "FIN":
+            elif command == Category.FIN.value:
                 logger.info(
                         f"At FIN, self.failed_obstacles: {self.failed_obstacles}"
                         f"\nself.current_location: {self.current_location}"
@@ -248,9 +257,9 @@ class TaskOne(RaspberryPi):
 
             elif message["cat"] == Category.MANUAL.value:
                 command = manual_commands.get(message["value"])
-                if not command:
+                if command is None:
                     logger.error("Invalid manual command!")
-                self.stm_link.send_cmd(*command)
+                self.stm_link.send_cmd(**command)
                 
             ## Command: Start Moving ##
             # TODO check with android team if they want to use control
@@ -281,7 +290,7 @@ class TaskOne(RaspberryPi):
 
         filename = f"/home/pi/cam/{int(time.time())}_{obstacle_id}_{signal}.jpg"
         filename_send = f"{int(time.time())}_{obstacle_id}_{signal}.jpg"
-        snap_using_picamera(
+        results = snap_using_picamera(
             obstacle_id=obstacle_id,
             signal=signal,
             filename=filename,
@@ -292,7 +301,7 @@ class TaskOne(RaspberryPi):
         self.android_queue.put(AndroidMessage(Category.IMAGE_REC.value, results))
 
     # TODO check if robot position and direction always the same
-    def request_algo(self, data, robot_x=1, robot_y=1, robot_dir=0, retrying=False) -> None:
+    def request_algo(self, data, robot_x: int, robot_y:int , robot_dir: int, retrying=False) -> None:
         """
         Requests for a series of commands and the path from the Algo API.
         The received commands and path are then queued in the respective queues

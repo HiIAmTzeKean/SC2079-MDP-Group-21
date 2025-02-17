@@ -1,10 +1,11 @@
 import logging
 
 
-log_format = logging.Formatter("%(asctime)s :: %(levelname)s :: %(name)%->%(funcName)% :: %(message)s")
+log_format = logging.Formatter("%(asctime)s :: %(levelname)s :: %(funcName)s :: %(message)s")
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+logger.propagate = True
 
 if not logger.hasHandlers():
     # Console handler
@@ -20,3 +21,5 @@ if not logger.hasHandlers():
     # Add handlers to logger
     logger.addHandler(debug_handler)
     logger.addHandler(txt_handler)
+
+logger.info("started package")
