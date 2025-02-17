@@ -174,8 +174,11 @@ class AndroidLink(Link):
     {
         "cat": "obstacles",
         "value": {
-            "obstacles": [{"x": 5, "y": 10, "id": 1, "d": 2}],
-            "mode": "0"
+            "obstacles": [{"x": 5, "y": 10, "id": 1, "d": 2}, {"x": 5, "y": 10, "id": 1, "d": 2}],
+            "mode": "0",
+            "robot_x": 5, 
+            "robot_y": 10,
+            "robot_dir": 2
         }
     }
     ```

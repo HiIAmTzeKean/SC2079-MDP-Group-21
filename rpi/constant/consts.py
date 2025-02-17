@@ -49,6 +49,7 @@ class Category(Enum):
     IMAGE_REC = 'image-rec' # image recognition results
     STATUS = 'status' # status updates of the robot (`running` or `finished`)
     STITCH = 'stitch'
+    FIN = 'FIN'
 
 manual_commands = {
     "front": ("T", 50, 0, 10),
