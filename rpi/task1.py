@@ -3,7 +3,7 @@ import logging
 import queue
 import time
 from multiprocessing import Process
-from typing import Optional
+from typing import Any, Optional
 
 import requests
 from .base_rpi import RaspberryPi
@@ -65,27 +65,28 @@ class TaskOne(RaspberryPi):
             logger.debug(f"PiAction retrieved from queue: {action.cat} {action.value}")
             ## obstacle ID
             if action.cat == Category.OBSTACLE.value:
-                
-                for obs in action.value[Category.OBSTACLE.value]:
-                    self.obstacles[obs["id"]] = obs
+                for _ in action.value[Category.OBSTACLE.value]:
+                    self.obstacles += 1
                 self.current_location["x"] = int(action.value["robot_x"])
                 self.current_location["y"] = int(action.value["robot_y"])
                 self.current_location["d"] = int(action.value["robot_dir"])
-                self.request_algo(
-                    action.value,
-                    int(action.value["robot_x"]),
-                    int(action.value["robot_y"]),
-                    int(action.value["robot_dir"])
-                )
+                self.request_algo(action.value)
 
             elif action.cat == Category.SNAP.value:
-                self.unpause.wait()
+                while True:
+                    # wait for all STM instructions to finish
+                    with self.outstanding_stm_instructions.get_lock():
+                        if self.outstanding_stm_instructions.value == 0:
+                            break
                 self.recognize_image(obstacle_id_with_signal=action.value)
 
             elif action.cat == Category.STITCH.value:
-                self.unpause.wait()
+                while True:
+                    # wait for all STM instructions to finish
+                    with self.obstacles.get_lock():
+                        if self.outstanding_stm_instructions.value == 0:
+                            break
                 self.request_stitch()
-            self.unpause.set()
 
     # TODO
     def command_follower(self) -> None:
@@ -94,7 +95,7 @@ class TaskOne(RaspberryPi):
         """
         while True:
             command: str = self.command_queue.get()
-            logger.debug(f"Command Dequeued: {command}")
+            logger.debug(f"command dequeued: {command}")
 
             self.unpause.wait()
 
@@ -102,17 +103,14 @@ class TaskOne(RaspberryPi):
             logger.debug("Acquiring movement lock...")
             self.movement_lock.acquire()
 
-            logger.debug(f"Getting Prefix: {command}")
+            logger.debug(f"command for movement lock: {command}")
             if command.startswith(stm32_prefixes):
                 strings = str(command)
+                # t|100|100|100
                 parts = strings.split("|")
-                first_part = parts[0]
-                flag = first_part[0]
-                speed = int(first_part[1:])
-                angle = int(parts[1])
-                val = int(parts[2])
-
-                self.stm_link.send_cmd(flag, speed, angle, val)
+                with self.outstanding_stm_instructions.get_lock():
+                    self.outstanding_stm_instructions.value += 1
+                self.stm_link.send_cmd(parts[0][0], int(parts[0][1:]), int(parts[1]), int(parts[2]))
                 logger.debug(f"Sending to STM32: {command}")
 
             elif command.startswith("SNAP"):
@@ -206,13 +204,10 @@ class TaskOne(RaspberryPi):
         [Child Process] Receive acknowledgement messages from STM32, and release the movement lock
         """
         while True:
-            message: Optional[str] = self.stm_link.wait_receive()
-            
-            if "CMD Received!" in message:
-                continue
+            message: str = self.stm_link.wait_receive()
             
             try:
-                if message.startswith("f"):
+                if message.startswith(("f","r")):
                     cur_location = self.path_queue.get_nowait()
 
                     self.current_location["x"] = cur_location["x"]
@@ -229,11 +224,12 @@ class TaskOne(RaspberryPi):
                             },
                         )
                     )
-                    logger.debug(f"stm sent {message}\nReleasing movement lock.")
+                    logger.debug(f"stm sent {message}")
                 else:
-                    logger.warning(f"Ignored unknown message from STM: {message}\nReleasing movement lock.")
+                    logger.warning(f"Ignored unknown message from STM: {message}")
             except Exception as e:
-                logger.error(f"Error in recv_stm: {e}\nMovement lock not released.")
+                logger.error(f"Error in recv_stm: {e}")
+            logger.info("Releasing movement lock.")
             self.movement_lock.release()
             
     def recv_android(self) -> None:
@@ -248,8 +244,8 @@ class TaskOne(RaspberryPi):
                 self.android_dropped.set()
                 logger.debug("OSError. Event set: Android dropped")
 
-            # TODO we should do something here to handle this error
             if android_str is None:
+                logger.debug("Empty message from andriod")
                 continue
 
             message: dict = json.loads(android_str)
@@ -267,7 +263,6 @@ class TaskOne(RaspberryPi):
                 self.stm_link.send_cmd(**command)
                 
             ## Command: Start Moving ##
-            # TODO check with android team if they want to use control
             elif message["cat"] == "control":
                 if message["value"] == "start":
                     # Commencing path following
@@ -304,33 +299,31 @@ class TaskOne(RaspberryPi):
             # auto_callibrate=False,
         )
         self.android_queue.put(AndroidMessage(Category.IMAGE_REC.value, results))
+        self.success_obstacles.append(obstacle_id)
 
-    # TODO check if robot position and direction always the same
-    def request_algo(self, data, robot_x: int, robot_y:int , robot_dir: int, retrying=False) -> None:
+    # TODO implement retrying flag
+    def request_algo(self, data: dict, retrying=False) -> None:
         """
         Requests for a series of commands and the path from the Algo API.
         The received commands and path are then queued in the respective queues
         """
-        logger.debug(f"Requesting path from algo")
-        # TODO check if line below is needed
+        logger.debug("Requesting path from algo")
         self.android_queue.put(AndroidMessage(cat=Category.INFO.value, value="Requesting path from algo..."))
 
         body = {
             **data,
-            "robot_x": robot_x,
-            "robot_y": robot_y,
-            "robot_dir": robot_dir,
+            "robot_x": data["robot_x"],
+            "robot_y": data["robot_y"],
+            "robot_dir": data["robot_dir"],
             "retrying": retrying,
         }
         logger.debug(f"{body}")
-        response = requests.post(url=f"{URL}/path", json=body, timeout=2.0)
+        response = requests.post(url=f"{URL}/path", json=body, timeout=1.0)
 
-        # TODO if the response fails, we should retry max times if not we stall
         if response.status_code != 200:
             logger.error("Error when requesting path from Algo API.")
             self.android_queue.put(AndroidMessage(Category.ERROR.value, "Error when requesting path from Algo API."))
             return
-
 
         result = json.loads(response.content)["data"]
         commands = result["commands"]
@@ -338,10 +331,10 @@ class TaskOne(RaspberryPi):
         logger.debug(f"Commands received from API: {commands}")
         
         self.clear_queues()
-        
-        # TODO check empty list
+
         if commands == []:
             logger.error("Command queue is empty")
+            return
 
         for c in commands:
             self.command_queue.put(c)

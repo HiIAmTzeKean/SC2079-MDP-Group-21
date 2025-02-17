@@ -66,9 +66,7 @@ class STMLink(Link):
         logger.debug(f"recv stm: {message}")
         return message
 
-    
-    # TODO clarify what is the ack message
-    def wait_receive(self) -> Optional[str]:
+    def wait_receive(self) -> str:
         while self.serial_link.in_waiting <= 0:
             pass
         message = str(self.serial_link.read_all(), "utf-8")
