@@ -37,8 +37,11 @@ import com.mdp25.forever21.bluetooth.BluetoothInfoReceiver;
 import com.mdp25.forever21.bluetooth.BluetoothMessage;
 import com.mdp25.forever21.bluetooth.BluetoothMessageParser;
 import com.mdp25.forever21.bluetooth.BluetoothMessageReceiver;
+import com.mdp25.forever21.bluetooth.JsonMessage;
+import com.mdp25.forever21.canvas.GridObstacle;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class BluetoothActivity extends AppCompatActivity {
 
@@ -149,6 +152,18 @@ public class BluetoothActivity extends AppCompatActivity {
         Button canvasButton = findViewById(R.id.btnTemp);
         canvasButton.setOnClickListener(view -> {
             startActivity(new Intent(this, CanvasActivity.class));
+        });
+
+        // TEMP
+        findViewById(R.id.testBtn).setOnClickListener(view -> {
+            BluetoothMessage msg = BluetoothMessage.ofObstaclesMessage(new Position(1, 1), Facing.NORTH, List.of((GridObstacle.of(10,10,Facing.SOUTH))));
+            myApp.btConnection().sendMessage(msg.getAsJsonMessage().getAsJson());
+        });
+
+        // TEMP
+        findViewById(R.id.tesetBtn2).setOnClickListener(view -> {
+            BluetoothMessage msg = BluetoothMessage.ofRobotStartMessage();
+            myApp.btConnection().sendMessage(msg.getAsJsonMessage().getAsJson());
         });
     }
 
