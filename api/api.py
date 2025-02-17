@@ -1,8 +1,10 @@
 
+from werkzeug.datastructures import FileStorage
 import time
 from flask_restx import Resource, Api
 from flask_cors import CORS
 from flask import Flask, request, jsonify
+from pathlib import Path
 from models.models import get_models
 
 import sys
@@ -11,6 +13,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from algo.algorithms.algo import MazeSolver  # nopep8
 from algo.tools.commands import CommandGenerator  # nopep8
+from image_rec.model import load_model, predict_image, stitch_image  # nopep8
 
 app = Flask(__name__)
 
@@ -18,8 +21,9 @@ api = Api(app, validate=True)
 restx_models = get_models(api)
 
 CORS(app)
-# model = load_model()
-model = None
+
+# load model for image recognition
+model = load_model()
 
 
 @api.route('/status')
@@ -152,39 +156,45 @@ class SimulatorPathFinding(Resource):
             "error": None
         }
 
-# TODO
+
+# for API validation to allow only file upload in POST request
+file_upload_parser = api.parser()
+file_upload_parser.add_argument('file', location='files',
+                                type=FileStorage, required=True)
 
 
 @api.route('/image')
 class ImagePredict(Resource):
-    def post():
+    @api.expect(file_upload_parser)
+    @api.marshal_with(restx_models["ImagePredictResponse"])
+    def post(self):
         """
         This is the main endpoint for the image prediction algorithm
-        :return: a json object with a key "result" and value a dictionary with keys "obstacle_id" and "image_id"
+        :return: a json object of a dictionary with keys "obstacle_id" and "image_id"
         """
         file = request.files['file']
         filename = file.filename
-        file.save(os.path.join('uploads', filename))
-        # filename format: "<timestamp>_<obstacle_id>_<signal>.jpeg"
-        constituents = file.filename.split("_")
-        obstacle_id = constituents[1]
 
-        ## Week 8 ##
-        # signal = constituents[2].strip(".jpg")
-        # image_id = predict_image(filename, model, signal)
+        # RPI sends image file in format eg. "1739516818_1_C.jpg"
+        _, obstacle_id, signal = file.filename.strip(".jpg").split("_")
 
-        ## Week 9 ##
-        # We don't need to pass in the signal anymore
-        image_id = predict_image_week_9(filename, model)
+        # Store image sent from RPI into uploads folder
+        upload_dir = Path("image_rec_files/uploads")
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        file_path = upload_dir / filename
+        file.save(file_path)
 
-        # Return the obstacle_id and image_id
-        result = {
+        # Call the predict_image function
+        # Store processed image with bounding box into output folder
+        output_dir = Path("image_rec_files/output")
+        os.makedirs(output_dir, exist_ok=True)
+
+        image_id = predict_image(model, file_path, output_dir)
+
+        return {
             "obstacle_id": obstacle_id,
             "image_id": image_id
         }
-        return jsonify(result)
-
-# TODO
 
 
 @api.route('/stitch')
@@ -195,8 +205,6 @@ class Stitch(Resource):
         """
         img = stitch_image()
         img.show()
-        img2 = stitch_image_own()
-        img2.show()
         return jsonify({"result": "ok"})
 
 
