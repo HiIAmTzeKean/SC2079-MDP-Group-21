@@ -23,6 +23,16 @@ public sealed interface BluetoothMessage permits BluetoothMessage.CustomMessage,
     public static final String TAG = "BluetoothMessage";
 
     /**
+     * Provided for convenience. Use cautiously, this is an unchecked cast.
+     * @return possibly null
+     */
+    default public JsonMessage getAsJsonMessage() {
+        if (this instanceof JsonMessage)
+            return (JsonMessage) this;
+        return null;
+    }
+
+    /**
      * Received from RPI
      */
     public record RobotStatusMessage(String rawMsg, String status) implements BluetoothMessage {}
@@ -60,7 +70,7 @@ public sealed interface BluetoothMessage permits BluetoothMessage.CustomMessage,
     public record RobotMoveMessage(RobotMoveCommand cmd) implements BluetoothMessage, JsonMessage {
         @Override
         public String getAsJson() {
-            return getFormatted("manual", cmd.value());
+            return getFormattedStr("manual", cmd.value());
         }
     }
     public static BluetoothMessage ofRobotMoveMessage(RobotMoveCommand cmd) {
@@ -73,7 +83,7 @@ public sealed interface BluetoothMessage permits BluetoothMessage.CustomMessage,
     public record RobotStartMessage() implements BluetoothMessage, JsonMessage {
         @Override
         public String getAsJson() {
-            return getFormatted("control", "start");
+            return getFormattedStr("control", "start");
         }
     }
     public static BluetoothMessage ofRobotStartMessage() {
@@ -106,7 +116,7 @@ public sealed interface BluetoothMessage permits BluetoothMessage.CustomMessage,
                 Log.e(TAG,"Error creating json for ObstaclesMessage");
                 throw new RuntimeException(e);
             }
-            return getFormatted("obstacles", jsonObject.toString());
+            return getFormattedObj("obstacles", jsonObject);
         }
     }
     public static BluetoothMessage ofObstaclesMessage(Position robotInitPos, Facing robotInitDir, List<GridObstacle> obstacleList) {
