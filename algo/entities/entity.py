@@ -88,23 +88,23 @@ class Obstacle(CellState):
             List[CellState]: Valid cell states where robot can be positioned to view the symbol on the obstacle
         """
         cells = []
-        offset = PADDING
+        offset = 1  # off set due to position of robot's center
 
         # If the obstacle is facing north, then robot's cell state must be facing south
         if self.direction == Direction.NORTH:
             positions = [
-                # robot camera is directly in front of obstacle
-                (self.x, self.y + offset),
                 # robot camera is left of obstacle
                 (self.x - 1, self.y + 2 + offset),
                 # robot camera is right of obstacle
                 (self.x + 1, self.y + 2 + offset),
+                # robot camera is directly in front of obstacle
+                (self.x, self.y + 1 + offset),
                 (self.x, self.y + 2 + offset),
             ]
             costs = [
-                TOO_CLOSE_COST,         # robot camera is directly in front of obstacle
                 SCREENSHOT_COST,        # robot camera is left of obstacle
                 SCREENSHOT_COST,        # robot camera is right of obstacle
+                TOO_CLOSE_COST,         # robot camera is directly in front of obstacle
                 0,                      # robot camera is positioned just nice
             ]
 
@@ -118,15 +118,15 @@ class Obstacle(CellState):
         # If obstacle is facing south, then robot's cell state must be facing north
         elif self.direction == Direction.SOUTH:
             positions = [
-                (self.x, self.y - offset),
                 (self.x + 1, self.y - 2 - offset),
                 (self.x - 1, self.y - 2 - offset),
                 (self.x, self.y - 1 - offset),
+                (self.x, self.y - 2 - offset),
             ]
             costs = [
+                SCREENSHOT_COST,
+                SCREENSHOT_COST,
                 TOO_CLOSE_COST,
-                SCREENSHOT_COST,
-                SCREENSHOT_COST,
                 0,
             ]
 
@@ -140,15 +140,15 @@ class Obstacle(CellState):
         # If obstacle is facing east, then robot's cell state must be facing west
         elif self.direction == Direction.EAST:
             positions = [
-                (self.x + offset, self.y),
                 (self.x + 2 + offset, self.y + 1),
                 (self.x + 2 + offset, self.y - 1),
+                (self.x + 1 + offset, self.y),
                 (self.x + 2 + offset, self.y),
             ]
             costs = [
+                SCREENSHOT_COST,
+                SCREENSHOT_COST,
                 TOO_CLOSE_COST,
-                SCREENSHOT_COST,
-                SCREENSHOT_COST,
                 0,
             ]
 
@@ -162,15 +162,15 @@ class Obstacle(CellState):
         # If obstacle is facing west, then robot's cell state must be facing east
         elif self.direction == Direction.WEST:
             positions = [
-                (self.x - offset, self.y),
                 (self.x - 2 - offset, self.y + 1),
                 (self.x - 2 - offset, self.y - 1),
+                (self.x - 1 - offset, self.y),
                 (self.x - 2 - offset, self.y),
             ]
             costs = [
+                SCREENSHOT_COST,
+                SCREENSHOT_COST,
                 TOO_CLOSE_COST,
-                SCREENSHOT_COST,
-                SCREENSHOT_COST,
                 0,
             ]
 
@@ -254,10 +254,10 @@ class Grid:
 
         for ob in self.obstacles:
             # ensure Manhattan distance from robot to obstacle is not within padding
-            if abs(ob.x - x) + abs(ob.y - y) <= PADDING:
+            if abs(ob.x - x) + abs(ob.y - y) <= 1:
                 return False
             # ensure Chebyshev distance from robot to obstacle is not within padding
-            if max(abs(ob.x - x), abs(ob.y - y)) < PADDING:
+            if max(abs(ob.x - x), abs(ob.y - y)) < 1:
                 return False
 
         return True

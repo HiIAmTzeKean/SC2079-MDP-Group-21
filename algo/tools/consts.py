@@ -45,7 +45,7 @@ X ←----┐  .  .
 0: long axis, 1: short axis
 """
 TURN_RADIUS = 1
-TURN_DISPLACEMENT = [4 * TURN_RADIUS, TURN_RADIUS]
+TURN_DISPLACEMENT = [4 * TURN_RADIUS, 4 * TURN_RADIUS]
 
 # for collision checking. minimum padding from robot to obstacle position
 TURN_PADDING = 2 * EXPANDED_CELL
