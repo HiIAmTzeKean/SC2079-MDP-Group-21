@@ -3,10 +3,10 @@ from flask_restx import fields
 
 def get_models(api):
     obstacle = api.model('Obstacle', {
-        'x': fields.Integer(min=0, max=19, default=10),
-        'y': fields.Integer(min=0, max=19, default=10),
-        'd': fields.Integer(min=0, max=8, multiple=2, default=4),
-        'id': fields.Integer(min=1)
+        'x': fields.Integer(required=True, min=0, max=19, default=10),
+        'y': fields.Integer(required=True, min=0, max=19, default=10),
+        'd': fields.Integer(required=True, min=0, max=8, multiple=2, default=4),
+        'id': fields.Integer(required=True)
     })
 
     position = api.model('Position', {
@@ -31,7 +31,6 @@ def get_models(api):
 
     path_finding_response = api.model('PathFindingResponse', {
         'data': fields.Nested(path_finding_data),
-        'error': fields.String()
     })
 
     simulator_path_finding_request = api.model('SimulatorPathFindingRequest', {
@@ -53,12 +52,19 @@ def get_models(api):
 
     simulator_path_finding_response = api.model('SimulatorPathFindingResponse', {
         'data': fields.Nested(simulator_path_finding_data),
-        'error': fields.String()
     })
 
     image_predict_response = api.model('ImagePredictResponse', {
         "obstacle_id": fields.String(),
         "image_id": fields.String(),
+    })
+
+    error = api.model('Error', {
+        'error': fields.String()
+    })
+
+    ok = api.model('Ok', {
+        'result': fields.String()
     })
 
     return {
@@ -67,5 +73,7 @@ def get_models(api):
         "PathFindingResponse": path_finding_response,
         "SimulatorPathFindingRequest": simulator_path_finding_request,
         "SimulatorPathFindingResponse": simulator_path_finding_response,
-        "ImagePredictResponse": image_predict_response
+        "ImagePredictResponse": image_predict_response,
+        "Error": error,
+        "Ok": ok,
     }

@@ -1,11 +1,14 @@
 
 from werkzeug.datastructures import FileStorage
 import time
-from flask_restx import Resource, Api
+from flask_restx import Resource, Api, marshal
 from flask_cors import CORS
 from flask import Flask, request, jsonify
 from pathlib import Path
+import json
+
 from models.models import get_models
+from logger.logger import setup_logger
 
 import sys
 import os
@@ -18,7 +21,9 @@ from image_rec.model import load_model, predict_image, stitch_image  # nopep8
 app = Flask(__name__)
 
 api = Api(app, validate=True)
-restx_models = get_models(api)
+restx_models = get_models(api
+                          )
+logger = setup_logger()
 
 CORS(app)
 
@@ -28,97 +33,63 @@ model = load_model()
 
 @api.route('/status')
 class Status(Resource):
+    @api.response(model=restx_models["Ok"], code=200, description="Success")
     def get(self):
         """
         This is a health check endpoint to check if the server is running
         :return: a json object with a key "result" and value "ok"
         """
-        return jsonify({"result": "ok"})
+        return marshal(
+            {
+                "result": "ok"
+            },
+            restx_models["Ok"]
+        ), 200
+
+
+@app.after_request
+def log_response_info(response):
+    ignored_paths = ["/swaggerui/", "/swagger.json",
+                     "/swagger/", "/static/", "/favicon.ico"]
+    # Only log responses for requests to API endpoints, ignoring Swagger-related requests
+    if not any(request.path.startswith(path) for path in ignored_paths) and request.path != "/":
+        try:
+            logger.debug(json.loads(response.data))
+        except json.JSONDecodeError:
+            logger.debug("Response data is not valid JSON.")
+    return response
 
 
 @api.route('/path')
 class PathFinding(Resource):
     @api.expect(restx_models["PathFindingRequest"])
-    @api.marshal_with(restx_models["PathFindingResponse"])
+    @api.response(model=restx_models["PathFindingResponse"], code=200, description="Success")
+    @api.response(model=restx_models["Error"], code=500, description="Internal Server Error")
     def post(self):
         """
         This is the main endpoint for the path finding algorithm
         :return: a json object with a key "data" and value a dictionary with keys "distance", "path", and "commands"
         """
-        # Get the json data from the request
-        content = request.json
+        try:
+            # Get the json data from the request
+            content = request.json
+            logger.debug("Request received from client:")
+            logger.debug(f"{content}")
 
-        # Get the obstacles, retrying, robot_x, robot_y, and robot_direction from the json data
-        obstacles = content['obstacles']
-        # TODO: use alternative algo for retrying?
-        retrying = content.get('retrying', False)
-        robot_x, robot_y = content.get('robot_x', 1), content.get('robot_y', 1)
-        robot_direction = content.get('robot_dir', 0)
+            # Get the obstacles, retrying, robot_x, robot_y, and robot_direction from the json data
+            obstacles = content['obstacles']
+            # TODO: use alternative algo for retrying?
+            retrying = content.get('retrying', False)
+            robot_x, robot_y = content.get(
+                'robot_x', 1), content.get('robot_y', 1)
+            robot_direction = content.get('robot_dir', 0)
 
-        optimal_path, commands = None, None
+            optimal_path, commands = None, None
 
-        # Initialize MazeSolver object with robot size of 20x20, bottom left corner of robot at (1,1), facing north.
-        maze_solver = MazeSolver(size_x=20, size_y=20, robot_x=robot_x,
-                                 robot_y=robot_y, robot_direction=robot_direction)
-        # Add each obstacle into the MazeSolver. Each obstacle is defined by its x,y positions, its direction, and its id
-        for ob in obstacles:
-            maze_solver.add_obstacle(ob['x'], ob['y'], ob['d'], ob['id'])
-
-        start = time.time()
-        # Get shortest path
-        optimal_path, cost = maze_solver.get_optimal_path()
-        runtime = time.time() - start
-        print(
-            f"Time taken to find shortest path using A* search: {runtime}s")
-        print(f"cost to travel: {cost} units")
-
-        # Based on the shortest path, generate commands for the robot
-        motions, obstacle_ids = maze_solver.optimal_path_to_motion_path(
-            optimal_path)
-        command_generator = CommandGenerator()
-        commands = command_generator.generate_commands(
-            motions, obstacle_ids)
-
-        # Get the starting location and add it to path_results
-        path_results = []
-        for pos in optimal_path:
-            path_results.append(pos.get_dict())
-
-        return {
-            "data": {
-                'path': path_results,
-                'commands': commands,
-            },
-            "error": None
-        }
-
-
-# FOR SIMULATOR TESTING ONLY
-@api.route('/simulator_path')
-class SimulatorPathFinding(Resource):
-    @api.expect(restx_models["SimulatorPathFindingRequest"])
-    @api.marshal_with(restx_models["SimulatorPathFindingResponse"])
-    def post(self):
-        """
-        FOR SIMULATOR TESTING ONLY. RPI SHOULD NOT BE USING THIS ENDPOINT
-        :return: a json object with a key "data" and value a dictionary with keys "distance", "path", and "commands"
-        """
-        # Get the json data from the request
-        content = request.json
-
-        # Get the obstacles, retrying, robot_x, robot_y, and robot_direction from the json data
-        obstacles = content['obstacles']
-        # TODO: use alternative algo for retrying?
-        retrying = content.get('retrying', False)
-        robot_x, robot_y = content.get('robot_x', 1), content.get('robot_y', 1)
-        robot_direction = content.get('robot_dir', 0)
-        num_runs = content.get('num_runs', 1)  # for testing
-
-        optimal_path, commands, total_cost, total_runtime, = None, None, 0, 0
-        for _ in range(num_runs):
             # Initialize MazeSolver object with robot size of 20x20, bottom left corner of robot at (1,1), facing north.
             maze_solver = MazeSolver(size_x=20, size_y=20, robot_x=robot_x,
                                      robot_y=robot_y, robot_direction=robot_direction)
+
             # Add each obstacle into the MazeSolver. Each obstacle is defined by its x,y positions, its direction, and its id
             for ob in obstacles:
                 maze_solver.add_obstacle(ob['x'], ob['y'], ob['d'], ob['id'])
@@ -127,11 +98,9 @@ class SimulatorPathFinding(Resource):
             # Get shortest path
             optimal_path, cost = maze_solver.get_optimal_path()
             runtime = time.time() - start
-            total_runtime += runtime
-            total_cost += cost
-            print(
+            logger.debug(
                 f"Time taken to find shortest path using A* search: {runtime}s")
-            print(f"cost to travel: {cost} units")
+            logger.debug(f"cost to travel: {cost} units")
 
             # Based on the shortest path, generate commands for the robot
             motions, obstacle_ids = maze_solver.optimal_path_to_motion_path(
@@ -140,21 +109,108 @@ class SimulatorPathFinding(Resource):
             commands = command_generator.generate_commands(
                 motions, obstacle_ids)
 
-        # Get the starting location and add it to path_results
-        path_results = []
-        for pos in optimal_path:
-            path_results.append(pos.get_dict())
+            # Get the starting location and add it to path_results
+            path_results = []
+            for pos in optimal_path:
+                path_results.append(pos.get_dict())
 
-        return {
-            "data": {
-                'distance': total_cost / num_runs,
-                'runtime': total_runtime / num_runs,
-                'path': path_results,
-                'commands': commands,
-                'motions': motions
-            },
-            "error": None
-        }
+            return marshal(
+                {
+                    "data": {
+                        'path': path_results,
+                        'commands': commands,
+                    }
+                },
+                restx_models["PathFindingResponse"]
+            ), 200
+        except Exception as error:
+            logger.debug("", exc_info=True)
+            return marshal(
+                {
+                    "error": repr(error)
+                },
+                restx_models["Error"]
+            ), 500
+
+
+# FOR SIMULATOR TESTING ONLY
+@api.route('/simulator_path')
+class SimulatorPathFinding(Resource):
+    @api.expect(restx_models["SimulatorPathFindingRequest"])
+    @api.response(model=restx_models["SimulatorPathFindingResponse"], code=200, description="Success")
+    @api.response(model=restx_models["Error"], code=500, description="Internal Server Error")
+    def post(self):
+        """
+        FOR SIMULATOR TESTING ONLY. RPI SHOULD NOT BE USING THIS ENDPOINT
+        :return: a json object with a key "data" and value a dictionary with keys "distance", "path", and "commands"
+        """
+        try:
+            # Get the json data from the request
+            content = request.json
+            logger.debug("Request received from client:")
+            logger.debug(f"{content}\n")
+
+            # Get the obstacles, retrying, robot_x, robot_y, and robot_direction from the json data
+            obstacles = content['obstacles']
+            # TODO: use alternative algo for retrying?
+            retrying = content.get('retrying', False)
+            robot_x, robot_y = content.get(
+                'robot_x', 1), content.get('robot_y', 1)
+            robot_direction = content.get('robot_dir', 0)
+            num_runs = content.get('num_runs', 1)  # for testing
+
+            optimal_path, commands, total_cost, total_runtime, = None, None, 0, 0
+            for _ in range(num_runs):
+                # Initialize MazeSolver object with robot size of 20x20, bottom left corner of robot at (1,1), facing north.
+                maze_solver = MazeSolver(size_x=20, size_y=20, robot_x=robot_x,
+                                         robot_y=robot_y, robot_direction=robot_direction)
+                # Add each obstacle into the MazeSolver. Each obstacle is defined by its x,y positions, its direction, and its id
+                for ob in obstacles:
+                    maze_solver.add_obstacle(
+                        ob['x'], ob['y'], ob['d'], ob['id'])
+
+                start = time.time()
+                # Get shortest path
+                optimal_path, cost = maze_solver.get_optimal_path()
+                runtime = time.time() - start
+                total_runtime += runtime
+                total_cost += cost
+                logger.debug(
+                    f"Time taken to find shortest path using A* search: {runtime}s")
+                logger.debug(f"cost to travel: {cost} units")
+
+                # Based on the shortest path, generate commands for the robot
+                motions, obstacle_ids = maze_solver.optimal_path_to_motion_path(
+                    optimal_path)
+                command_generator = CommandGenerator()
+                commands = command_generator.generate_commands(
+                    motions, obstacle_ids)
+
+            # Get the starting location and add it to path_results
+            path_results = []
+            for pos in optimal_path:
+                path_results.append(pos.get_dict())
+
+            return marshal(
+                {
+                    "data": {
+                        'distance': total_cost / num_runs,
+                        'runtime': total_runtime / num_runs,
+                        'path': path_results,
+                        'commands': commands,
+                        'motions': motions
+                    }
+                },
+                restx_models["SimulatorPathFindingResponse"]
+            ), 200
+        except Exception as error:
+            logger.debug("", exc_info=True)
+            return marshal(
+                {
+                    "error": repr(error)
+                },
+                restx_models["Error"]
+            ), 500
 
 
 # for API validation to allow only file upload in POST request
@@ -166,46 +222,72 @@ file_upload_parser.add_argument('file', location='files',
 @api.route('/image')
 class ImagePredict(Resource):
     @api.expect(file_upload_parser)
-    @api.marshal_with(restx_models["ImagePredictResponse"])
+    @api.response(model=restx_models["ImagePredictResponse"], code=200, description="Success")
+    @api.response(model=restx_models["Error"], code=500, description="Internal Server Error")
     def post(self):
-        """
-        This is the main endpoint for the image prediction algorithm
-        :return: a json object of a dictionary with keys "obstacle_id" and "image_id"
-        """
-        file = request.files['file']
-        filename = file.filename
+        try:
+            """
+            This is the main endpoint for the image prediction algorithm
+            :return: a json object of a dictionary with keys "obstacle_id" and "image_id"
+            """
+            file = request.files['file']
+            filename = file.filename
 
-        # RPI sends image file in format eg. "1739516818_1_C.jpg"
-        _, obstacle_id, signal = file.filename.strip(".jpg").split("_")
+            # RPI sends image file in format eg. "1739516818_1_C.jpg"
+            _, obstacle_id, signal = file.filename.strip(".jpg").split("_")
 
-        # Store image sent from RPI into uploads folder
-        upload_dir = Path("image_rec_files/uploads")
-        upload_dir.mkdir(parents=True, exist_ok=True)
-        file_path = upload_dir / filename
-        file.save(file_path)
+            # Store image sent from RPI into uploads folder
+            upload_dir = Path("image_rec_files/uploads")
+            upload_dir.mkdir(parents=True, exist_ok=True)
+            file_path = upload_dir / filename
+            file.save(file_path)
 
-        # Call the predict_image function
-        # Store processed image with bounding box into output folder
-        output_dir = Path("image_rec_files/output")
-        os.makedirs(output_dir, exist_ok=True)
+            # Call the predict_image function
+            # Store processed image with bounding box into output folder
+            output_dir = Path("image_rec_files/output")
+            os.makedirs(output_dir, exist_ok=True)
 
-        image_id = predict_image(model, file_path, output_dir)
+            image_id = predict_image(model, file_path, output_dir)
 
-        return {
-            "obstacle_id": obstacle_id,
-            "image_id": image_id
-        }
+            return marshal(
+                {
+                    "obstacle_id": obstacle_id,
+                    "image_id": image_id
+                },
+                restx_models["ImagePredictResponse"]
+            )
+        except Exception as error:
+            logger.debug("", exc_info=True)
+            return {
+                "error": repr(error)
+            }, 500
 
 
 @api.route('/stitch')
 class Stitch(Resource):
+    @api.response(model=restx_models["Ok"], code=200, description="Success")
+    @api.response(model=restx_models["Error"], code=500, description="Internal Server Error")
     def get(self):
         """
         This is the main endpoint for the stitching command. Stitches the images using two different functions, in effect creating two stitches, just for redundancy purposes
         """
-        img = stitch_image()
-        img.show()
-        return jsonify({"result": "ok"})
+        try:
+            img = stitch_image()
+            img.show()
+            return marshal(
+                {
+                    "result": "ok"
+                },
+                restx_models["Ok"]
+            ), 200
+        except Exception as error:
+            logger.debug(repr(error), exc_info=True)
+            return marshal(
+                {
+                    "error": repr(error)
+                },
+                restx_models["Error"]
+            ), 500
 
 
 if __name__ == '__main__':

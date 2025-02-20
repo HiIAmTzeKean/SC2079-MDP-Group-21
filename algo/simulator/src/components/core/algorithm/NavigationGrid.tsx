@@ -214,7 +214,7 @@ export const NavigationGrid = (props: NavigationGridProps) => {
 
       {/* Draw the path taken so far by the robot */}
       {robotPath &&
-        robotPath.map((_, index) => {
+        robotPath.map((position, index) => {
           if (index === 0) return null;
           const { x: x1, y: y1 } = getSVGCoords(robotPath[index - 1]);
           const { x: x2, y: y2 } = getSVGCoords(robotPath[index]);
@@ -222,6 +222,17 @@ export const NavigationGrid = (props: NavigationGridProps) => {
           // TODO: draw curves based on motion
           return (
             <>
+              {/* Draw position where robot snaps image of obstacle */}
+              {position.s &&
+                <circle
+                  key={`snap-${index}`}
+                  cx={x2}
+                  cy={y2}
+                  r={cellSize / 2}
+                  fill="lime"
+                  fillOpacity={0.5}
+                />}
+
               <line
                 key={index}
                 x1={x1}
