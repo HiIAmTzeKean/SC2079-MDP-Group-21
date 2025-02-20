@@ -88,7 +88,7 @@ class Obstacle(CellState):
             List[CellState]: Valid cell states where robot can be positioned to view the symbol on the obstacle
         """
         cells = []
-        offset = 1  # off set due to position of robot's center
+        offset = 1  # offset due to position of robot's center
 
         # If the obstacle is facing north, then robot's cell state must be facing south
         if self.direction == Direction.NORTH:
@@ -254,10 +254,10 @@ class Grid:
 
         for ob in self.obstacles:
             # ensure Manhattan distance from robot to obstacle is not within padding
-            if abs(ob.x - x) + abs(ob.y - y) <= 1:
+            if abs(ob.x - x) + abs(ob.y - y) <= PADDING:
                 return False
             # ensure Chebyshev distance from robot to obstacle is not within padding
-            if max(abs(ob.x - x), abs(ob.y - y)) < 1:
+            if max(abs(ob.x - x), abs(ob.y - y)) < PADDING:
                 return False
 
         return True
