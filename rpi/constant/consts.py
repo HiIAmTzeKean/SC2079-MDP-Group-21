@@ -45,7 +45,7 @@ class Category(Enum):
     FAILED = 'failed'
     SUCCESS = 'success'
     ERROR = 'error'
-    OBSTACLE = 'obstacle' # list of obstacles
+    OBSTACLE = 'obstacles' # list of obstacles
     IMAGE_REC = 'image-rec' # image recognition results
     STATUS = 'status' # status updates of the robot (`running` or `finished`)
     STITCH = 'stitch'

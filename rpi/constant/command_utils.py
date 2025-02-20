@@ -1,4 +1,5 @@
-from constant.consts import manual_commands
+from rpi.constant.consts import manual_commands
+
 # prep the basic directional commamds and the arcs (likely for obstacle 2)
 # values to be adjusted again..
 def exec_seq(stm_link, commands: list):

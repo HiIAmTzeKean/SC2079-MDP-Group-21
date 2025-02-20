@@ -1,28 +1,51 @@
 import json
+import logging
 import os
-import time
 
 import cv2
 import numpy as np
 import requests
+from picamera import PiCamera
 
 
-def calculate_brightness(image_path):
+logger = logging.getLogger(__name__)
+con_file = "PiLCConfig9.txt"
+home_files = []
+home_files.append(str(os.getenv("USER")))
+config_file = "/home/" + "/pi" + "/" + con_file
+
+extns = ["jpg", "png", "bmp", "rgb", "yuv420", "raw"]
+
+shutters = [
+    -2000,-1600,-1250,-1000,-800,-640,-500, 
+    -400,-320,-288,-250,-240,-200,-160,-144,
+    -125,-120,-100,-96,-80,-60,-50,-48,-40,
+    -30,-25,-20,-15,-13,-10,-8,-6,-5,
+    -4,-3,0.4,0.5,0.6,0.8,1,1.1,1.2,2,3,4,5,6,
+    7,8,9,10,11,15,20,25,30,40,50,60,75,
+    100,112,120,150,200,220,230,239,435
+]
+
+meters = ["centre", "spot", "average"]
+awbs = ["off", "auto", "incandescent", "tungsten", "fluorescent", "indoor", "daylight", "cloudy"]
+denoises = ["off", "cdn_off", "cdn_fast", "cdn_hq"]
+    
+def calculate_brightness(image_path: str) -> int:
     """
     calculate brightness based on average pixel brightness (ranges between 0 and 255)
     """
     image = cv2.imread(image_path)
     grey_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     avg_brightness = np.mean(grey_image)
-    print(avg_brightness)
+    logger.info(f"The average brightness is {avg_brightness}")
     return avg_brightness
 
 
-def adjust_camera_settings(avg_brightness):
+def adjust_camera_settings(avg_brightness: int) -> tuple[int, int, int]:
     """
     offsets speed,gain,brightness based on avg_brightness
     """
-    if avg_brightness < 50:
+    if avg_brightness < 60:
         return 10, 5, 20  # Low light: increase shutter speed and gain
     elif avg_brightness > 200:
         return 10, -5, -20  # Bright light: decrease shutter speed and gain
@@ -30,109 +53,19 @@ def adjust_camera_settings(avg_brightness):
         return 0, 0, 0  # Normal light
 
 
-def snap_using_picamera(self, obstacle_id: str, signal: str, filename: str, filename_send: str, url: str) -> None:
-    my_file = open(filename, "wb")
-    with PiCamera() as camera:
-        camera.resolution = (640, 480)
-        camera.start_preview()
-        camera.capture(my_file)
-        camera.stop_preview()
-
-    my_file.close()
-    response = requests.post(url, files={"file": (filename_send, open(filename, "rb"))})
-    if response.status_code != 200:
-        self.logger.error("Something went wrong when requesting path from image-rec API. Please try again.")
-        return
-
-
 def snap_using_libcamera(
-    self, obstacle_id: str, signal: str, filename: str, filename_send: str, url: str, auto_callibrate: bool
-) -> None:
+    obstacle_id: str,
+    signal: str,
+    filename: str,
+    filename_send: str,
+    url: str,
+    auto_callibrate: bool,
+) -> str:
     """
     RPi snaps an image and calls the API for image-rec.
     The image is saved in /home/pi/cam
     The response is then forwarded back to the android
-
     """
-    con_file = "PiLCConfig9.txt"
-    Home_Files = []
-    Home_Files.append(str(os.getenv("USER")))
-    config_file = "/home/" + "/pi" + "/" + con_file
-    extns = ["jpg", "png", "bmp", "rgb", "yuv420", "raw"]
-    shutters = [
-        -2000,
-        -1600,
-        -1250,
-        -1000,
-        -800,
-        -640,
-        -500,
-        -400,
-        -320,
-        -288,
-        -250,
-        -240,
-        -200,
-        -160,
-        -144,
-        -125,
-        -120,
-        -100,
-        -96,
-        -80,
-        -60,
-        -50,
-        -48,
-        -40,
-        -30,
-        -25,
-        -20,
-        -15,
-        -13,
-        -10,
-        -8,
-        -6,
-        -5,
-        -4,
-        -3,
-        0.4,
-        0.5,
-        0.6,
-        0.8,
-        1,
-        1.1,
-        1.2,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        11,
-        15,
-        20,
-        25,
-        30,
-        40,
-        50,
-        60,
-        75,
-        100,
-        112,
-        120,
-        150,
-        200,
-        220,
-        230,
-        239,
-        435,
-    ]
-    meters = ["centre", "spot", "average"]
-    awbs = ["off", "auto", "incandescent", "tungsten", "fluorescent", "indoor", "daylight", "cloudy"]
-    denoises = ["off", "cdn_off", "cdn_fast", "cdn_hq"]
 
     config = []
     with open(config_file, "r") as file:
@@ -141,6 +74,7 @@ def snap_using_libcamera(
             config.append(line.strip())
             line = file.readline()
         config = list(map(int, config))
+    
     mode = config[0]
     speed = config[1]
     gain = config[2]
@@ -156,6 +90,7 @@ def snap_using_libcamera(
     sharpness = config[22]
     denoise = config[23]
     quality = config[24]
+    
     if auto_callibrate == True:
         image_callibration_filepath = f"/home/pi/cam/sample_ambient_light.jpg"
         callibrate_camera_cmd = "libcamera-still -e " + extns[extn] + " -n -t 500 -o " + image_callibration_filepath
@@ -196,34 +131,61 @@ def snap_using_libcamera(
         rpistr += " --quality " + str(quality)
         rpistr += " --denoise " + denoises[denoise]
         rpistr += " --metadata - --metadata-format txt >> PiLibtext.txt"
-
         os.system(rpistr)
-
+        
         response = requests.post(url, files={"file": (filename_send, open(filename, "rb"))})
-
+        
         if response.status_code != 200:
-            self.logger.error("Something went wrong when requesting path from image-rec API. Please try again.")
-            return
+            logger.error("Error from image-rec API.")
+            raise OSError("API Error")
 
         results = json.loads(response.content)
+        return results
+    
+        # # Higher brightness retry
+        # break
+        # if results["image_id"] != "NA" or retry_count > 6:
+        #     break
+        # elif retry_count > 3:
+        #     self.logger.info(f"Image recognition results: {results}")
+        #     self.logger.info("Recapturing with lower shutter speed...")
+        #     speed -= 1
+        # elif retry_count <= 3:
+        #     self.logger.info(f"Image recognition results: {results}")
+        #     self.logger.info("Recapturing with higher shutter speed...")
+        #     speed += 1
 
-        # Higher brightness retry
-        break
-        if results["image_id"] != "NA" or retry_count > 6:
-            break
-        elif retry_count > 3:
-            self.logger.info(f"Image recognition results: {results}")
-            self.logger.info("Recapturing with lower shutter speed...")
-            speed -= 1
-        elif retry_count <= 3:
-            self.logger.info(f"Image recognition results: {results}")
-            self.logger.info("Recapturing with higher shutter speed...")
-            speed += 1
 
+
+def snap_using_picamera(
+    obstacle_id: str,
+    signal: str,
+    filename: str,
+    filename_send: str,
+    url: str,
+) -> str:
+    my_file = open(filename, "wb")
+    with PiCamera() as camera:
+        camera.resolution = (640, 480)
+        camera.start_preview()
+        camera.capture(my_file)
+        camera.stop_preview()
+
+    my_file.close()
+    response = requests.post(url, files={"file": (filename_send, open(filename, "rb"))})
+    
+    if response.status_code != 200:
+        logger.error("Error from image-rec API.")
+        raise OSError("API Error")
+
+    results = json.loads(response.content)
+    return results
+
+import time
 
 obstacle_id = "1"
 signal = "C"
-url = f"http://192.168.30.100:5001/image"
-filename = f"/home/pi/cam/{int(time.time())}_{obstacle_id}_{signal}.jpg"
+url = f"http://192.168.21.25:5000/image"
+filename = f"/home/rpi21/cam/{int(time.time())}_{obstacle_id}_{signal}.jpg"
 filename_send = f"{int(time.time())}_{obstacle_id}_{signal}.jpg"
-snap_using_libcamera("", obstacle_id, signal, filename, filename_send, url, True)
+snap_using_picamera(obstacle_id, signal, filename, filename_send, url)

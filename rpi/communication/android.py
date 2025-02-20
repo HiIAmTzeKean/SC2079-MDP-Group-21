@@ -5,7 +5,7 @@ import socket
 from typing import Dict, Optional, Union
 
 import bluetooth
-from communication.link import Link
+from .link import Link
 
 
 logger = logging.getLogger(__name__)
@@ -237,8 +237,9 @@ class AndroidLink(Link):
         """
         Connect to Andriod by Bluetooth
         """
-        logger.info("Bluetooth connection started")
+        logger.debug("Bluetooth connection started")
         try:
+            os.system("sudo chmod o+rw /var/run/sdp")
             os.system("sudo hciconfig hci0 piscan")
             logger.debug("Bluetooth device set to discoverable")
             # Initialize server socket
@@ -259,7 +260,7 @@ class AndroidLink(Link):
                 profiles=[bluetooth.SERIAL_PORT_PROFILE],
             )
 
-            logger.info(f"Awaiting Bluetooth connection on RFCOMM CHANNEL {port}")
+            logger.debug(f"Awaiting Bluetooth connection on RFCOMM CHANNEL {port}")
             self.client_sock, client_info = self.server_sock.accept()
             logger.info(f"Accepted connection from: {client_info}")
 
@@ -287,9 +288,9 @@ class AndroidLink(Link):
         try:
             # TODO change to string format
             self.client_sock.send(f"{message.to_string()}\n".encode("utf-8"))
-            logger.debug(f"Sent to Android: {message.jsonify}")
+            logger.debug(f"android: {message.jsonify}")
         except OSError as e:
-            logger.error(f"Error sending message to Android: {e}")
+            logger.error(f"android: {e}")
             raise e
 
     def recv(self) -> Optional[str]:
@@ -298,8 +299,8 @@ class AndroidLink(Link):
             tmp = self.client_sock.recv(1024)
             logger.debug(tmp)
             message = tmp.strip().decode("utf-8")
-            logger.debug(f"Received from Android: {message}")
+            logger.debug(f"android: {message}")
             return message
-        except OSError as e:  # connection broken, try to reconnect
-            logger.error(f"Error receiving message from Android: {e}")
+        except OSError as e:
+            logger.error(f"android: {e}")
             raise e
