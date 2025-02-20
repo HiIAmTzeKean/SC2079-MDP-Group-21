@@ -32,7 +32,7 @@ def cmd_bleft(stm_link):
     exec_seq(stm_link, ["bleft"])
 
 def cmd_left_arc(stm_link):
-    exec_seq(stm_link, ["left", "right120"])
+    exec_seq(stm_link, ["left", "right120", "left60"])
 
 def cmd_right_arc(stm_link):
-    exec_seq(stm_link, ["right", "left120"])
+    exec_seq(stm_link, ["right", "left120", "right60"])
