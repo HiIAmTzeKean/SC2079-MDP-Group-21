@@ -1,73 +1,84 @@
 package com.mdp25.forever21.canvas;
 
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import android.animation.ValueAnimator;
+
+import java.util.Optional;
 
 /**
  * Handles all touch interactions with the canvas. Namely:
  * <ul>
- *     <li>Touch empty grid space to add obstacle</li>
+ *     <li>If an empty cell is selected, an obstacle is placed when the finger is lifted
+ *     Obstacle replacement is not allowed if the finger is lifted over an occupied grid cell</li>
  *     <li>Touch & hold in an occupied spot, then drag to move/remove obstacle</li>
  * </ul>
  * Extra: Uses vibration to feedback to the user.
  */
 public class CanvasTouchController implements View.OnTouchListener {
-    private final CanvasView canvasView;
-    private GridObstacle selectedObstacle = null;
-    private int selectedX = -1, selectedY = -1;
-    private float animatedX, animatedY; // For smooth movement
-
-    public CanvasTouchController(CanvasView canvasView) {
-        this.canvasView = canvasView;
+    private final static String TAG = "CanvasTouchController";
+    private final Grid grid;
+    private Optional<GridObstacle> selectedObstacle = Optional.empty();
+    public CanvasTouchController(Grid grid) {
+        this.grid = grid;
     }
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {
+        CanvasView canvasView = (CanvasView) v; // do an unchecked cast, should be fine
         int x = (int) ((event.getX() - canvasView.getOffsetX()) / canvasView.getCellSize());
         int y = (int) ((event.getY() - canvasView.getOffsetY()) / canvasView.getCellSize());
-
-        // Flip Y to match bottom-left origin
-        y = (canvasView.getGridSize() - 1) - y;
+        y = (Grid.GRID_SIZE - 1) - y; // Flip Y to match bottom-left origin
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                // Start drag if obstacle exists
-                if (canvasView.hasObstacle(x, y)) {
-                    selectedObstacle = canvasView.getObstacle(x, y);
-                    selectedX = x;
-                    selectedY = y;
-                    animatedX = x * canvasView.getCellSize();
-                    animatedY = y * canvasView.getCellSize();
-                }
-                else {
-                    canvasView.addObstacle(x, y);
-                }
-                break;
-
-            case MotionEvent.ACTION_MOVE:
-                if (selectedObstacle != null) {
-                    // Remove from old position
-                    canvasView.removeObstacle(selectedX, selectedY);
-                    selectedX = x;
-                    selectedY = y;
+                // finalX and finalY to be used in lambda functions (it's just liddat)
+                int finalX = x;
+                int finalY = y;
+                if (grid.isInsideGrid(finalX, finalY) && grid.hasObstacle(finalX, finalY)) {
+                    selectedObstacle = grid.findObstacle(finalX, finalY);
+                    Log.d(TAG, "Selected obstacle at (" + finalX + ", " + finalY + ")");
                 }
                 break;
 
             case MotionEvent.ACTION_UP:
-                if (selectedObstacle != null) {
-                    if (x >= 0 && x < canvasView.getGridSize() && y >= 0 && y < canvasView.getGridSize()) {
-                        // Place in new position
-                        canvasView.addObstacle(x, y);
-                    } else {
-                        // Remove obstacle if dragged out of bounds
-                        canvasView.removeObstacle(selectedX, selectedY);
+                finalX = x;
+                finalY = y;
+                selectedObstacle.ifPresent(obstacle -> {
+                    int oldX = obstacle.getPosition().getXInt();
+                    int oldY = obstacle.getPosition().getYInt();
+                    if (!grid.isInsideGrid(finalX, finalY)) {
+                        // Remove if lifted outside the grid
+                        grid.removeObstacle(oldX, oldY);
+                        // TODO: Bluetooth stuff
+                        Log.d(TAG, "Removed obstacle at (" + oldX + ", " + oldY + ")");
+                        canvasView.invalidate(); // Refresh canvas
                     }
-                    selectedObstacle = null;
+                    else if (!grid.hasObstacle(finalX, finalY)) {
+                        // Move obstacle only if lifted on an empty cell
+                        obstacle.updatePosition(finalX, finalY);
+                        // TODO: Bluetooth stuff
+                        Log.d(TAG, "Moved obstacle from (" + oldX + ", " + oldY + ") to (" + finalX + ", " + finalY + ")");
+                        canvasView.invalidate(); // Refresh canvas
+                    }
+                    else if (grid.hasObstacle(finalX, finalY) && oldX == finalX && oldY == finalY) {
+                        // Rotate obstacle clockwise if lifted on the same cell
+                        obstacle.rotateClockwise();
+                        // TODO: Bluetooth stuff
+                        Log.d(TAG, "Rotated obstacle clockwise at (" + finalX + ", " + finalY + ")");
+                        canvasView.invalidate(); // Refresh canvas
+                    }
+                });
+                // If no obstacle was selected, add a new one
+                if (grid.isInsideGrid(finalX, finalY) && !grid.hasObstacle(finalX, finalY) && selectedObstacle.isEmpty()) {
+                    grid.addObstacle(GridObstacle.of(finalX, finalY));
+                    // TODO: Bluetooth stuff
+                    Log.d(TAG, "Added new obstacle at (" + finalX + ", " + finalY + ")");
+                    canvasView.invalidate(); // Refresh canvas
                 }
+                selectedObstacle = Optional.empty(); // Clear selection
                 break;
         }
-        canvasView.invalidate(); // Refresh canvas
         return true;
     }
 }
