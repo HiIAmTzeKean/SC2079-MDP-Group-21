@@ -1,77 +1,87 @@
 package com.mdp25.forever21.canvas;
 
+import android.util.Log;
+
+import com.mdp25.forever21.Target;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 /**
  * Logical representation / Data structure for the canvas grid.
- * <p> Most cells are empty, and some contain {@link GridObstacle}s.
+ * <p> Contains {@link GridObstacle}s.
  */
 public class Grid {
-    private static final int GRID_SIZE = 20;
-    private final GridObstacle[] grid; // grid is a 1D array because each GridObstacle has a position attribute
 
-    public Grid() { grid = new GridObstacle[GRID_SIZE * GRID_SIZE]; }
+    private static final String TAG = "Grid";
+    public static final int GRID_SIZE = 20;
+    private final List<GridObstacle> obstacleList; // list represents obstacles currently added
+
+    public Grid() {
+        obstacleList = new ArrayList<>();
+    }
 
     /**
      * Adds an obstacle to a specified position.
+     *
      * @param obstacle The GridObstacle object.
-     * @param x The x-coordinate (0 to 19).
-     * @param y The y-coordinate (0 to 19).
      * @return true if placed successfully, false if out of bounds or position occupied.
      */
-    public boolean addObstacle(GridObstacle obstacle, int x, int y) {
-        if (isOutOfBounds(x, y) || grid[toIndex(x, y)] != null) {
-            return false; // Invalid position or already occupied
-        }
-        grid[toIndex(x, y)] = obstacle; // Place the obstacle
+    public boolean addObstacle(GridObstacle obstacle) {
+        //TODO check if obstacle not alr at same position
+        obstacleList.add(obstacle);
+        Log.d(TAG, "Added obstacle: " + obstacle);
         return true;
     }
 
     /**
      * Removes an obstacle from the specified position.
+     *
      * @return true if an obstacle was removed, false if the position was empty.
      */
     public boolean removeObstacle(int x, int y) {
-        if (isOutOfBounds(x, y)) return false; // Invalid position
-
-        int index = toIndex(x, y);
-        if (grid[index] == null) return false; // No obstacle to remove
-
-        grid[index] = null; // Remove the obstacle
-        return true;
+        Optional<GridObstacle> foundObstacle = findObstacle(x, y);
+        if (foundObstacle.isPresent()) {
+            obstacleList.remove(foundObstacle.get());
+            Log.d(TAG, "Removed obstacle: " + foundObstacle.get());
+            return true;
+        }
+        return false;
     }
 
     /**
      * Gets the obstacle at a given position.
-     * @param x The x-coordinate.
-     * @param y The y-coordinate.
-     * @return The GridObstacle at (x, y), or null if empty.
      */
-    public Optional<GridObstacle> getObstacle(int x, int y) {
-        if (isOutOfBounds(x, y)) {
-            return Optional.empty(); // Out of bounds, return empty
+    public Optional<GridObstacle> findObstacle(int x, int y) {
+        for (GridObstacle gridObstacle : obstacleList) {
+            if (gridObstacle.getPosition().getXInt() == x &&
+                    gridObstacle.getPosition().getYInt() == y) {
+                return Optional.of(gridObstacle);
+            }
         }
-        return Optional.ofNullable(grid[toIndex(x, y)]); // Wrap existing value or null in Optional
+        return Optional.empty();
     }
 
     /**
-     * Gets the size of the grid.
+     * If there is an obstacle at (x,y), returns true
      */
-    public static int getGridSize() {
-        return GRID_SIZE;
+    public boolean hasObstacle(int x, int y) {
+        return findObstacle(x, y).isPresent();
     }
 
     /**
-     * Helper function that checks if a position is out of the grid bounds.
+     * Returns list of obstacles (mutable). For usage in {@link CanvasView}.
      */
-    private boolean isOutOfBounds(int x, int y) {
-        return x < 0 || x >= GRID_SIZE || y < 0 || y >= GRID_SIZE;
+    public List<GridObstacle> getObstacleList() {
+        return obstacleList;
     }
 
-    /**
-     * Helper function to convert 2D coordinates to 1D index.
-     */
-    private int toIndex(int x, int y) {
-        return x + (y * GRID_SIZE);
+    public void updateObstacleTarget(int x, int y, int targetId) {
+        findObstacle(x, y).ifPresent(obstacle -> obstacle.setTarget(Target.of(targetId)));
+    }
+
+    public boolean isInsideGrid(int x, int y) {
+        return x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE;
     }
 }
