@@ -8,6 +8,7 @@ from pathlib import Path
 import json
 
 from models.models import get_models
+from logger.logger import setup_logger
 
 import sys
 import os
@@ -20,7 +21,9 @@ from image_rec.model import load_model, predict_image, stitch_image  # nopep8
 app = Flask(__name__)
 
 api = Api(app, validate=True)
-restx_models = get_models(api)
+restx_models = get_models(api
+                          )
+logger = setup_logger()
 
 CORS(app)
 
@@ -44,7 +47,7 @@ def log_response_info(response):
                      "/swagger/", "/static/", "/favicon.ico"]
     # Only log responses for requests to API endpoints, ignoring Swagger-related requests
     if not any(request.path.startswith(path) for path in ignored_paths) and request.path != "/":
-        print(json.loads(response.data))
+        logger.debug(json.loads(response.data))
     return response
 
 
@@ -61,14 +64,15 @@ class PathFinding(Resource):
         try:
             # Get the json data from the request
             content = request.json
-            print("Request received from client:")
-            print(f"{content}\n")
+            logger.debug("Request received from client:")
+            logger.debug(f"{content}")
 
             # Get the obstacles, retrying, robot_x, robot_y, and robot_direction from the json data
             obstacles = content['obstacles']
             # TODO: use alternative algo for retrying?
             retrying = content.get('retrying', False)
-            robot_x, robot_y = content.get('robot_x', 1), content.get('robot_y', 1)
+            robot_x, robot_y = content.get(
+                'robot_x', 1), content.get('robot_y', 1)
             robot_direction = content.get('robot_dir', 0)
 
             optimal_path, commands = None, None
@@ -85,9 +89,9 @@ class PathFinding(Resource):
             # Get shortest path
             optimal_path, cost = maze_solver.get_optimal_path()
             runtime = time.time() - start
-            print(
+            logger.debug(
                 f"Time taken to find shortest path using A* search: {runtime}s")
-            print(f"cost to travel: {cost} units\n")
+            logger.debug(f"cost to travel: {cost} units")
 
             # Based on the shortest path, generate commands for the robot
             motions, obstacle_ids = maze_solver.optimal_path_to_motion_path(
@@ -111,6 +115,7 @@ class PathFinding(Resource):
                 restx_models["PathFindingResponse"]
             ), 200
         except Exception as error:
+            logger.debug("", exc_info=True)
             return marshal(
                 {
                     "error": repr(error)
@@ -133,8 +138,8 @@ class SimulatorPathFinding(Resource):
         try:
             # Get the json data from the request
             content = request.json
-            print("Request received from client:")
-            print(f"{content}\n")
+            logger.debug("Request received from client:")
+            logger.debug(f"{content}\n")
 
             # Get the obstacles, retrying, robot_x, robot_y, and robot_direction from the json data
             obstacles = content['obstacles']
@@ -161,9 +166,9 @@ class SimulatorPathFinding(Resource):
                 runtime = time.time() - start
                 total_runtime += runtime
                 total_cost += cost
-                print(
+                logger.debug(
                     f"Time taken to find shortest path using A* search: {runtime}s")
-                print(f"cost to travel: {cost} units")
+                logger.debug(f"cost to travel: {cost} units")
 
                 # Based on the shortest path, generate commands for the robot
                 motions, obstacle_ids = maze_solver.optimal_path_to_motion_path(
@@ -190,6 +195,7 @@ class SimulatorPathFinding(Resource):
                 restx_models["SimulatorPathFindingResponse"]
             ), 200
         except Exception as error:
+            logger.debug("", exc_info=True)
             return marshal(
                 {
                     "error": repr(error)
@@ -242,6 +248,7 @@ class ImagePredict(Resource):
                 restx_models["ImagePredictResponse"]
             )
         except Exception as error:
+            logger.debug("", exc_info=True)
             return {
                 "error": repr(error)
             }, 500
@@ -258,7 +265,7 @@ class Stitch(Resource):
             img.show()
             return jsonify({"result": "ok"}), 200
         except Exception as error:
-            print(repr(error))
+            logger.debug(repr(error), exc_info=True)
             return 500
 
 
