@@ -63,6 +63,10 @@ def get_models(api):
         'error': fields.String()
     })
 
+    ok = api.model('Ok', {
+        'result': fields.String()
+    })
+
     return {
         "Obstacle": obstacle,
         "PathFindingRequest": path_finding_request,
@@ -70,5 +74,7 @@ def get_models(api):
         "Error": error,
         "SimulatorPathFindingRequest": simulator_path_finding_request,
         "SimulatorPathFindingResponse": simulator_path_finding_response,
-        "ImagePredictResponse": image_predict_response
+        "ImagePredictResponse": image_predict_response,
+        "Error": error,
+        "Ok": ok,
     }
