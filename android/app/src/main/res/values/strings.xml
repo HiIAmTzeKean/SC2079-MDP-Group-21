@@ -12,10 +12,25 @@
     <string name="move_forward">Move Forward</string>
     <string name="move_right">Move Right</string>
     <string name="move_left">Move Left</string>
+    <string name="start_robot">Start</string>
+    <string name="input_prompt">Type a message...</string>
+    <string name="send_input">Send</string>
 
-    <string name="robot_status_static">ROBOT STATUS</string>
-    <string name="received_messages_title">Received Messages:</string>
-    <string name="robot_status_dynamic">Awaiting Orders</string>
+    <string name="static_received_messages">Received Messages:</string>
+    <string name="initialize_robot">Initialize Robot</string>
+    <string name="x_coordinate">X</string>
+    <string name="y_coordinate">Y</string>
+    <string name="robot_status">ROBOT STATUS</string>
+    <string name="robot_status_waiting">waiting...</string>
+
+
+    <string-array name="robot_facing_options">
+        <item>NORTH</item>
+        <item>EAST</item>
+        <item>SOUTH</item>
+        <item>WEST</item>
+    </string-array>
+
 
     <string name="lorem_ipsum">
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam in scelerisque sem. Mauris
