@@ -33,12 +33,18 @@ model = load_model()
 
 @api.route('/status')
 class Status(Resource):
+    @api.response(model=restx_models["Ok"], code=200, description="Success")
     def get(self):
         """
         This is a health check endpoint to check if the server is running
         :return: a json object with a key "result" and value "ok"
         """
-        return jsonify({"result": "ok"}), 200
+        return marshal(
+            {
+                "result": "ok"
+            },
+            restx_models["Ok"]
+        ), 200
 
 
 @app.after_request
@@ -47,7 +53,10 @@ def log_response_info(response):
                      "/swagger/", "/static/", "/favicon.ico"]
     # Only log responses for requests to API endpoints, ignoring Swagger-related requests
     if not any(request.path.startswith(path) for path in ignored_paths) and request.path != "/":
-        logger.debug(json.loads(response.data))
+        try:
+            logger.debug(json.loads(response.data))
+        except json.JSONDecodeError:
+            logger.debug("Response data is not valid JSON.")
     return response
 
 
@@ -256,6 +265,8 @@ class ImagePredict(Resource):
 
 @api.route('/stitch')
 class Stitch(Resource):
+    @api.response(model=restx_models["Ok"], code=200, description="Success")
+    @api.response(model=restx_models["Error"], code=500, description="Internal Server Error")
     def get(self):
         """
         This is the main endpoint for the stitching command. Stitches the images using two different functions, in effect creating two stitches, just for redundancy purposes
@@ -263,10 +274,20 @@ class Stitch(Resource):
         try:
             img = stitch_image()
             img.show()
-            return jsonify({"result": "ok"}), 200
+            return marshal(
+                {
+                    "result": "ok"
+                },
+                restx_models["Ok"]
+            ), 200
         except Exception as error:
             logger.debug(repr(error), exc_info=True)
-            return 500
+            return marshal(
+                {
+                    "error": repr(error)
+                },
+                restx_models["Error"]
+            ), 500
 
 
 if __name__ == '__main__':
