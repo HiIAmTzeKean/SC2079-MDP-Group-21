@@ -6,7 +6,7 @@ def get_models(api):
         'x': fields.Integer(required=True, min=0, max=19, default=10),
         'y': fields.Integer(required=True, min=0, max=19, default=10),
         'd': fields.Integer(required=True, min=0, max=8, multiple=2, default=4),
-        'id': fields.Integer(required=True, min=1)
+        'id': fields.Integer(required=True)
     })
 
     position = api.model('Position', {
@@ -71,7 +71,6 @@ def get_models(api):
         "Obstacle": obstacle,
         "PathFindingRequest": path_finding_request,
         "PathFindingResponse": path_finding_response,
-        "Error": error,
         "SimulatorPathFindingRequest": simulator_path_finding_request,
         "SimulatorPathFindingResponse": simulator_path_finding_response,
         "ImagePredictResponse": image_predict_response,

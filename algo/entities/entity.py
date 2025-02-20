@@ -12,7 +12,7 @@ class CellState:
         self.y = y
         self.direction = direction
         # If screenshot_id != None, the snapshot is taken at that position is for obstacle with obstacle_id = screenshot_id
-        self.screenshot_id = screenshot_id if screenshot_id else None
+        self.screenshot_id = screenshot_id
         self.penalty = penalty  # Penalty for the view point of taking picture
 
     def cmp_position(self, x, y) -> bool:
@@ -41,7 +41,7 @@ class CellState:
         return self.x == x and self.y == y and self.direction == direction
 
     def __repr__(self):
-        return "Cellstate(x: {}, y: {}, direction: {}, screenshot: {})".format(self.x, self.y, self.direction.name, self.screenshot_id)
+        return "Cellstate(x: {}, y: {}, direction: {}, screenshot: {})".format(self.x, self.y, Direction(self.direction), self.screenshot_id)
 
     def set_screenshot(self, screenshot_id):
         """Set screenshot id for cell
