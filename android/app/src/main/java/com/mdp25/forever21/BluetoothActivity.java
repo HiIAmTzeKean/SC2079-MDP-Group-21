@@ -156,7 +156,7 @@ public class BluetoothActivity extends AppCompatActivity {
 
         // TEMP
         findViewById(R.id.testBtn).setOnClickListener(view -> {
-            BluetoothMessage msg = BluetoothMessage.ofObstaclesMessage(new Position(1, 1), Facing.NORTH, List.of((GridObstacle.of(10,10,Facing.SOUTH))));
+            BluetoothMessage msg = BluetoothMessage.ofObstaclesMessage(new Position(1, 1), Facing.NORTH, List.of((GridObstacle.of(1,7,Facing.EAST))));
             myApp.btConnection().sendMessage(msg.getAsJsonMessage().getAsJson());
         });
 
