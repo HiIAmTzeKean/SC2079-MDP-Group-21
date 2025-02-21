@@ -53,13 +53,13 @@ public class CanvasView extends View {
         idPaint.setColor(Color.WHITE);
         idPaint.setTextAlign(Paint.Align.CENTER);
         idPaint.setFakeBoldText(false);
-        idPaint.setTextSize(25);
+        idPaint.setTextSize(16);
 
         // Target styling
         targetPaint.setColor(Color.GREEN);
         targetPaint.setTextAlign(Paint.Align.CENTER);
         targetPaint.setFakeBoldText(true);
-        targetPaint.setTextSize(40);
+        targetPaint.setTextSize(24);
 
         // Facing indicator styling (Orange Strip)
         facingPaint.setColor(Color.rgb(255, 165, 0)); // Orange color

@@ -57,8 +57,8 @@ public class CanvasTouchController implements View.OnTouchListener {
                         // Remove if lifted outside the grid
                         grid.removeObstacle(oldX, oldY);
                         // some fake log to show removing of obstacles
-                        if (myApp.btConnection() != null)
-                            myApp.btConnection().sendMessage("OBST_REMOVE," + oldX + "," + oldY);
+//                        if (myApp.btConnection() != null)
+//                            myApp.btConnection().sendMessage("OBST_REMOVE," + obstacle.getId() + "," + oldX + "," + oldY);
                         Log.d(TAG, "Removed obstacle at (" + oldX + ", " + oldY + ")");
                         canvasView.invalidate(); // Refresh canvas
                     }
@@ -66,8 +66,8 @@ public class CanvasTouchController implements View.OnTouchListener {
                         // Move obstacle only if lifted on an empty cell
                         obstacle.updatePosition(finalX, finalY);
                         // some fake log to show moving of obstacles
-                        if (myApp.btConnection() != null)
-                            myApp.btConnection().sendMessage("OBST_MOVE," + oldX + "," + oldY + "," + finalX + "," + finalY);
+//                        if (myApp.btConnection() != null)
+//                            myApp.btConnection().sendMessage("OBST_MOVE,"  + obstacle.getId() + "," + oldX + "," + oldY + "," + finalX + "," + finalY);
                         Log.d(TAG, "Moved obstacle from (" + oldX + ", " + oldY + ") to (" + finalX + ", " + finalY + ")");
                         canvasView.invalidate(); // Refresh canvas
                     }
@@ -75,18 +75,19 @@ public class CanvasTouchController implements View.OnTouchListener {
                         // Rotate obstacle clockwise if lifted on the same cell
                         obstacle.rotateClockwise();
                         // some fake log to show rotating of obstacles
-                        if (myApp.btConnection() != null)
-                            myApp.btConnection().sendMessage("OBST_ROT," + finalX + "," + finalY);
+//                        if (myApp.btConnection() != null)
+//                            myApp.btConnection().sendMessage("OBST_ROT," + obstacle.getId() + "," + finalX + "," + finalY);
                         Log.d(TAG, "Rotated obstacle clockwise at (" + finalX + ", " + finalY + ")");
                         canvasView.invalidate(); // Refresh canvas
                     }
                 });
                 // If no obstacle was selected, add a new one
                 if (grid.isInsideGrid(finalX, finalY) && !grid.hasObstacle(finalX, finalY) && selectedObstacle.isEmpty()) {
-                    grid.addObstacle(GridObstacle.of(finalX, finalY));
+                    GridObstacle obstacle = GridObstacle.of(finalX, finalY);
+                    grid.addObstacle(obstacle);
                     // some fake log to show adding of obstacles
-                    if (myApp.btConnection() != null)
-                        myApp.btConnection().sendMessage("OBST_ADD," + finalX + "," + finalY);
+//                    if (myApp.btConnection() != null)
+//                        myApp.btConnection().sendMessage("OBST_ADD," + obstacle.getId() + "," + finalX + "," + finalY);
                     Log.d(TAG, "Added new obstacle at (" + finalX + ", " + finalY + ")");
                     canvasView.invalidate(); // Refresh canvas
                 }

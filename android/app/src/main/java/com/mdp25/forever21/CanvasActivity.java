@@ -77,6 +77,8 @@ public class CanvasActivity extends AppCompatActivity {
         inputY = findViewById(R.id.inputY);
         applyInputFilter(inputX);
         applyInputFilter(inputY);
+        inputX.setText(Integer.toString(myApp.robot().getPosition().getXInt()));
+        inputY.setText(Integer.toString(myApp.robot().getPosition().getYInt()));
         chatInputBox = findViewById(R.id.chatInputBox);
 
         receivedMessages = findViewById(R.id.ReceiveMsgTextView);
@@ -125,11 +127,7 @@ public class CanvasActivity extends AppCompatActivity {
     }
 
     private void startRobot() {
-        BluetoothMessage msg = BluetoothMessage.ofObstaclesMessage(myApp.robot().getPosition(),
-                this.myApp.robot().getFacing(),
-                this.myApp.grid().getObstacleList());
-        myApp.btConnection().sendMessage(msg.getAsJsonMessage().getAsJson());
-        msg = BluetoothMessage.ofRobotStartMessage();
+        BluetoothMessage msg = BluetoothMessage.ofRobotStartMessage();
         myApp.btConnection().sendMessage(msg.getAsJsonMessage().getAsJson());
     }
 
@@ -192,6 +190,11 @@ public class CanvasActivity extends AppCompatActivity {
         facingDirection = convertFacing(selectedFacing);
 
         initializeRobot(x, y, facingDirection);
+
+        BluetoothMessage msg = BluetoothMessage.ofObstaclesMessage(myApp.robot().getPosition(),
+                this.myApp.robot().getFacing(),
+                this.myApp.grid().getObstacleList());
+        myApp.btConnection().sendMessage(msg.getAsJsonMessage().getAsJson());
     }
 
     private void initializeRobot(int x, int y, Facing facing) {
@@ -213,7 +216,7 @@ public class CanvasActivity extends AppCompatActivity {
     private void onMsgReceived(BluetoothMessage btMsg) {
         if (btMsg instanceof BluetoothMessage.PlainStringMessage m) {
             // show on ui
-            receivedMessages.append(m.rawMsg() + "\n");
+            receivedMessages.append("\n" + m.rawMsg());
         } else if (btMsg instanceof BluetoothMessage.RobotStatusMessage m) {
             // show on ui
             robotStatusDynamic.setText(m.status());
