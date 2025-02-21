@@ -189,7 +189,7 @@ class ImagePredict(Resource):
         output_dir = Path("image_rec_files/output")
         os.makedirs(output_dir, exist_ok=True)
 
-        image_id = predict_image(model, file_path, output_dir)
+        image_id = predict_image(model, file_path, output_dir,signal)
 
         return {
             "obstacle_id": obstacle_id,

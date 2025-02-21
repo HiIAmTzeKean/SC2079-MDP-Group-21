@@ -61,25 +61,58 @@ def get_random_string(length):
     result = ''.join(random.choice(string.ascii_letters) for i in range(length))
     return result
 
+# Filter and select the best bounding box based on selection mode
 def find_largest_or_central_bbox(bboxes, selection_mode='largest', confidence_adjustment=False):
     if not bboxes:
         return "NA", 0.0
 
     valid_bboxes = []
 
-    # Filter bboxes based on initial confidence threshold
+    # Filter bboxes based on confidence threshold
     for bbox in bboxes:
+        if bbox["confidence"] > 0.3:  # Confidence threshold
             valid_bboxes.append(bbox)
 
     if not valid_bboxes:
         return "NA", 0.0
 
-    if selection_mode == 'largest':
-        return max(valid_bboxes, key=lambda x: x["bbox_area"])["label"], max(valid_bboxes, key=lambda x: x["bbox_area"])["bbox_area"]
+    # Sort valid bboxes by area (largest first)
+    valid_bboxes.sort(key=lambda x: x["bbox_area"], reverse=True)
 
-    # Example central detection (adjust as needed)
-    center_x = 320
-    return min(valid_bboxes, key=lambda x: abs(x["xywh"][0] - center_x))["label"], min(valid_bboxes, key=lambda x: abs(x["xywh"][0] - center_x))["bbox_area"]
+    if selection_mode == 'largest':
+        # Return the largest bbox
+        return valid_bboxes[0]["label"], valid_bboxes[0]["bbox_area"]
+
+    elif selection_mode == 'C':  # Central mode
+        # Filter bboxes within a central area (adjust as needed)
+        central_bboxes = []
+        current_area = valid_bboxes[0]["bbox_area"]
+        for bbox in valid_bboxes:
+            if (current_area * 0.7 <= bbox["bbox_area"]) or (bbox["label"] == "One" and current_area * 0.5 <= bbox["bbox_area"]):
+                central_bboxes.append(bbox)
+                current_area = bbox["bbox_area"]
+
+        if not central_bboxes:
+            return "NA", 0.0
+
+        # Choose the most central bbox
+        center_x = 320  # Adjust based on your image width
+        central_bbox = min(central_bboxes, key=lambda x: abs(x["xywh"][0] - center_x))
+        return central_bbox["label"], central_bbox["bbox_area"]
+
+    elif selection_mode in ['L', 'R']:  # Left or Right mode
+        # Sort bboxes by x-coordinate (leftmost or rightmost)
+        valid_bboxes.sort(key=lambda x: x["xywh"][0])
+
+        if selection_mode == 'L':
+            return valid_bboxes[0]["label"], valid_bboxes[0]["bbox_area"]
+        else:
+            return valid_bboxes[-1]["label"], valid_bboxes[-1]["bbox_area"]
+
+    else:
+        # Default to largest bbox
+        return valid_bboxes[0]["label"], valid_bboxes[0]["bbox_area"]
+    
 
 # Predict and Annotate image .
 def predict_image(model, image_path, output_dir, selection_mode='largest'):
