@@ -16,6 +16,7 @@ public class Grid {
 
     private static final String TAG = "Grid";
     public static final int GRID_SIZE = 20;
+    private static int idGen = 1;
     private final List<GridObstacle> obstacleList; // list represents obstacles currently added
 
     public Grid() {
@@ -24,13 +25,15 @@ public class Grid {
 
     /**
      * Adds an obstacle to a specified position.
+     * <p> Always sets the id of the created obstacle in a incrementing fashion.
      *
      * @param obstacle The GridObstacle object.
      * @return true if placed successfully, false if out of bounds or position occupied.
      */
     public boolean addObstacle(GridObstacle obstacle) {
-        //TODO check if obstacle not alr at same position
+        // skip check if obstacle not alr at same position
         obstacleList.add(obstacle);
+        obstacle.setId(idGen++); // set the id to an auto-inc id
         Log.d(TAG, "Added obstacle: " + obstacle);
         return true;
     }

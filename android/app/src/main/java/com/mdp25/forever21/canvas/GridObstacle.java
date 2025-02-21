@@ -35,6 +35,9 @@ public class GridObstacle {
         return new GridObstacle(x, y, facing);
     }
 
+    /**
+     * Let parent class manage incrementing id. Care needed.
+     */
     public void setId(int id) {
         this.id = id;
     }
