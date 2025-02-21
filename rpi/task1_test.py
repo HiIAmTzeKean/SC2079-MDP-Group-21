@@ -225,58 +225,28 @@ class TaskOne(RaspberryPi):
                         )
                     )
                     logger.debug(f"stm finish {message}")
-                    logger.info("Releasing movement lock.")
-                    self.movement_lock.release()
                 elif message.startswith("r"):
                     logger.debug(f"stm ack {message}")
                 else:
                     logger.warning(f"Ignored unknown message from STM: {message}")
             except Exception as e:
                 logger.error(f"Error in recv_stm: {e}")
-            
+            logger.info("Releasing movement lock.")
+            self.movement_lock.release()
             
     def recv_android(self) -> None:
         """
         [Child Process] Processes the messages received from Android
         """
         while True:
-            android_str: Optional[str] = None
-            try:
-                android_str = self.android_link.recv()
-            except OSError:
-                self.android_dropped.set()
-                logger.debug("OSError. Event set: Android dropped")
 
-            if android_str is None:
-                logger.debug("Empty message from andriod")
-                continue
-
-            message: dict = json.loads(android_str)
-
-            ## Command: Set obstacles ##
-            logger.info(f"message obtained is {message['cat']}")
-            if message["cat"] == Category.OBSTACLE.value:
-                self.rpi_action_queue.put(PiAction(cat=Category.OBSTACLE, value=message["value"]))
-                logger.debug(f"PiAction obstacles appended to queue: {message}")
-
-            elif message["cat"] == Category.MANUAL.value:
-                command = manual_commands.get(message["value"])
-                if command is None:
-                    logger.error("Invalid manual command!")
-                self.stm_link.send_cmd(**command)
+            if not self.command_queue.empty():
+                self.unpause.set()
                 
-            ## Command: Start Moving ##
-            elif message["cat"] == "control":
-                if message["value"] == "start":
-                    # Commencing path following
-                    if not self.command_queue.empty():
-                        self.unpause.set()
-                        
-                        logger.info("Start command received, starting robot on path!")
-                        self.android_queue.put(AndroidMessage(Category.INFO.value, "Starting robot on path!"))
-                    else:
-                        logger.warning("The command queue is empty, please set obstacles.")
-                        self.android_queue.put(AndroidMessage(Category.ERROR.value, "Command queue empty (no obstacles)"))
+                logger.info("Start command received, starting robot on path!")
+                self.android_queue.put(AndroidMessage(Category.INFO.value, "Starting robot on path!"))
+            else:
+                logger.warning("The command queue is empty, please set obstacles.")
 
     # TODO fix the library camera call
     def recognize_image(self, obstacle_id_with_signal: str) -> None:
@@ -286,24 +256,10 @@ class TaskOne(RaspberryPi):
 
         :param obstacle_id_with_signal: eg: SNAP<obstacle_id>_<C/L/R>
         """
-        obstacle_id, signal = obstacle_id_with_signal.split("_")
-        logger.info(f"Capturing image for obstacle id: {obstacle_id}")
-        self.android_queue.put(AndroidMessage(Category.INFO.value, f"Capturing image for obstacle id: {obstacle_id}"))
-        url = f"{URL}/image"
-
-        filename = f"/home/rpi21/cam/{int(time.time())}_{obstacle_id}_{signal}.jpg"
-        filename_send = f"{int(time.time())}_{obstacle_id}_{signal}.jpg"
-        results = snap_using_picamera(
-            obstacle_id=obstacle_id,
-            signal=signal,
-            filename=filename,
-            filename_send=filename_send,
-            url=url,
-            # auto_callibrate=False,
-        )
-        self.android_queue.put(AndroidMessage(Category.IMAGE_REC.value, results))
+        print("SNAPPPPPPPPPPPPPP")
         with self.obstacles.get_lock():
             self.obstacles.value -= 1
+
 
     # TODO implement retrying flag
     def request_algo(self, data: dict, retrying=False) -> None:
@@ -312,27 +268,7 @@ class TaskOne(RaspberryPi):
         The received commands and path are then queued in the respective queues
         """
         logger.debug("Requesting path from algo")
-        self.android_queue.put(AndroidMessage(cat=Category.INFO.value, value="Requesting path from algo..."))
-
-        body = {
-            **data,
-            "robot_x": data["robot_x"],
-            "robot_y": data["robot_y"],
-            "robot_dir": data["robot_dir"],
-            "retrying": retrying,
-        }
-        logger.debug(f"{body}")
-        response = requests.post(url=f"{URL}/path", json=body, timeout=1.0)
-
-        if response.status_code != 200:
-            logger.error("Error when requesting path from Algo API.")
-            self.android_queue.put(AndroidMessage(Category.ERROR.value, "Error when requesting path from Algo API."))
-            return
-
-        result = json.loads(response.content)["data"]
-        commands = result["commands"]
-        path = result["path"]
-        logger.debug(f"Commands received from API: {commands}")
+        commands = ['T50|0|10', 't50|0|10', 'SNAP', 'STICH', 'FIN']
         
         self.clear_queues()
 
