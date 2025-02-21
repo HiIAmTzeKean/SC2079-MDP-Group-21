@@ -52,12 +52,14 @@ public class CanvasView extends View {
         // ID text styling (obstacle IDs)
         idPaint.setColor(Color.WHITE);
         idPaint.setTextAlign(Paint.Align.CENTER);
-        idPaint.setFakeBoldText(true);
+        idPaint.setFakeBoldText(false);
+        idPaint.setTextSize(25);
 
         // Target styling
         targetPaint.setColor(Color.GREEN);
         targetPaint.setTextAlign(Paint.Align.CENTER);
         targetPaint.setFakeBoldText(true);
+        targetPaint.setTextSize(40);
 
         // Facing indicator styling (Orange Strip)
         facingPaint.setColor(Color.rgb(255, 165, 0)); // Orange color
@@ -123,7 +125,6 @@ public class CanvasView extends View {
     private void drawObstacles(Canvas canvas) {
         int id = 1;
         for (GridObstacle gridObstacle : grid.getObstacleList()){
-            gridObstacle.setId(id++);
             int left = offsetX + gridObstacle.getPosition().getXInt() * cellSize;
             int top = offsetY + (Grid.GRID_SIZE - 1 - gridObstacle.getPosition().getYInt()) * cellSize;  // Flip y-axis
             int right = left + cellSize;
@@ -136,11 +137,13 @@ public class CanvasView extends View {
             float textY = top + (cellSize / 2) - ((idPaint.descent() + idPaint.ascent()) / 2);
 
             if(gridObstacle.getTarget() == null){
-                // Draw ID text
+                // Draw ID text (no target yet)
                 canvas.drawText(String.valueOf(gridObstacle.getId()), textX, textY, idPaint);
             }
             else {
-                // TODO: Draw target text and Bluetooth Stuff
+                // Draw target text if avail
+                canvas.drawText(gridObstacle.getTarget().getTargetStr(), textX, textY, targetPaint);
+
             }
 
             // Draw facing indicator
