@@ -4,6 +4,10 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
+import androidx.core.graphics.drawable.IconCompat;
+
+import com.mdp25.forever21.MyApplication;
+
 import java.util.Optional;
 
 /**
@@ -36,7 +40,7 @@ public class CanvasTouchController implements View.OnTouchListener {
                 int finalX = x;
                 int finalY = y;
                 if (grid.isInsideGrid(finalX, finalY) && grid.hasObstacle(finalX, finalY)) {
-                    selectedObstacle = grid.findObstacle(finalX, finalY);
+                    selectedObstacle = grid.findObstacleWithPos(finalX, finalY);
                     Log.d(TAG, "Selected obstacle at (" + finalX + ", " + finalY + ")");
                 }
                 break;

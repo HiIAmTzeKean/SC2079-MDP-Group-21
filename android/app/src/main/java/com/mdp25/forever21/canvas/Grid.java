@@ -41,7 +41,7 @@ public class Grid {
      * @return true if an obstacle was removed, false if the position was empty.
      */
     public boolean removeObstacle(int x, int y) {
-        Optional<GridObstacle> foundObstacle = findObstacle(x, y);
+        Optional<GridObstacle> foundObstacle = findObstacleWithPos(x, y);
         if (foundObstacle.isPresent()) {
             obstacleList.remove(foundObstacle.get());
             Log.d(TAG, "Removed obstacle: " + foundObstacle.get());
@@ -53,7 +53,7 @@ public class Grid {
     /**
      * Gets the obstacle at a given position.
      */
-    public Optional<GridObstacle> findObstacle(int x, int y) {
+    public Optional<GridObstacle> findObstacleWithPos(int x, int y) {
         for (GridObstacle gridObstacle : obstacleList) {
             if (gridObstacle.getPosition().getXInt() == x &&
                     gridObstacle.getPosition().getYInt() == y) {
@@ -64,10 +64,22 @@ public class Grid {
     }
 
     /**
+     * Gets the obstacle from a given id.
+     */
+    public Optional<GridObstacle> findObstacleWithId(int obstacleId) {
+        for (GridObstacle gridObstacle : obstacleList) {
+            if (gridObstacle.getId() == obstacleId) {
+                return Optional.of(gridObstacle);
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
      * If there is an obstacle at (x,y), returns true
      */
     public boolean hasObstacle(int x, int y) {
-        return findObstacle(x, y).isPresent();
+        return findObstacleWithPos(x, y).isPresent();
     }
 
     /**
@@ -78,7 +90,11 @@ public class Grid {
     }
 
     public void updateObstacleTarget(int x, int y, int targetId) {
-        findObstacle(x, y).ifPresent(obstacle -> obstacle.setTarget(Target.of(targetId)));
+        findObstacleWithPos(x, y).ifPresent(obstacle -> obstacle.setTarget(Target.of(targetId)));
+    }
+
+    public void updateObstacleTarget(int obstacleId, int targetId) {
+        findObstacleWithId(obstacleId).ifPresent(obstacle -> obstacle.setTarget(Target.of(targetId)));
     }
 
     public boolean isInsideGrid(int x, int y) {

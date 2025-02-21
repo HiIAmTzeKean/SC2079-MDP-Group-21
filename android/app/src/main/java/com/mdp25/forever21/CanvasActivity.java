@@ -2,6 +2,8 @@ package com.mdp25.forever21;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.BroadcastReceiver;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.ScrollView;
@@ -16,6 +18,8 @@ import android.text.Spanned;
 import android.widget.EditText;
 
 import com.mdp25.forever21.bluetooth.BluetoothMessage;
+import com.mdp25.forever21.bluetooth.BluetoothMessageParser;
+import com.mdp25.forever21.bluetooth.BluetoothMessageReceiver;
 import com.mdp25.forever21.canvas.CanvasGestureController;
 import com.mdp25.forever21.canvas.CanvasTouchController;
 import com.mdp25.forever21.canvas.CanvasView;
@@ -38,6 +42,7 @@ public class CanvasActivity extends AppCompatActivity {
     private Facing facingDirection;
     private final String TAG = "CanvasActivity";
     private MyApplication myApp;
+    private BroadcastReceiver msgReceiver; //receive bluetooth messages
     private CanvasView canvasView;
     private RobotView robotView;
     private CanvasTouchController canvasTouchController;
@@ -65,6 +70,9 @@ public class CanvasActivity extends AppCompatActivity {
         robotView.setRobot(robot);
 
         bindUI(); // Calls method to initialize UI components
+
+        msgReceiver = new BluetoothMessageReceiver(BluetoothMessageParser.ofDefault(), this::onMsgReceived);
+        getApplicationContext().registerReceiver(msgReceiver, new IntentFilter(BluetoothMessageReceiver.ACTION_MSG_READ), RECEIVER_NOT_EXPORTED);
     }
 
     private void bindUI() {
@@ -74,7 +82,7 @@ public class CanvasActivity extends AppCompatActivity {
         applyInputFilter(inputX);
         applyInputFilter(inputY);
         chatInputBox = findViewById(R.id.chatInputBox);
-        // TODO Bluetooth stuff
+
         receivedMessages = findViewById(R.id.ReceiveMsgTextView);
         robotStatusDynamic = findViewById(R.id.robotStatusDynamic);
 
@@ -199,6 +207,24 @@ public class CanvasActivity extends AppCompatActivity {
             case "EAST": return Facing.EAST;
             case "WEST": return Facing.WEST;
             default: return Facing.NORTH;
+        }
+    }
+
+    private void onMsgReceived(BluetoothMessage btMsg) {
+        if (btMsg instanceof BluetoothMessage.PlainStringMessage m) {
+            // show on ui
+            receivedMessages.append(m.rawMsg() + "\n");
+        } else if (btMsg instanceof BluetoothMessage.RobotStatusMessage m) {
+            // show on ui
+            robotStatusDynamic.setText(m.status());
+        } else if (btMsg instanceof BluetoothMessage.TargetFoundMessage m) {
+            // update obstacle's target, then invalidate ui
+            grid.updateObstacleTarget(m.obstacleId(), m.targetId());
+            canvasView.invalidate();
+        } else if (btMsg instanceof BluetoothMessage.RobotPositionMessage m) {
+            // update robot's pos, then invalidate ui
+            robot.updatePosition(m.x(), m.y());
+            robotView.invalidate();
         }
     }
 }
