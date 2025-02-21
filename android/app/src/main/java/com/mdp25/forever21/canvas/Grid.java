@@ -67,6 +67,20 @@ public class Grid {
     }
 
     /**
+     * Gets the obstacle at a given approximate position.
+     */
+    public Optional<GridObstacle> findObstacleWithApproxPos(int x, int y) {
+        //TODO search the neighbour as well
+        for (GridObstacle gridObstacle : obstacleList) {
+            if (gridObstacle.getPosition().getXInt() == x &&
+                    gridObstacle.getPosition().getYInt() == y) {
+                return Optional.of(gridObstacle);
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
      * Gets the obstacle from a given id.
      */
     public Optional<GridObstacle> findObstacleWithId(int obstacleId) {

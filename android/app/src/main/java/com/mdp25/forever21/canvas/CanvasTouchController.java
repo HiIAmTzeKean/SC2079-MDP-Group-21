@@ -22,8 +22,10 @@ import java.util.Optional;
 public class CanvasTouchController implements View.OnTouchListener {
     private final static String TAG = "CanvasTouchController";
     private final Grid grid;
+    private final MyApplication myApp;
     private Optional<GridObstacle> selectedObstacle = Optional.empty();
-    public CanvasTouchController(Grid grid) {
+    public CanvasTouchController(MyApplication myApp, Grid grid) {
+        this.myApp = myApp;
         this.grid = grid;
     }
 
@@ -54,21 +56,24 @@ public class CanvasTouchController implements View.OnTouchListener {
                     if (!grid.isInsideGrid(finalX, finalY)) {
                         // Remove if lifted outside the grid
                         grid.removeObstacle(oldX, oldY);
-                        // TODO: Bluetooth stuff
+                        // some fake log to show removing of obstacles
+                        myApp.btConnection().sendMessage("OBST_REMOVE," + oldX + "," + oldY);
                         Log.d(TAG, "Removed obstacle at (" + oldX + ", " + oldY + ")");
                         canvasView.invalidate(); // Refresh canvas
                     }
                     else if (!grid.hasObstacle(finalX, finalY)) {
                         // Move obstacle only if lifted on an empty cell
                         obstacle.updatePosition(finalX, finalY);
-                        // TODO: Bluetooth stuff
+                        // some fake log to show moving of obstacles
+                        myApp.btConnection().sendMessage("OBST_MOVE," + oldX + "," + oldY + "," + finalX + "," + finalY);
                         Log.d(TAG, "Moved obstacle from (" + oldX + ", " + oldY + ") to (" + finalX + ", " + finalY + ")");
                         canvasView.invalidate(); // Refresh canvas
                     }
                     else if (grid.hasObstacle(finalX, finalY) && oldX == finalX && oldY == finalY) {
                         // Rotate obstacle clockwise if lifted on the same cell
                         obstacle.rotateClockwise();
-                        // TODO: Bluetooth stuff
+                        // some fake log to show rotating of obstacles
+                        myApp.btConnection().sendMessage("OBST_ROT," + finalX + "," + finalY);
                         Log.d(TAG, "Rotated obstacle clockwise at (" + finalX + ", " + finalY + ")");
                         canvasView.invalidate(); // Refresh canvas
                     }
@@ -76,7 +81,8 @@ public class CanvasTouchController implements View.OnTouchListener {
                 // If no obstacle was selected, add a new one
                 if (grid.isInsideGrid(finalX, finalY) && !grid.hasObstacle(finalX, finalY) && selectedObstacle.isEmpty()) {
                     grid.addObstacle(GridObstacle.of(finalX, finalY));
-                    // TODO: Bluetooth stuff
+                    // some fake log to show adding of obstacles
+                    myApp.btConnection().sendMessage("OBST_ADD," + finalX + "," + finalY);
                     Log.d(TAG, "Added new obstacle at (" + finalX + ", " + finalY + ")");
                     canvasView.invalidate(); // Refresh canvas
                 }
