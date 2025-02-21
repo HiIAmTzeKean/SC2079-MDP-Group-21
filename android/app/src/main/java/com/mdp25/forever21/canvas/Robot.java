@@ -13,6 +13,10 @@ public class Robot {
         this.position = Position.of(x, y);
     }
 
+    public static Robot ofDefault() {
+        return new Robot(1, 1, Facing.NORTH);
+    }
+
     /**
      * Static factory method with default facing of {@link Facing#NORTH}.
      */
@@ -33,7 +37,7 @@ public class Robot {
         return this.position;
     }
 
-    public void updateFacing(Facing facing){
+    public void updateFacing(Facing facing) {
         this.facing = facing;
     }
 
@@ -108,6 +112,7 @@ public class Robot {
             this.facing = Facing.NORTH;
         }
     }
+
     // Ummm... idk if reverseLeft and reverseRight will ever be implemented. Can delete if not required.
     // Robot reverses left by moving backward by one cell and the turning radius
     public void reverseLeft() {

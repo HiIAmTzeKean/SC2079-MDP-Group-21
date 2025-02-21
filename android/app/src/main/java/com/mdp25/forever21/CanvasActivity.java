@@ -47,8 +47,6 @@ public class CanvasActivity extends AppCompatActivity {
     private RobotView robotView;
     private CanvasTouchController canvasTouchController;
     private CanvasGestureController canvasGestureController;
-    private Grid grid;
-    private Robot robot;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,18 +54,16 @@ public class CanvasActivity extends AppCompatActivity {
         setContentView(R.layout.activity_canvas);
 
         myApp = (MyApplication) getApplication();
-        grid = new Grid();
-        robot = Robot.of(1, 1, Facing.NORTH); // Initialize robot
 
-        canvasTouchController = new CanvasTouchController(grid);
+        canvasTouchController = new CanvasTouchController(myApp);
         canvasGestureController = new CanvasGestureController();
 
         canvasView = findViewById(R.id.canvasView);
-        canvasView.setGrid(grid);
+        canvasView.setGrid(myApp.grid());
         canvasView.setOnTouchListener(canvasTouchController);
 
         robotView = findViewById(R.id.robotView);
-        robotView.setRobot(robot);
+        robotView.setRobot(myApp.robot());
 
         bindUI(); // Calls method to initialize UI components
 
@@ -103,31 +99,35 @@ public class CanvasActivity extends AppCompatActivity {
 
         // Bind movement buttons
         findViewById(R.id.btnRobotForward).setOnClickListener(view -> {
-            myApp.btConnection().sendMessage("f");
-            robot.moveForward();
+            if (myApp.btConnection() != null)
+                myApp.btConnection().sendMessage("f");
+            myApp.robot().moveForward();
             robotView.invalidate();
         });
         findViewById(R.id.btnRobotBackward).setOnClickListener(view -> {
-            myApp.btConnection().sendMessage("r");
-            robot.moveBackward();
+            if (myApp.btConnection() != null)
+                myApp.btConnection().sendMessage("r");
+            myApp.robot().moveBackward();
             robotView.invalidate();
         });
         findViewById(R.id.btnRobotRight).setOnClickListener(view -> {
-            myApp.btConnection().sendMessage("tr");
-            robot.turnRight();
+            if (myApp.btConnection() != null)
+                myApp.btConnection().sendMessage("tr");
+            myApp.robot().turnRight();
             robotView.invalidate();
         });
         findViewById(R.id.btnRobotLeft).setOnClickListener(view -> {
-            myApp.btConnection().sendMessage("tl");
-            robot.turnLeft();
+            if (myApp.btConnection() != null)
+                myApp.btConnection().sendMessage("tl");
+            myApp.robot().turnLeft();
             robotView.invalidate();
         });
     }
 
     private void startRobot() {
-        BluetoothMessage msg = BluetoothMessage.ofObstaclesMessage(this.robot.getPosition(),
-                this.robot.getFacing(),
-                this.grid.getObstacleList());
+        BluetoothMessage msg = BluetoothMessage.ofObstaclesMessage(myApp.robot().getPosition(),
+                this.myApp.robot().getFacing(),
+                this.myApp.grid().getObstacleList());
         myApp.btConnection().sendMessage(msg.getAsJsonMessage().getAsJson());
         msg = BluetoothMessage.ofRobotStartMessage();
         myApp.btConnection().sendMessage(msg.getAsJsonMessage().getAsJson());
@@ -195,8 +195,8 @@ public class CanvasActivity extends AppCompatActivity {
     }
 
     private void initializeRobot(int x, int y, Facing facing) {
-        robot.updatePosition(x, y);
-        robot.updateFacing(facing);
+        myApp.robot().updatePosition(x, y);
+        myApp.robot().updateFacing(facing);
         robotView.invalidate();
     }
 
@@ -219,11 +219,11 @@ public class CanvasActivity extends AppCompatActivity {
             robotStatusDynamic.setText(m.status());
         } else if (btMsg instanceof BluetoothMessage.TargetFoundMessage m) {
             // update obstacle's target, then invalidate ui
-            grid.updateObstacleTarget(m.obstacleId(), m.targetId());
+            myApp.grid().updateObstacleTarget(m.obstacleId(), m.targetId());
             canvasView.invalidate();
         } else if (btMsg instanceof BluetoothMessage.RobotPositionMessage m) {
             // update robot's pos, then invalidate ui
-            robot.updatePosition(m.x(), m.y());
+            myApp.robot().updatePosition(m.x(), m.y());
             robotView.invalidate();
         }
     }
