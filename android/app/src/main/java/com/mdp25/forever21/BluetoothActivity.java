@@ -69,9 +69,6 @@ public class BluetoothActivity extends AppCompatActivity {
         // retrieve bluetooth adapter
         myApp = (MyApplication) getApplication();
 
-        //TODO disable back button from gg back to InitActivity...
-        //getOnBackPressedDispatcher().addCallback(callback -> {} );
-
         // request bluetooth permissions
         String[] permissions = new String[]{
                 Manifest.permission.BLUETOOTH_SCAN,

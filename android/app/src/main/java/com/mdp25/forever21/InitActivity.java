@@ -36,6 +36,7 @@ public class InitActivity extends AppCompatActivity {
         Handler handler = new Handler(Looper.getMainLooper());
         handler.postDelayed(() -> {
             startActivity(new Intent(this, NEXT_ACTIVITY));
+            finish(); // to remove from stack
         }, DELAY_TIME_MS);
     }
 }
