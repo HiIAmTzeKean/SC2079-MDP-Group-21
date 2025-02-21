@@ -14,8 +14,44 @@ class Direction(int, Enum):
 
     @staticmethod
     def rotation_cost(d1, d2):
-        diff = abs(d1 - d2)
-        return min(diff, 8 - diff)
+        """
+        Calculate the cost of turning from direction d1 to direction d2
+        If the robot does not turn, the cost is 0.
+        """
+        if d1 == Direction.NORTH:
+            if d2 in [Direction.EAST, Direction.WEST]:
+                return 1
+            elif d2 == Direction.NORTH:
+                return 0
+            else:
+                raise ValueError("Robot cannot turn from north to south")
+
+        elif d1 == Direction.SOUTH:
+            if d2 in [Direction.EAST, Direction.WEST]:
+                return 1
+            elif d2 == Direction.SOUTH:
+                return 0
+            else:
+                raise ValueError("Robot cannot turn from south to north")
+
+        elif d1 == Direction.EAST:
+            if d2 in [Direction.NORTH, Direction.SOUTH]:
+                return 1
+            elif d2 == Direction.EAST:
+                return 0
+            else:
+                raise ValueError("Robot cannot turn from east to west")
+
+        elif d1 == Direction.WEST:
+            if d2 in [Direction.NORTH, Direction.SOUTH]:
+                return 1
+            elif d2 == Direction.WEST:
+                return 0
+            else:
+                raise ValueError("Robot cannot turn from west to east")
+
+        else:
+            raise ValueError(f"direction {d1} is not a valid direction.")
 
     def __repr__(self):
         return self.name
@@ -36,11 +72,19 @@ MOVE_DIRECTION = [
 class Motion(int, Enum):
     """
     Enum class for the motion of the robot between two cells
+
+    For OFFSET, make two half turns to end up diagonally in the specified direction
+    eg. FORWARD_OFFSET_LEFT 
+    .  . X .  .  .
+    .  . ↑ .  .  .   
+    .  . └o┐  .  .  
+    .  .   |  .  .   
+    .  .   X  .  .
     """
     # the robot can move in 10 different ways from one cell to another
     # designed so that 10 - motion = opposite motion
     FORWARD_LEFT_TURN = 0
-    FORWARD_OFFSET_LEFT = 1  # moving forward while drifting left
+    FORWARD_OFFSET_LEFT = 1
     FORWARD = 2
     FORWARD_OFFSET_RIGHT = 3
     FORWARD_RIGHT_TURN = 4
@@ -84,10 +128,29 @@ class Motion(int, Enum):
     def reverse_cost(self):
         if self == Motion.CAPTURE:
             raise ValueError("Capture motion does not have a reverse cost")
-        if self in [Motion.REVERSE_OFFSET_RIGHT, Motion.REVERSE_OFFSET_LEFT, Motion.REVERSE_LEFT_TURN,
-                    Motion.REVERSE_RIGHT_TURN]:
-            return 5
-        elif self == Motion.REVERSE:
+        elif self in [
+            Motion.REVERSE_OFFSET_LEFT,
+            Motion.REVERSE_OFFSET_RIGHT,
+            Motion.REVERSE_LEFT_TURN,
+            Motion.REVERSE_RIGHT_TURN,
+            Motion.REVERSE
+        ]:
+            return 1
+        else:
+            return 0
+
+    def half_turn_cost(self):
+        """
+        If the motion is a half turn motion, return the cost of the motion.
+        Returns:
+            int:
+        """
+        if self in [
+            Motion.FORWARD_OFFSET_LEFT,
+            Motion.FORWARD_OFFSET_RIGHT,
+            Motion.REVERSE_OFFSET_LEFT,
+            Motion.REVERSE_OFFSET_RIGHT,
+        ]:
             return 1
         else:
             return 0

@@ -34,4 +34,8 @@ API Server for RPI to communicate with PC over Wifi. Used by Algo & Image Rec
     python api.py
     ```
 
-Server application and Swagger documentation will be running on http://127.0.0.1:5000 (localhost) or http://{your local IP}:5000
+Server application and Swagger documentation will be running on http://localhost:5000 or http://{your local IP}:5000. Make sure to point the web simulator or RPI code to the URL that this server is running on.
+
+Image recognition files will be stored in `/api/image_rec_files`. 
+`/api/image_rec_files/uploads/`: contains the images sent in the POST request to the `/image` API endpoint
+`/api/image_rec_files/output/`: contains the processed images with bounding boxes

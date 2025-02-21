@@ -1,6 +1,7 @@
 from typing import List
-from algo.tools.consts import EXPANDED_CELL, SCREENSHOT_COST, HEIGHT, WIDTH
+from algo.tools.consts import SCREENSHOT_COST, TOO_CLOSE_COST, PADDING, MID_TURN_PADDING, TURN_PADDING, HEIGHT, WIDTH
 from algo.tools.movement import Direction
+from math import sqrt
 
 
 class CellState:
@@ -11,7 +12,7 @@ class CellState:
         self.y = y
         self.direction = direction
         # If screenshot_id != None, the snapshot is taken at that position is for obstacle with obstacle_id = screenshot_id
-        self.screenshot_id = screenshot_id if screenshot_id else None
+        self.screenshot_id = screenshot_id
         self.penalty = penalty  # Penalty for the view point of taking picture
 
     def cmp_position(self, x, y) -> bool:
@@ -40,7 +41,7 @@ class CellState:
         return self.x == x and self.y == y and self.direction == direction
 
     def __repr__(self):
-        return "Cellstate(x: {}, y: {}, direction: {}, screenshot: {})".format(self.x, self.y, self.direction.name, self.screenshot_id)
+        return "Cellstate(x: {}, y: {}, direction: {}, screenshot: {})".format(self.x, self.y, Direction(self.direction), self.screenshot_id)
 
     def set_screenshot(self, screenshot_id):
         """Set screenshot id for cell
@@ -77,7 +78,7 @@ class Obstacle(CellState):
         """
         return self.x == other.x and self.y == other.y and self.direction == other.direction
 
-    def get_view_state(self, retrying) -> List[CellState]:
+    def get_view_state(self) -> List[CellState]:
         """
         Constructs the list of CellStates from which the robot can view the image on the obstacle properly.
         Currently checks a T shape of grids in front of the image
@@ -87,69 +88,98 @@ class Obstacle(CellState):
             List[CellState]: Valid cell states where robot can be positioned to view the symbol on the obstacle
         """
         cells = []
-        offset = 2 * EXPANDED_CELL
+        offset = 1  # offset due to position of robot's center
+
         # If the obstacle is facing north, then robot's cell state must be facing south
         if self.direction == Direction.NORTH:
-            if not retrying:
-                positions = [(self.x, self.y + offset), (self.x - 1, self.y + 1 + offset),
-                             (self.x + 1, self.y + 1 + offset), (self.x, self.y + 1 + offset)]
-                costs = [0, SCREENSHOT_COST, SCREENSHOT_COST, 5]
-            else:
-                positions = [(self.x, self.y + 1 + offset), (self.x - 1, self.y + 2 + offset),
-                             (self.x + 2, self.y + 1 + offset), (self.x, self.y + 2 + offset)]
-                costs = [0, SCREENSHOT_COST, SCREENSHOT_COST, 5]
+            positions = [
+                # robot camera is left of obstacle
+                (self.x - 1, self.y + 2 + offset),
+                # robot camera is right of obstacle
+                (self.x + 1, self.y + 2 + offset),
+                # robot camera is directly in front of obstacle
+                (self.x, self.y + 1 + offset),
+                (self.x, self.y + 2 + offset),
+            ]
+            costs = [
+                SCREENSHOT_COST,        # robot camera is left of obstacle
+                SCREENSHOT_COST,        # robot camera is right of obstacle
+                TOO_CLOSE_COST,         # robot camera is directly in front of obstacle
+                0,                      # robot camera is positioned just nice
+            ]
 
             for idx, pos in enumerate(positions):
                 if self.is_valid_position(*pos):
-                    cells.append(CellState(*pos, Direction.SOUTH,
-                                 self.obstacle_id, costs[idx]))
+                    cells.append(
+                        CellState(*pos, Direction.SOUTH,
+                                  self.obstacle_id, costs[idx])
+                    )
 
         # If obstacle is facing south, then robot's cell state must be facing north
         elif self.direction == Direction.SOUTH:
+            positions = [
+                (self.x + 1, self.y - 2 - offset),
+                (self.x - 1, self.y - 2 - offset),
+                (self.x, self.y - 1 - offset),
+                (self.x, self.y - 2 - offset),
+            ]
+            costs = [
+                SCREENSHOT_COST,
+                SCREENSHOT_COST,
+                TOO_CLOSE_COST,
+                0,
+            ]
 
-            if not retrying:
-                positions = [(self.x, self.y - offset), (self.x + 1, self.y - 1 - offset),
-                             (self.x - 1, self.y - 1 - offset), (self.x, self.y - 1 - offset)]
-                costs = [0, SCREENSHOT_COST, SCREENSHOT_COST, 5]
-            else:
-                positions = [(self.x, self.y - 1 - offset), (self.x + 1, self.y - 2 - offset),
-                             (self.x - 1, self.y - 2 - offset), (self.x, self.y - 2 - offset)]
-                costs = [0, SCREENSHOT_COST, SCREENSHOT_COST, 5]
             for idx, pos in enumerate(positions):
                 if self.is_valid_position(*pos):
-                    cells.append(CellState(*pos, Direction.NORTH,
-                                 self.obstacle_id, costs[idx]))
+                    cells.append(
+                        CellState(*pos, Direction.NORTH,
+                                  self.obstacle_id, costs[idx])
+                    )
 
         # If obstacle is facing east, then robot's cell state must be facing west
         elif self.direction == Direction.EAST:
-            if not retrying:
-                positions = [(self.x + offset, self.y), (self.x + 1 + offset, self.y + 1),
-                             (self.x + 1 + offset, self.y - 1), (self.x + 1 + offset, self.y)]
-                costs = [0, SCREENSHOT_COST, SCREENSHOT_COST, 5]
-            else:
-                positions = [(self.x + 1 + offset, self.y), (self.x + 2 + offset, self.y + 1),
-                             (self.x + 2 + offset, self.y - 1), (self.x + 2 + offset, self.y)]
-                costs = [0, SCREENSHOT_COST, SCREENSHOT_COST, 5]
+            positions = [
+                (self.x + 2 + offset, self.y + 1),
+                (self.x + 2 + offset, self.y - 1),
+                (self.x + 1 + offset, self.y),
+                (self.x + 2 + offset, self.y),
+            ]
+            costs = [
+                SCREENSHOT_COST,
+                SCREENSHOT_COST,
+                TOO_CLOSE_COST,
+                0,
+            ]
 
             for idx, pos in enumerate(positions):
                 if self.is_valid_position(*pos):
-                    cells.append(CellState(*pos, Direction.WEST,
-                                 self.obstacle_id, costs[idx]))
+                    cells.append(
+                        CellState(*pos, Direction.WEST,
+                                  self.obstacle_id, costs[idx])
+                    )
 
         # If obstacle is facing west, then robot's cell state must be facing east
         elif self.direction == Direction.WEST:
-            if not retrying:
-                position = [(self.x - offset, self.y), (self.x - 1 - offset, self.y + 1),
-                            (self.x - 1 - offset, self.y - 1), (self.x - 1 - offset, self.y)]
-                costs = [0, SCREENSHOT_COST, SCREENSHOT_COST, 5]
-            else:
-                position = [(self.x - 1 - offset, self.y), (self.x - 2 - offset, self.y + 1),
-                            (self.x - 2 - offset, self.y - 1), (self.x - 2 - offset, self.y)]
-                costs = [0, SCREENSHOT_COST, SCREENSHOT_COST, 5]
-            for idx, pos in enumerate(position):
+            positions = [
+                (self.x - 2 - offset, self.y + 1),
+                (self.x - 2 - offset, self.y - 1),
+                (self.x - 1 - offset, self.y),
+                (self.x - 2 - offset, self.y),
+            ]
+            costs = [
+                SCREENSHOT_COST,
+                SCREENSHOT_COST,
+                TOO_CLOSE_COST,
+                0,
+            ]
+
+            for idx, pos in enumerate(positions):
                 if self.is_valid_position(*pos):
-                    cells.append(CellState(*pos, Direction.EAST,
-                                 self.obstacle_id, costs[idx]))
+                    cells.append(
+                        CellState(*pos, Direction.EAST,
+                                  self.obstacle_id, costs[idx])
+                    )
         return cells
 
     def get_obstacle_id(self):
@@ -186,20 +216,20 @@ class Grid:
         self.obstacles: List[Obstacle] = []
 
     def add_obstacle(self, obstacle: Obstacle):
-        """Add a new obstacle to the Grid object, ignores if duplicate obstacle
+        """
+        Add a new obstacle to the Grid object, ignores if duplicate obstacle. 
+        Ensures that list of Obstacles is always sorted so that the same optimal path is returned for the same obstacles in different orders.
+
+        NOTE: Sorting is just a band-aid fix to to ensure consistency. 
+        There may be issues in the pathfinding algorithm or the A* heuristic may not be admissible 
+        which is causing different paths to be returned for same obstacles in different orders
 
         Args:
             obstacle (Obstacle): Obstacle to be added
         """
-        # Loop through the existing obstacles to check for duplicates
-        to_add = True
-        for ob in self.obstacles:
-            if ob == obstacle:
-                to_add = False
-                break
-
-        if to_add:
+        if obstacle not in self.obstacles:
             self.obstacles.append(obstacle)
+            self.obstacles.sort(key=lambda ob: (ob.x, ob.y))
 
     def reset_obstacles(self):
         """
@@ -213,55 +243,99 @@ class Grid:
         """
         return self.obstacles
 
-    def reachable(self, x: int, y: int, turn=False, preturn=False) -> bool:
-        """Checks whether the given x,y coordinate is reachable/safe. Criterion is as such:
-        - Must be at least 4 units away in total (x+y) from the obstacle
-        - Greater distance (x or y distance) must be at least 3 units away from obstacle
-
+    def reachable(self, x: int, y: int) -> bool:
+        """Checks whether the given x,y coordinate is reachable/safe for the robot from a straight movement.
         Args:
             x (int): x coordinate
             y (int): y coordinate
-            turn (bool): Should be set to True when checking coordinates while turning
-            preturn (bool): Should be set to True when checking coordinates before turning
         """
-        turn_padding = EXPANDED_CELL + 2
         if not self.is_valid_coord(x, y):
             return False
 
         for ob in self.obstacles:
-            if abs(ob.x - x) + abs(ob.y - y) <= 2:
+            # ensure Manhattan distance from robot to obstacle is not within padding
+            if abs(ob.x - x) + abs(ob.y - y) <= PADDING:
+                return False
+            # ensure Chebyshev distance from robot to obstacle is not within padding
+            if max(abs(ob.x - x), abs(ob.y - y)) < PADDING:
                 return False
 
-            if turn:
-                if max(abs(ob.x - x), abs(ob.y - y)) < turn_padding:
-                    return False
-            if preturn:
-                if max(abs(ob.x - x), abs(ob.y - y)) < turn_padding + 1:
-                    return False
-            if not turn and not preturn:
-                if max(abs(ob.x - x), abs(ob.y - y)) < 2:
+        return True
+
+    def turn_reachable(
+        self, x: int, y: int, new_x: int, new_y: int, direction: Direction
+    ) -> bool:
+        """
+        Checks if the robot can turn from x, y to new_x, new_y
+        Logic:
+            Checks 3 things for a turn: pre-turn, turn, post-turn
+            1. pre-turn: if the obstacle is within the padding distance from the starting point
+            2. post-turn: if the obstacle is within the padding distance from the end point
+            3. turn:
+                    Finds 3 points near the curve followed by the robot during the turn
+                    For each point, checks if the obstacle is within the padding distance
+        (For more details regarding the 3 points, refer to the _get_turn_checking_points function)
+        """
+
+        points = self._get_turn_checking_points(x, y, new_x, new_y, direction)
+
+        if not self.is_valid_coord(x, y) or not self.is_valid_coord(new_x, new_y):
+            return False
+        for obstacle in self.obstacles:
+            # pre turn
+            preturn_horizontal_distance = obstacle.x - x
+            preturn_vertical_distance = obstacle.y - y
+            preturn_dist = sqrt(
+                preturn_horizontal_distance**2 + preturn_vertical_distance**2
+            )
+            if preturn_dist < TURN_PADDING:
+                return False
+
+            # post-turn
+            turn_horizontal_distance = obstacle.x - new_x
+            turn_vertical_distance = obstacle.y - new_y
+            turn_dist = sqrt(
+                turn_horizontal_distance**2 + turn_vertical_distance**2
+            )
+            if turn_dist < TURN_PADDING:
+                return False
+
+            # turn
+            for point in points:
+                horizontal_distance = obstacle.x - point[0]
+                vertical_distance = obstacle.y - point[1]
+                if sqrt(horizontal_distance**2 + vertical_distance**2) < MID_TURN_PADDING:
                     return False
 
         return True
 
     def half_turn_reachable(self, x: int, y: int, new_x: int, new_y: int) -> bool:
+        """
+        Checks if the robot can make 2 half-turns from x, y to new_x, new_y
+        Logic:
+            find the longer axis for the movement, and add padding to the shorter axis.
+            Check if the obstacle is within the padded area
+        """
         # create a path with padding from x, y to new_x, new_y and check if it is reachable
         if not self.is_valid_coord(x, y) or not self.is_valid_coord(new_x, new_y):
             return False
-        padding = 2 * EXPANDED_CELL
+
+        # ensure that new_x > x so we can compare to obstacle coordinates later
         if new_x < x:
             new_x, x = x, new_x
         if new_y < y:
             new_y, y = y, new_y
-        for obs in self.obstacles:
 
+        for obs in self.obstacles:
             if abs(x-new_x) > abs(y-new_y):
-                # x is the longer axis. Use padding only for the y-axis
-                if x <= obs.x <= new_x and y - padding <= obs.y <= new_y + padding:
+                # x is the longer axis
+                # Use padding for the shorter y-axis to account for small vertical deviations when robot is moving mostly horizontally
+                if x <= obs.x <= new_x and y - PADDING <= obs.y <= new_y + PADDING:
                     return False
             else:
-                # y is the longer axis. Use padding only for the x-axis
-                if x - padding <= obs.x <= new_x + padding and y <= obs.y <= new_y:
+                # y is the longer axis
+                # Use padding for the shorter x-axis to account for small horizontal deviations when robot is moving mostly vertically
+                if x - PADDING <= obs.x <= new_x + PADDING and y <= obs.y <= new_y:
                     return False
         return True
 
@@ -280,29 +354,23 @@ class Grid:
         """
         return self.is_valid_coord(state.x, state.y)
 
-    def get_view_obstacle_positions(self, retrying) -> List[List[CellState]]:
+    def get_view_obstacle_positions(self) -> List[List[CellState]]:
         """
-        Extracts all valid viewing positions in a grid-wide fashion,
-        without being affected by the order in which obstacles were added.
+        This function return a list of desired states for the robot to achieve based on the obstacle position and direction.
+        The state is the position that the robot can see the image of the obstacle and is safe to reach without collision
+        :return: [[CellState]]
         """
+
         optimal_positions = []
-    
-        # Instead of relying on `self.obstacles`, scan the entire grid and collect obstacles dynamically
-        all_obstacles = { (o.x, o.y): o for o in self.obstacles }  # Dictionary for fast lookup
-
-        # Loop through the grid, detecting obstacles in a structured way
-        for x in range(self.size_x):
-            for y in range(self.size_y):
-                if (x, y) in all_obstacles:
-                    obstacle = all_obstacles[(x, y)]
-                
-                    # Compute valid view positions for this obstacle
-                    view_states = [view for view in obstacle.get_view_state(retrying) if self.reachable(view.x, view.y)]
-                
-                    optimal_positions.append(view_states)
-
+        for obstacle in self.obstacles:
+            # skip objects that have SKIP as their direction
+            if obstacle.direction == Direction.SKIP:
+                continue
+            else:
+                view_states = [view_state for view_state in obstacle.get_view_state() if
+                               self.reachable(view_state.x, view_state.y)]
+            optimal_positions.append(view_states)
         return optimal_positions
-
 
     def find_obstacle_by_id(self, obstacle_id: int) -> Obstacle:
         """
@@ -312,3 +380,35 @@ class Grid:
             if obstacle.obstacle_id == obstacle_id:
                 return obstacle
         return None
+
+    @staticmethod
+    def _get_turn_checking_points(
+        x: int, y: int, new_x: int, new_y: int, direction: Direction
+    ):
+        """
+        Finds 3 points near the curve followed by the robot during the turn. Near the curve since it is difficult to
+        approximate points on the curve since it is not a part of a circle, but rather an irregular ellipse.
+
+        Some intermediate points are used in the calculation. These are:
+            1. mid_x, mid_y: the mid-point between the starting point and end point of the turn
+            2. tr_x, tr_y: The point that completes the right-angled triangle with the starting point and end point of the turn.
+
+        The 3 points are calculated as follows:
+            1. p1x, p1y: A point between the starting point and (mid_x, mid_y)
+            2. p2x, p2y: the mid-point between (tr_x, tr_y) and (mid_x, mid_y)
+            3. p3x, p3y: A point between the ending point and (mid_x, mid_y)
+        """
+        mid_x, mid_y = (x + new_x) / 2, (y + new_y) / 2
+        if direction == Direction.NORTH or direction == Direction.SOUTH:
+            tr_x, tr_y = x, new_y
+            p1x, p1y = (x + mid_x) / 2, mid_y
+            p2x, p2y = (tr_x + mid_x) / 2, (tr_y + mid_y) / 2
+            p3x, p3y = mid_x, (new_y + mid_y) / 2
+            return [(p1x, p1y), (p2x, p2y), (p3x, p3y)]
+        elif direction == Direction.EAST or direction == Direction.WEST:
+            tr_x, tr_y = new_x, y
+            p1x, p1y = mid_x, (y + mid_y) / 2
+            p2x, p2y = (tr_x + mid_x) / 2, (tr_y + mid_y) / 2
+            p3x, p3y = (new_x + mid_x) / 2, mid_y
+            return [(p1x, p1y), (p2x, p2y), (p3x, p3y)]
+        raise ValueError("Invalid direction")

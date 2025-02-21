@@ -21,35 +21,34 @@ obstacles = [
 ]
 
 
-# -------------------- TESTING SIMULATOR --------------------
-sim = MazeSolverSimulation(
-    grid_size_x=20,
-    grid_size_y=20,
-    robot_x=1,
-    robot_y=1,
-    robot_direction=Direction.NORTH,
-    big_turn=1
-)
+# -------------------- TESTING MATPLOTLIB SIMULATOR --------------------
+# sim = MazeSolverSimulation(
+#     grid_size_x=20,
+#     grid_size_y=20,
+#     robot_x=1,
+#     robot_y=1,
+#     robot_direction=Direction.NORTH,
+# )
 
-sim.enable_debug(0)
+# sim.enable_debug(0)
 
-# sim.load_obstacles(0)  # load obstacles from file option 0 for last
-# sim.generate_random_obstacles(2)
-for ob in obstacles:
-    sim.maze_solver.add_obstacle(ob["x"], ob["y"], ob["d"], ob["id"])
+# # sim.load_obstacles(0)  # load obstacles from file option 0 for last
+# # sim.generate_random_obstacles(2)
+# for ob in obstacles:
+#     sim.maze_solver.add_obstacle(ob["x"], ob["y"], ob["d"], ob["id"])
 
-sim.plot_optimal_path_animation(testing=True)
+# sim.plot_optimal_path_animation(testing=True)
 
 
 # -------------------- TESTING ACTUAL ALGO --------------------
 maze_solver = MazeSolver(size_x=20, size_y=20, robot_x=1,
-                         robot_y=1, robot_direction=Direction.NORTH, big_turn=1)
+                         robot_y=1, robot_direction=Direction.NORTH)
 
 for ob in obstacles:
     maze_solver.add_obstacle(ob['x'], ob['y'], ob['d'], ob['id'])
 
 start = time.time()
-optimal_path, cost = maze_solver.get_optimal_path(retrying=False)
+optimal_path, cost = maze_solver.get_optimal_path()
 print(
     f"Time taken to find shortest path using A* search: {time.time() - start}s")
 print(f"cost to travel: {cost} units")

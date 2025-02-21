@@ -9,9 +9,11 @@ from algo.tools.consts import (
     TURN_FACTOR,
     ITERATIONS,
     SAFE_COST,
-    TURN_WRT_BIG_TURNS,
+    TURN_DISPLACEMENT,
     HALF_TURNS,
     REVERSE_FACTOR,
+    PADDING,
+    HALF_TURN_FACTOR
 )
 from algo.tools.movement import (
     Direction,
@@ -33,7 +35,6 @@ class MazeSolver:
             robot_x: int = 1,
             robot_y: int = 1,
             robot_direction: Direction = Direction.NORTH,
-            big_turn=0,
     ):
         self.neighbor_cache = {}  # Store precomputed neighbors
         """
@@ -43,14 +44,11 @@ class MazeSolver:
         :param robot_x: If no robot object is provided, the x coordinate of the robot. Default is 1
         :param robot_y: If no robot object is provided, the y coordinate of the robot. Default is 1
         :param robot_direction: If no robot object is provided, the direction the robot is facing. Default is NORTH
-        :param big_turn: A flag to indicate the turn radius of the robot. Must be 0 or 1. 0: 3-1 turn radius (default), 1: 4-2 turn
         """
         self.grid = Grid(size_x, size_y)
 
         self.robot = robot if robot else Robot(
             robot_x, robot_y, robot_direction)
-
-        self.big_turn = big_turn
 
         self.path_table = dict()
         self.cost_table = dict()
@@ -75,7 +73,7 @@ class MazeSolver:
         """
         self.grid.reset_obstacles()
 
-    def get_optimal_path(self, retrying):
+    def get_optimal_path(self):
         """
         Get the optimal path from the using dynamic programming
 
@@ -85,7 +83,7 @@ class MazeSolver:
         optimal_path = []
 
         # get all grid positions that can view the obstacle images
-        views = self.grid.get_view_obstacle_positions(retrying)
+        views = self.grid.get_view_obstacle_positions()
         num_views = len(views)
 
         for bin_pos in self._get_visit_options(num_views):
@@ -140,7 +138,7 @@ class MazeSolver:
                             # initialize the cost matrix with a large value since the cost has not been calculated
                             cost_matrix[start_idx, end_idx] = 1e9
 
-                        # add the cost for the reverse path
+                    # add the cost for the reverse path
                         cost_matrix[end_idx, start_idx] = cost_matrix[
                             start_idx, end_idx
                         ]
@@ -282,27 +280,17 @@ class MazeSolver:
                     self.motion_table[
                         (x, y, direction, new_x, new_y, new_direction)
                     ] = motion
-                #
-                # # calculate the cost of robot reversing
-                reverse_cost = REVERSE_FACTOR * motion.reverse_cost()
 
                 # calculate the cost of robot rotation
-                rot_cost = (
-                    TURN_FACTOR *
-                    Direction.rotation_cost(direction, new_direction)
-                    + safe_cost
-                    + reverse_cost
-                    + 1
+                rotation_cost = TURN_FACTOR * Direction.rotation_cost(
+                    direction, new_direction
                 )
-                # check if it is a half turn
-                if motion in [
-                    Motion.FORWARD_OFFSET_LEFT,
-                    Motion.FORWARD_OFFSET_RIGHT,
-                    Motion.REVERSE_OFFSET_LEFT,
-                    Motion.REVERSE_OFFSET_RIGHT,
-                ]:
-                    # 2 x Turncost since it is 2 half turns
-                    rot_cost += (TURN_FACTOR * 2) * 2
+                # calculate the cost of robot reversing
+                reverse_cost = REVERSE_FACTOR * motion.reverse_cost()
+                # calculate the cost of robot half-turning
+                half_turn_cost = HALF_TURN_FACTOR * motion.half_turn_cost()
+
+                motion_cost = rotation_cost + reverse_cost + half_turn_cost + safe_cost
 
                 # check if there is a screenshot penalty
                 if end.is_eq(new_x, new_y, new_direction):
@@ -313,7 +301,7 @@ class MazeSolver:
                 # total cost f = g + h = safe_cost + rot_cost + screenshot_cost + dist + h (estimated distance)
                 total_cost = (
                     dist
-                    + rot_cost
+                    + motion_cost
                     + screenshot_cost
                     + self._estimate_distance(
                         CellState(new_x, new_y, new_direction), end
@@ -323,9 +311,9 @@ class MazeSolver:
                 # update the g distance if the new state has not been visited or the new cost is less than the previous cost
                 if (new_x, new_y, new_direction) not in g_dist or g_dist[
                     (new_x, new_y, new_direction)
-                ] > dist + rot_cost:
+                ] > dist + motion_cost + screenshot_cost:
                     g_dist[(new_x, new_y, new_direction)] = dist + \
-                        rot_cost + screenshot_cost
+                        motion_cost + screenshot_cost
 
                     # add the new state to the heap
                     heapq.heappush(
@@ -342,14 +330,10 @@ class MazeSolver:
         Return a list of tuples with format:
         newX, newY, new_direction
 
+        # Get list of possible valid cell states the robot can reach from its current position
         # Neighbors have the following format: {newX, newY, movement direction, safe cost, motion}
-        # Neighbors are coordinates that fulfill the following criteria:
-        # If moving in the same direction:
-        #   - Valid position within bounds
-        #   - Must be at least 4 units away in total (x+y)
-        #   - Furthest distance must be at least 3 units away (x or y)
-        # If it is exactly 2 units away in both x and y directions, safe cost = SAFECOST. Else, safe cost = 0
         """
+        # cell state already visited. significantly reduces algo runtime
         if (x, y, direction) in self.neighbor_cache:
             return self.neighbor_cache[(x, y, direction)]
         neighbors = []
@@ -362,7 +346,6 @@ class MazeSolver:
                     # Get safe cost of destination
                     safe_cost = self._calculate_safe_cost(x + dx, y + dy)
                     motion = Motion.FORWARD
-
                     neighbors.append((x + dx, y + dy, md, safe_cost, motion))
 
                 # REVERSE
@@ -382,10 +365,8 @@ class MazeSolver:
                         motion = Motion.FORWARD_OFFSET_RIGHT
                         neighbors.append(
                             (x + delta_x, y + delta_y, md, safe_cost, motion))
-
                     # FORWARD_OFFSET_LEFT
                     if self.grid.half_turn_reachable(x, y, x - delta_x, y + delta_y):
-
                         safe_cost = self._calculate_safe_cost(
                             x - delta_x, y + delta_y)
                         motion = Motion.FORWARD_OFFSET_LEFT
@@ -393,7 +374,6 @@ class MazeSolver:
                             (x - delta_x, y + delta_y, md, safe_cost, motion))
                     # REVERSE_OFFSET_RIGHT
                     if self.grid.half_turn_reachable(x, y, x + delta_x, y - delta_y):
-
                         safe_cost = self._calculate_safe_cost(
                             x + delta_x, y - delta_y)
                         motion = Motion.REVERSE_OFFSET_RIGHT
@@ -401,7 +381,6 @@ class MazeSolver:
                             (x + delta_x, y - delta_y, md, safe_cost, motion))
                     # REVERSE_OFFSET_LEFT
                     if self.grid.half_turn_reachable(x, y, x - delta_x, y - delta_y):
-
                         safe_cost = self._calculate_safe_cost(
                             x - delta_x, y - delta_y)
                         motion = Motion.REVERSE_OFFSET_LEFT
@@ -411,7 +390,6 @@ class MazeSolver:
                     # EAST or WEST
                     # FORWARD_OFFSET_RIGHT
                     if self.grid.half_turn_reachable(x, y, x + delta_x, y - delta_y):
-
                         safe_cost = self._calculate_safe_cost(
                             x + delta_x, y - delta_y)
                         motion = Motion.FORWARD_OFFSET_RIGHT
@@ -420,7 +398,6 @@ class MazeSolver:
 
                     # FORWARD_OFFSET_LEFT
                     if self.grid.half_turn_reachable(x, y, x + delta_x, y + delta_y):
-
                         safe_cost = self._calculate_safe_cost(
                             x + delta_x, y + delta_y)
                         motion = Motion.FORWARD_OFFSET_LEFT
@@ -429,7 +406,6 @@ class MazeSolver:
 
                     # REVERSE_OFFSET_RIGHT
                     if self.grid.half_turn_reachable(x, y, x - delta_x, y - delta_y):
-
                         safe_cost = self._calculate_safe_cost(
                             x - delta_x, y - delta_y)
                         motion = Motion.REVERSE_OFFSET_RIGHT
@@ -438,7 +414,6 @@ class MazeSolver:
 
                     # REVERSE_OFFSET_LEFT
                     if self.grid.half_turn_reachable(x, y, x - delta_x, y + delta_y):
-
                         safe_cost = self._calculate_safe_cost(
                             x - delta_x, y + delta_y)
                         motion = Motion.REVERSE_OFFSET_LEFT
@@ -448,246 +423,245 @@ class MazeSolver:
             else:  # consider 8 cases
 
                 # Turning displacement
-                delta_big = TURN_WRT_BIG_TURNS[self.big_turn][0]
-                delta_small = TURN_WRT_BIG_TURNS[self.big_turn][1]
+                delta_big = TURN_DISPLACEMENT[0]
+                delta_small = TURN_DISPLACEMENT[1]
 
                 # north -> east
                 if direction == Direction.NORTH and md == Direction.EAST:
                     # FORWARD_RIGHT_TURN
-                    if self.grid.reachable(
-                            x + delta_big, y + delta_small, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x + delta_big, y + delta_small, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x + delta_big, y + delta_small
                         )
                         motion = Motion.FORWARD_RIGHT_TURN
                         neighbors.append(
                             (x + delta_big, y + delta_small,
-                             md, safe_cost + 10, motion)
+                             md, safe_cost, motion)
                         )
 
                     # REVERSE_LEFT_TURN
-                    if self.grid.reachable(
-                            x - delta_small, y - delta_big, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x - delta_small, y - delta_big, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x - delta_small, y - delta_big
                         )
                         motion = Motion.REVERSE_LEFT_TURN
                         neighbors.append(
                             (x - delta_small, y - delta_big,
-                             md, safe_cost + 10, motion)
+                             md, safe_cost, motion)
                         )
 
                 # east -> north
                 if direction == Direction.EAST and md == Direction.NORTH:
                     # FORWARD_LEFT_TURN
-                    if self.grid.reachable(
-                            x + delta_small, y + delta_big, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x + delta_small, y + delta_big, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x + delta_small, y + delta_big
                         )
                         motion = Motion.FORWARD_LEFT_TURN
                         neighbors.append(
                             (x + delta_small, y + delta_big,
-                             md, safe_cost + 10, motion)
+                             md, safe_cost, motion)
                         )
 
                     # REVERSE_RIGHT_TURN
-                    if self.grid.reachable(
-                            x - delta_big, y - delta_small, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x - delta_big, y - delta_small, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x - delta_big, y - delta_small
                         )
                         motion = Motion.REVERSE_RIGHT_TURN
                         neighbors.append(
                             (x - delta_big, y - delta_small,
-                             md, safe_cost + 10, motion)
+                             md, safe_cost, motion)
                         )
 
                 # east -> south
                 if direction == Direction.EAST and md == Direction.SOUTH:
                     # FORWARD_RIGHT_TURN
-                    if self.grid.reachable(
-                            x + delta_small, y - delta_big, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x + delta_small, y - delta_big, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x + delta_small, y - delta_big
                         )
                         motion = Motion.FORWARD_RIGHT_TURN
                         neighbors.append(
                             (x + delta_small, y - delta_big,
-                             md, safe_cost + 10, motion)
+                             md, safe_cost, motion)
                         )
 
                     # REVERSE_LEFT_TURN
-                    if self.grid.reachable(
-                            x - delta_big, y + delta_small, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x - delta_big, y + delta_small, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x - delta_big, y + delta_small
                         )
                         motion = Motion.REVERSE_LEFT_TURN
                         neighbors.append(
                             (x - delta_big, y + delta_small,
-                             md, safe_cost + 10, motion)
+                             md, safe_cost, motion)
                         )
 
                 # south -> east
                 if direction == Direction.SOUTH and md == Direction.EAST:
                     # FORWARD_LEFT_TURN
-                    if self.grid.reachable(
-                            x + delta_big, y - delta_small, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x + delta_big, y - delta_small, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x + delta_big, y - delta_small
                         )
                         motion = Motion.FORWARD_LEFT_TURN
                         neighbors.append(
                             (x + delta_big, y - delta_small,
-                             md, safe_cost + 10, motion)
+                             md, safe_cost, motion)
                         )
 
                     # REVERSE_RIGHT_TURN
-                    if self.grid.reachable(
-                            x - delta_small, y + delta_big, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x - delta_small, y + delta_big, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x - delta_small, y + delta_big
                         )
                         motion = Motion.REVERSE_RIGHT_TURN
                         neighbors.append(
                             (x - delta_small, y + delta_big,
-                             md, safe_cost + 10, motion)
+                             md, safe_cost, motion)
                         )
 
                 # south -> west
                 if direction == Direction.SOUTH and md == Direction.WEST:
                     # FORWARD_RIGHT_TURN
-                    if self.grid.reachable(
-                            x - delta_big, y - delta_small, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x - delta_big, y - delta_small, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x - delta_big, y - delta_small
                         )
                         motion = Motion.FORWARD_RIGHT_TURN
                         neighbors.append(
                             (x - delta_big, y - delta_small,
-                             md, safe_cost + 10, motion)
+                             md, safe_cost, motion)
                         )
 
                     # REVERSE_LEFT_TURN
-                    if self.grid.reachable(
-                            x + delta_small, y + delta_big, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x + delta_small, y + delta_big, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x + delta_small, y + delta_big
                         )
                         motion = Motion.REVERSE_LEFT_TURN
                         neighbors.append(
                             (x + delta_small, y + delta_big,
-                             md, safe_cost + 10, motion)
+                             md, safe_cost, motion)
                         )
 
                 # west -> south
                 if direction == Direction.WEST and md == Direction.SOUTH:
                     # FORWARD_LEFT_TURN
-                    if self.grid.reachable(
-                            x - delta_small, y - delta_big, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x - delta_small, y - delta_big, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x - delta_small, y - delta_big
                         )
                         motion = Motion.FORWARD_LEFT_TURN
                         neighbors.append(
                             (x - delta_small, y - delta_big,
-                             md, safe_cost + 10, motion)
+                             md, safe_cost, motion)
                         )
 
                     # REVERSE_RIGHT_TURN
-                    if self.grid.reachable(
-                            x + delta_big, y + delta_small, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x + delta_big, y + delta_small, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x + delta_big, y + delta_small
                         )
                         motion = Motion.REVERSE_RIGHT_TURN
                         neighbors.append(
                             (x + delta_big, y + delta_small,
-                             md, safe_cost + 10, motion)
+                             md, safe_cost, motion)
                         )
 
                 # west -> north
                 if direction == Direction.WEST and md == Direction.NORTH:
                     # FORWARD_RIGHT_TURN
-                    if self.grid.reachable(
-                            x - delta_small, y + delta_big, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x - delta_small, y + delta_big, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x - delta_small, y + delta_big
                         )
                         motion = Motion.FORWARD_RIGHT_TURN
                         neighbors.append(
                             (x - delta_small, y + delta_big,
-                             md, safe_cost + 10, motion)
+                             md, safe_cost, motion)
                         )
 
                     # REVERSE_LEFT_TURN
-                    if self.grid.reachable(
-                            x + delta_big, y - delta_small, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x + delta_big, y - delta_small, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x + delta_big, y - delta_small
                         )
                         motion = Motion.REVERSE_LEFT_TURN
                         neighbors.append(
                             (x + delta_big, y - delta_small,
-                             md, safe_cost + 10, motion)
+                             md, safe_cost, motion)
                         )
 
                 # north <-> west
                 if direction == Direction.NORTH and md == Direction.WEST:
                     # FORWARD_LEFT_TURN
-                    if self.grid.reachable(
-                            x - delta_big, y + delta_small, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x - delta_big, y + delta_small, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x - delta_big, y + delta_small
                         )
                         motion = Motion.FORWARD_LEFT_TURN
                         neighbors.append(
                             (x - delta_big, y + delta_small,
-                             md, safe_cost + 10, motion)
+                             md, safe_cost, motion)
                         )
 
                     # REVERSE_RIGHT_TURN
-                    if self.grid.reachable(
-                            x + delta_small, y - delta_big, turn=True
-                    ) and self.grid.reachable(x, y, preturn=True):
+                    if self.grid.turn_reachable(
+                        x, y, x + delta_small, y - delta_big, direction
+                    ):
                         safe_cost = self._calculate_safe_cost(
                             x + delta_small, y - delta_big
                         )
                         motion = Motion.REVERSE_RIGHT_TURN
                         neighbors.append(
                             (x + delta_small, y - delta_big,
-                             md, safe_cost + 10, motion)
+                             md, safe_cost, motion)
                         )
 
-        self.neighbor_cache[(x, y, direction)] = neighbors  # Store result
+        self.neighbor_cache[(x, y, direction)] = neighbors
         return neighbors
 
     def _calculate_safe_cost(self, new_x: int, new_y: int) -> int:
         """
         calculates the safe cost of moving to a new position, considering obstacles that the robot might touch.
-        Currently, the function checks 2 units in each direction.
+        Currently, the function checks PADDING units in each direction.
         """
-        padding = 2
         for obj in self.grid.obstacles:
-            if abs(obj.x - new_x) <= padding and abs(obj.y - new_y) <= padding:
+            if abs(obj.x - new_x) <= PADDING and abs(obj.y - new_y) <= PADDING:
                 return SAFE_COST
-            if abs(obj.y - new_y) <= padding and abs(obj.x - new_x) <= padding:
+            if abs(obj.y - new_y) <= PADDING and abs(obj.x - new_x) <= PADDING:
                 return SAFE_COST
         return 0
 
