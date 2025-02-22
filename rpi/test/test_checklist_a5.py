@@ -72,8 +72,8 @@ class TaskOne(RaspberryPi):
             logger.debug(f"PiAction retrieved from queue: {action.cat} {action.value}")
             ## obstacle ID
             if action.cat == Category.OBSTACLE.value:
-                for _ in action.value[Category.OBSTACLE.value]:
-                    self.obstacles += 1
+                # for _ in action.value[Category.OBSTACLE.value]:
+                #     self.obstacles += 1
                 self.current_location["x"] = int(action.value["robot_x"])
                 self.current_location["y"] = int(action.value["robot_y"])
                 self.current_location["d"] = int(action.value["robot_dir"])
@@ -325,6 +325,40 @@ class TaskOne(RaspberryPi):
         """
         logger.debug("Requesting path from algo")
         self.android_queue.put(AndroidMessage(cat=Category.INFO.value, value="Requesting path from algo..."))
+        
+        # incase android cannot support we will use this
+        # data = {
+        #     "obstacles": [
+        #         {
+        #         "x": 10,
+        #         "y": 10,
+        #         "d": 0,
+        #         "id": 0
+        #         },
+        #         {
+        #         "x": 10,
+        #         "y": 10,
+        #         "d": 2,
+        #         "id": 1
+        #         },
+        #         {
+        #         "x": 10,
+        #         "y": 10,
+        #         "d": 4,
+        #         "id": 2
+        #         },
+        #         {
+        #         "x": 10,
+        #         "y": 10,
+        #         "d": 6,
+        #         "id": 3
+        #         }
+        #     ],
+        #     "retrying": False,
+        #     "robot_dir": 0,
+        #     "robot_x": 10,
+        #     "robot_y": 1
+        # }
 
         body = {
             **data,
