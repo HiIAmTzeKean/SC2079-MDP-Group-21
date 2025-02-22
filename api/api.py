@@ -6,9 +6,11 @@ from flask_cors import CORS
 from flask import Flask, request, jsonify
 from pathlib import Path
 import json
+import threading
 
 from models.models import get_models
 from tools.logger import setup_logger
+from tools.network import network_monitor
 
 import sys
 import os
@@ -29,6 +31,10 @@ CORS(app)
 
 # load model for image recognition
 model = load_model()
+
+# poll wi-fi SSID to check that RPI can connect to API server
+# TODO remove if this causes any performance issues or bugs
+threading.Thread(target=network_monitor, args=(logger,), daemon=True).start()
 
 
 @api.route('/status')
