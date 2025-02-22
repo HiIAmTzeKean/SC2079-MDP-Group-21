@@ -178,6 +178,7 @@ def stitch_image(output_dir):
             path.name for path in list(output_dir.iterdir())
             if path.is_file()
             and path.name.lower().endswith(('.png', '.jpg', '.jpeg'))
+            and path.name.lower() != output_filename  # Do not include stitched image
         ]
         if not image_files:  # Handle the case where no images are found
             print(f"No image files found in '{output_dir}'.")
