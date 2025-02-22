@@ -16,7 +16,7 @@ SAFE_COST = 1000
 # Cost of taking an image off center.
 # The higher the value, the less likely the robot takes pictures from a position that is not directly in front of image.
 SCREENSHOT_COST = 100
-TOO_CLOSE_COST = 50  # the cost for when the robot is too close to the obstacle
+DISTANCE_COST = 50  # the cost for when the robot is too close or too far from the obstacle
 
 # Cost of turning the robot.
 # The higher the value, the less likely the robot is to turn.
