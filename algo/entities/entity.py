@@ -1,5 +1,5 @@
 from typing import List
-from algo.tools.consts import SCREENSHOT_COST, TOO_CLOSE_COST, PADDING, MID_TURN_PADDING, TURN_PADDING, HEIGHT, WIDTH
+from algo.tools.consts import SCREENSHOT_COST, TOO_CLOSE_COST, PADDING, MID_TURN_PADDING, TURN_PADDING, ARENA_HEIGHT, ARENA_WIDTH, OFFSET
 from algo.tools.movement import Direction
 from math import sqrt
 
@@ -88,18 +88,17 @@ class Obstacle(CellState):
             List[CellState]: Valid cell states where robot can be positioned to view the symbol on the obstacle
         """
         cells = []
-        offset = 1  # offset due to position of robot's center
 
         # If the obstacle is facing north, then robot's cell state must be facing south
         if self.direction == Direction.NORTH:
             positions = [
                 # robot camera is left of obstacle
-                (self.x - 1, self.y + 2 + offset),
+                (self.x - 1, self.y + 2 + OFFSET),
                 # robot camera is right of obstacle
-                (self.x + 1, self.y + 2 + offset),
+                (self.x + 1, self.y + 2 + OFFSET),
                 # robot camera is directly in front of obstacle
-                (self.x, self.y + 1 + offset),
-                (self.x, self.y + 2 + offset),
+                (self.x, self.y + 1 + OFFSET),
+                (self.x, self.y + 2 + OFFSET),
             ]
             costs = [
                 SCREENSHOT_COST,        # robot camera is left of obstacle
@@ -118,10 +117,10 @@ class Obstacle(CellState):
         # If obstacle is facing south, then robot's cell state must be facing north
         elif self.direction == Direction.SOUTH:
             positions = [
-                (self.x + 1, self.y - 2 - offset),
-                (self.x - 1, self.y - 2 - offset),
-                (self.x, self.y - 1 - offset),
-                (self.x, self.y - 2 - offset),
+                (self.x + 1, self.y - 2 - OFFSET),
+                (self.x - 1, self.y - 2 - OFFSET),
+                (self.x, self.y - 1 - OFFSET),
+                (self.x, self.y - 2 - OFFSET),
             ]
             costs = [
                 SCREENSHOT_COST,
@@ -140,10 +139,10 @@ class Obstacle(CellState):
         # If obstacle is facing east, then robot's cell state must be facing west
         elif self.direction == Direction.EAST:
             positions = [
-                (self.x + 2 + offset, self.y + 1),
-                (self.x + 2 + offset, self.y - 1),
-                (self.x + 1 + offset, self.y),
-                (self.x + 2 + offset, self.y),
+                (self.x + 2 + OFFSET, self.y + 1),
+                (self.x + 2 + OFFSET, self.y - 1),
+                (self.x + 1 + OFFSET, self.y),
+                (self.x + 2 + OFFSET, self.y),
             ]
             costs = [
                 SCREENSHOT_COST,
@@ -162,10 +161,10 @@ class Obstacle(CellState):
         # If obstacle is facing west, then robot's cell state must be facing east
         elif self.direction == Direction.WEST:
             positions = [
-                (self.x - 2 - offset, self.y + 1),
-                (self.x - 2 - offset, self.y - 1),
-                (self.x - 1 - offset, self.y),
-                (self.x - 2 - offset, self.y),
+                (self.x - 2 - OFFSET, self.y + 1),
+                (self.x - 2 - OFFSET, self.y - 1),
+                (self.x - 1 - OFFSET, self.y),
+                (self.x - 2 - OFFSET, self.y),
             ]
             costs = [
                 SCREENSHOT_COST,
@@ -197,7 +196,7 @@ class Obstacle(CellState):
         -------
         bool: True if valid, False otherwise
         """
-        return 0 < center_x < WIDTH - 1 and 0 < center_y < HEIGHT - 1
+        return 0 < center_x < ARENA_WIDTH - 1 and 0 < center_y < ARENA_HEIGHT - 1
 
 
 class Grid:
@@ -343,10 +342,7 @@ class Grid:
         """
         Checks if given position is within bounds
         """
-        if x < 1 or x >= self.size_x - 1 or y < 1 or y >= self.size_y - 1:
-            return False
-
-        return True
+        return 0 < x < self.size_x - 1 and 0 < y < self.size_y - 1
 
     def is_valid_cell_state(self, state: CellState) -> bool:
         """
