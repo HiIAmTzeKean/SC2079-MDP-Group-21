@@ -8,7 +8,7 @@ from pathlib import Path
 import json
 
 from models.models import get_models
-from logger.logger import setup_logger
+from tools.logger import setup_logger
 
 import sys
 import os
