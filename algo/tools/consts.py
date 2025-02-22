@@ -1,12 +1,10 @@
-# TODO Tune robot turning angles in CommandGenerator in <commands.py>
-
 # for both agent and obstacles.
 # a higher value will allow robot to have more space to move around obstacles at the cost of it being harder to find a shortest path
 EXPANDED_CELL = 1
 
-# dimensions of arena (in 10cm units)
-WIDTH = 20
-HEIGHT = 20
+# dimensions of arena (in 10 cm units)
+ARENA_WIDTH = 20
+ARENA_HEIGHT = 20
 
 # no. of iterations to run algorithm for to find the most accurate shortest path
 ITERATIONS = 2000
@@ -44,13 +42,14 @@ X ←----┐  .  .
 
 0: long axis, 1: short axis
 """
-TURN_RADIUS = 1
-TURN_DISPLACEMENT = [4 * TURN_RADIUS, 4 * TURN_RADIUS]
+TURN_DISPLACEMENT = [4, 4]
 
+# offset due to position of robot's center / how many cells more the robot occupies from its center cell
+OFFSET = 1
 # for collision checking. minimum padding from robot to obstacle position
-TURN_PADDING = 2 * EXPANDED_CELL
-MID_TURN_PADDING = 2 * EXPANDED_CELL
-PADDING = 2 * EXPANDED_CELL
+TURN_PADDING = (OFFSET + 1) * EXPANDED_CELL
+MID_TURN_PADDING = (OFFSET + 1) * EXPANDED_CELL
+PADDING = (OFFSET + 1) * EXPANDED_CELL
 
 """
 The number of grid squares the robot moves for TWO half turns on each axis. This must be tuned based on real robot movement.
@@ -63,4 +62,4 @@ eg. Motion.FORWARD_OFFSET_LEFT: TWO half turns to end up diagonally in the speci
 
 0: long axis, 1: short axis
 """
-HALF_TURNS = [6 * TURN_RADIUS, 2 * TURN_RADIUS]
+HALF_TURNS_DISPLACEMENT = [6, 2]
