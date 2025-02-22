@@ -73,19 +73,19 @@ class TaskOne(RaspberryPi):
                 self.request_algo(action.value)
 
             elif action.cat == Category.SNAP.value:
-                while True:
-                    # wait for all STM instructions to finish
-                    with self.outstanding_stm_instructions.get_lock():
-                        if self.outstanding_stm_instructions.value == 0:
-                            break
+                # while True:
+                #     # wait for all STM instructions to finish
+                #     with self.outstanding_stm_instructions.get_lock():
+                #         if self.outstanding_stm_instructions.value == 0:
+                #             break
                 self.recognize_image(obstacle_id_with_signal=action.value)
 
             elif action.cat == Category.STITCH.value:
-                while True:
+                # while True:
                     # wait for all STM instructions to finish
-                    with self.obstacles.get_lock():
-                        if self.outstanding_stm_instructions.value == 0:
-                            break
+                    # with self.obstacles.get_lock():
+                    #     if self.outstanding_stm_instructions.value == 0:
+                    #         break
                 self.request_stitch()
 
     # TODO
@@ -108,7 +108,7 @@ class TaskOne(RaspberryPi):
                 strings = str(command)
                 # t|100|100|100
                 parts = strings.split("|")
-                with self.outstanding_stm_instructions.get_lock():
+                with self.outstanding_stm_instructions:
                     self.outstanding_stm_instructions.value += 1
                 self.stm_link.send_cmd(parts[0][0], int(parts[0][1:]), int(parts[1]), int(parts[2]))
                 logger.debug(f"Sending to STM32: {command}")
@@ -302,8 +302,8 @@ class TaskOne(RaspberryPi):
             # auto_callibrate=False,
         )
         self.android_queue.put(AndroidMessage(Category.IMAGE_REC.value, results))
-        with self.obstacles.get_lock():
-            self.obstacles.value -= 1
+        # with self.obstacles.get_lock():
+        #     self.obstacles.value -= 1
 
     # TODO implement retrying flag
     def request_algo(self, data: dict, retrying=False) -> None:
