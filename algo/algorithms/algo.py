@@ -825,7 +825,8 @@ class MazeSolver:
         """
         # requires the path table to be filled and the optimal path to be calculated
         motion_path = []
-        obstacle_ids = []
+        obstacle_id_with_signals = []
+        scanned_obstacles = []
         for i in range(len(optimal_path) - 1):
             from_state = optimal_path[i]
             to_state = optimal_path[i + 1]
@@ -850,6 +851,10 @@ class MazeSolver:
             # check if the robot is taking a screenshot
             if to_state.screenshot_id != None:
                 motion_path.append(Motion.CAPTURE)
-                obstacle_ids.append(to_state.screenshot_id)
+                obstacle_id_with_signals.append(to_state.screenshot_id)
+                obstacle_id = int(to_state.screenshot_id.split("_")[0])
+                scanned_obstacles.append(
+                    self.grid.find_obstacle_by_id(obstacle_id)
+                )
 
-        return motion_path, obstacle_ids
+        return motion_path, obstacle_id_with_signals, scanned_obstacles

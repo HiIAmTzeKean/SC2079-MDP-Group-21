@@ -183,25 +183,27 @@ export const AlgorithmCore = () => {
 	useEffect(() => {
 		if (!robotCommands || !robotMotions) return;
 
+		let mergedCommands: string[] = [];
+		let currentGroup: string[] = [];
 		// merge commands for the same motion
-		let mergedCommands = [];
-		for (let i = 0; i < robotCommands.length; i++) {
-			let currentCommand = robotCommands[i];
-
-			if (currentCommand.startsWith("SNAP")) {
-				let merged = [currentCommand]; // Collect parts of the merged command
-
-				// Check if the next command is "FIN"
-				while (i + 1 < robotCommands.length &&
-					(robotCommands[i + 1] === "FIN")) {
-					merged.push(robotCommands[++i]); // Add and move to the next
-				}
-
-				mergedCommands.push(merged.join(" ")); // Merge and store
+		robotCommands.forEach((command) => {
+			if (command.startsWith('W') || command.startsWith('w') || command.startsWith('SNAP') || command === 'FIN') {
+				// If it starts with W, w, SNAP or is FIN, group it
+				currentGroup.push(command);
 			} else {
-				mergedCommands.push(currentCommand);
+				// If there is an ongoing group, merge it and push to the final result
+				if (currentGroup.length > 0) {
+					mergedCommands.push(currentGroup.join(' '));
+					currentGroup = [];  // Reset the group
+				}
+				mergedCommands.push(command);  // Add the non-group command
 			}
+		});
+		// If there's any remaining group, add it to the result
+		if (currentGroup.length > 0) {
+			mergedCommands.push(currentGroup.join(' '));
 		}
+		console.log(mergedCommands);
 
 
 		// TODO: refactor to switch statement for ALL possible motions for easy change when there are extra commands for a motion after tuning
