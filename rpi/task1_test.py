@@ -295,7 +295,7 @@ class TaskOne(RaspberryPi):
 
         if the API is down, an error message is sent to the Android
         """
-        response = requests.get(f"http://{URL}/stitch", timeout = 2.0)
+        response = requests.get(url=f"{URL}/stitch", timeout=2.0)
 
         # TODO should retry if the response fails
         if response.status_code != 200:
