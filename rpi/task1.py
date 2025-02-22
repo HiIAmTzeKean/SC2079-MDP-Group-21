@@ -6,6 +6,7 @@ from multiprocessing import Process
 from typing import Any, Optional
 
 import requests
+
 from .base_rpi import RaspberryPi
 from .communication.android import AndroidMessage
 from .communication.camera import snap_using_libcamera, snap_using_picamera
@@ -65,27 +66,27 @@ class TaskOne(RaspberryPi):
             logger.debug(f"PiAction retrieved from queue: {action.cat} {action.value}")
             ## obstacle ID
             if action.cat == Category.OBSTACLE.value:
-                for _ in action.value[Category.OBSTACLE.value]:
-                    self.obstacles += 1
+                # for _ in action.value[Category.OBSTACLE.value]:
+                #     self.obstacles += 1
                 self.current_location["x"] = int(action.value["robot_x"])
                 self.current_location["y"] = int(action.value["robot_y"])
                 self.current_location["d"] = int(action.value["robot_dir"])
                 self.request_algo(action.value)
 
             elif action.cat == Category.SNAP.value:
-                while True:
-                    # wait for all STM instructions to finish
-                    with self.outstanding_stm_instructions.get_lock():
-                        if self.outstanding_stm_instructions.value == 0:
-                            break
+                # while True:
+                #     # wait for all STM instructions to finish
+                #     with self.outstanding_stm_instructions.get_lock():
+                #         if self.outstanding_stm_instructions.value == 0:
+                #             break
                 self.recognize_image(obstacle_id_with_signal=action.value)
 
             elif action.cat == Category.STITCH.value:
-                while True:
+                # while True:
                     # wait for all STM instructions to finish
-                    with self.obstacles.get_lock():
-                        if self.outstanding_stm_instructions.value == 0:
-                            break
+                    # with self.obstacles.get_lock():
+                    #     if self.outstanding_stm_instructions.value == 0:
+                    #         break
                 self.request_stitch()
 
     # TODO
@@ -108,8 +109,8 @@ class TaskOne(RaspberryPi):
                 strings = str(command)
                 # t|100|100|100
                 parts = strings.split("|")
-                with self.outstanding_stm_instructions.get_lock():
-                    self.outstanding_stm_instructions.value += 1
+                # with self.outstanding_stm_instructions:
+                #     self.outstanding_stm_instructions.value += 1
                 self.stm_link.send_cmd(parts[0][0], int(parts[0][1:]), int(parts[1]), int(parts[2]))
                 logger.debug(f"Sending to STM32: {command}")
 
@@ -125,9 +126,7 @@ class TaskOne(RaspberryPi):
                     pass
 
             elif command == Category.FIN.value:
-                logger.info(
-                        f"At FIN->self.current_location: {self.current_location}"
-                )
+                logger.info(f"At FIN->self.current_location: {self.current_location}")
                 self.unpause.clear()
                 logger.debug("unpause cleared")
                 try:
@@ -138,6 +137,9 @@ class TaskOne(RaspberryPi):
                 logger.info("Commands queue finished.")
                 self.android_queue.put(AndroidMessage(Category.STATUS.value, "finished"))
                 self.rpi_action_queue.put(PiAction(cat=Category.STITCH, value=""))
+                self.finish_all.wait()
+                self.finish_all.clear()
+                logger.debug("All processes up to stich finished")
                 self.stop()
             else:
                 raise Exception(f"Unknown command: {command}")
@@ -207,7 +209,7 @@ class TaskOne(RaspberryPi):
             message: str = self.stm_link.wait_receive()
             
             try:
-                if message.startswith(("f","r")):
+                if message.startswith("f"):
                     cur_location = self.path_queue.get_nowait()
 
                     self.current_location["x"] = cur_location["x"]
@@ -224,14 +226,16 @@ class TaskOne(RaspberryPi):
                             },
                         )
                     )
-                    logger.debug(f"stm sent {message}")
+                    logger.debug(f"stm finish {message}")
+                    logger.info("Releasing movement lock.")
+                    self.movement_lock.release()
+                elif message.startswith("r"):
+                    logger.debug(f"stm ack {message}")
                 else:
                     logger.warning(f"Ignored unknown message from STM: {message}")
             except Exception as e:
                 logger.error(f"Error in recv_stm: {e}")
-            logger.info("Releasing movement lock.")
-            self.movement_lock.release()
-            
+                 
     def recv_android(self) -> None:
         """
         [Child Process] Processes the messages received from Android
@@ -298,8 +302,10 @@ class TaskOne(RaspberryPi):
             url=url,
             # auto_callibrate=False,
         )
-        self.android_queue.put(AndroidMessage(Category.IMAGE_REC.value, results))
-        self.success_obstacles.append(obstacle_id)
+        self.android_queue.put(AndroidMessage(Category.IMAGE_REC.value, value=results))
+        # with self.obstacles.get_lock():
+        #     self.obstacles.value -= 1
+        
 
     # TODO implement retrying flag
     def request_algo(self, data: dict, retrying=False) -> None:
@@ -355,7 +361,7 @@ class TaskOne(RaspberryPi):
 
         if the API is down, an error message is sent to the Android
         """
-        response = requests.get(f"http://{URL}/stitch", timeout = 2.0)
+        response = requests.get(url=f"{URL}/stitch", timeout=2.0)
 
         # TODO should retry if the response fails
         if response.status_code != 200:
@@ -365,4 +371,4 @@ class TaskOne(RaspberryPi):
 
         self.android_queue.put(AndroidMessage(Category.INFO.value, "Images stitched!"))
         logger.info("Images stitched!")
-
+        self.finish_all.set()

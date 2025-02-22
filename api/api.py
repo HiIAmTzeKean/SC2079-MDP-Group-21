@@ -272,7 +272,10 @@ class Stitch(Resource):
         This is the main endpoint for the stitching command. Stitches the images using two different functions, in effect creating two stitches, just for redundancy purposes
         """
         try:
-            img = stitch_image()
+            output_dir = Path("image_rec_files/output")
+            os.makedirs(output_dir, exist_ok=True)
+
+            img = stitch_image(output_dir)
             img.show()
             return marshal(
                 {

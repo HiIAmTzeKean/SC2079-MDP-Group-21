@@ -33,15 +33,15 @@ class TaskOne(RaspberryPi):
         logger.info("starting the start function")
         try:
             ### Start up initialization ###
-            self.android_link.connect()
-            self.android_queue.put(AndroidMessage(cat="info", value="You are connected to the RPi!"))
+            # self.android_link.connect()
+            # # self.android_queue.put(AndroidMessage(cat="info", value="You are connected to the RPi!"))
             self.stm_link.connect()
             self.check_api()
 
             # Define child processes
-            self.proc_recv_android = Process(target=self.recv_android)
+            # self.proc_recv_android = Process(target=self.recv_android)
             self.proc_recv_stm32 = Process(target=self.recv_stm)
-            self.proc_android_controller = Process(target=self.android_controller)
+            # self.proc_android_controller = Process(target=self.android_controller)
             self.proc_command_follower = Process(target=self.command_follower)
             self.proc_rpi_action = Process(target=self.rpi_action)
 
@@ -54,12 +54,12 @@ class TaskOne(RaspberryPi):
 
             logger.info("Child Processes started")
 
-            self.android_queue.put(AndroidMessage(Category.INFO.value, "Robot is ready!"))
-            self.android_queue.put(AndroidMessage(Category.MODE.value, "path"))
+            # # self.android_queue.put(AndroidMessage(Category.INFO.value, "Robot is ready!"))
+            # # self.android_queue.put(AndroidMessage(Category.MODE.value, "path"))
             
             # Reconnect Android if connection is lost
             # Handled in main process
-            self.reconnect_android()
+            # self.reconnect_android()
         except KeyboardInterrupt:
             self.stop()
 
@@ -141,7 +141,7 @@ class TaskOne(RaspberryPi):
                 except:
                     pass
                 logger.info("Commands queue finished.")
-                self.android_queue.put(AndroidMessage(Category.STATUS.value, "finished"))
+                # self.android_queue.put(AndroidMessage(Category.STATUS.value, "finished"))
                 self.rpi_action_queue.put(PiAction(cat=Category.STITCH, value=""))
                 self.finish_all.wait()
                 self.finish_all.clear()
@@ -183,8 +183,8 @@ class TaskOne(RaspberryPi):
             self.proc_android_controller.start()
 
             logger.info("Android processes restarted")
-            self.android_queue.put(AndroidMessage(Category.INFO.value, "You are reconnected!"))
-            self.android_queue.put(AndroidMessage(Category.MODE.value, "path"))
+            # self.android_queue.put(AndroidMessage(Category.INFO.value, "You are reconnected!"))
+            # self.android_queue.put(AndroidMessage(Category.MODE.value, "path"))
 
             self.android_dropped.clear()
 
@@ -222,16 +222,16 @@ class TaskOne(RaspberryPi):
                     self.current_location["y"] = cur_location["y"]
                     self.current_location["d"] = cur_location["d"]
                     logger.info(f"current location = {self.current_location}")
-                    self.android_queue.put(
-                        AndroidMessage(
-                            Category.LOCATION.value,
-                            {
-                                "x": cur_location["x"],
-                                "y": cur_location["y"],
-                                "d": cur_location["d"],
-                            },
-                        )
-                    )
+                    # self.android_queue.put(
+                    #     AndroidMessage(
+                    #         Category.LOCATION.value,
+                    #         {
+                    #             "x": cur_location["x"],
+                    #             "y": cur_location["y"],
+                    #             "d": cur_location["d"],
+                    #         },
+                    #     )
+                    # )
                     logger.debug(f"stm finish {message}")
                     logger.info("Releasing movement lock.")
                     self.movement_lock.release()
@@ -280,10 +280,10 @@ class TaskOne(RaspberryPi):
                         self.unpause.set()
                         
                         logger.info("Start command received, starting robot on path!")
-                        self.android_queue.put(AndroidMessage(Category.INFO.value, "Starting robot on path!"))
+                        # self.android_queue.put(AndroidMessage(Category.INFO.value, "Starting robot on path!"))
                     else:
                         logger.warning("The command queue is empty, please set obstacles.")
-                        self.android_queue.put(AndroidMessage(Category.ERROR.value, "Command queue empty (no obstacles)"))
+                        # self.android_queue.put(AndroidMessage(Category.ERROR.value, "Command queue empty (no obstacles)"))
 
     # TODO fix the library camera call
     def recognize_image(self, obstacle_id_with_signal: str) -> None:
@@ -295,7 +295,7 @@ class TaskOne(RaspberryPi):
         """
         obstacle_id, signal = obstacle_id_with_signal.split("_")
         logger.info(f"Capturing image for obstacle id: {obstacle_id}")
-        self.android_queue.put(AndroidMessage(Category.INFO.value, f"Capturing image for obstacle id: {obstacle_id}"))
+        # self.android_queue.put(AndroidMessage(Category.INFO.value, f"Capturing image for obstacle id: {obstacle_id}"))
         url = f"{URL}/image"
 
         filename = f"/home/rpi21/cam/{int(time.time())}_{obstacle_id}_{signal}.jpg"
@@ -308,7 +308,7 @@ class TaskOne(RaspberryPi):
             url=url,
             # auto_callibrate=False,
         )
-        self.android_queue.put(AndroidMessage(Category.IMAGE_REC.value, value=results))
+        # self.android_queue.put(AndroidMessage(Category.IMAGE_REC.value, value=results))
         # with self.obstacles.get_lock():
         #     self.obstacles.value -= 1
         
@@ -324,7 +324,7 @@ class TaskOne(RaspberryPi):
         The received commands and path are then queued in the respective queues
         """
         logger.debug("Requesting path from algo")
-        self.android_queue.put(AndroidMessage(cat=Category.INFO.value, value="Requesting path from algo..."))
+        # self.android_queue.put(AndroidMessage(cat=Category.INFO.value, value="Requesting path from algo..."))
         
         # incase android cannot support we will use this
         # data = {
@@ -372,7 +372,7 @@ class TaskOne(RaspberryPi):
 
         if response.status_code != 200:
             logger.error("Error when requesting path from Algo API.")
-            self.android_queue.put(AndroidMessage(Category.ERROR.value, "Error when requesting path from Algo API."))
+            # self.android_queue.put(AndroidMessage(Category.ERROR.value, "Error when requesting path from Algo API."))
             return
 
         result = json.loads(response.content)["data"]
@@ -392,12 +392,12 @@ class TaskOne(RaspberryPi):
         for p in path:
             self.path_queue.put(p)
 
-        self.android_queue.put(
-            AndroidMessage(
-                cat=Category.INFO.value,
-                value="Commands and path received Algo API. Robot is ready to move.",
-            )
-        )
+        # self.android_queue.put(
+        #     AndroidMessage(
+        #         cat=Category.INFO.value,
+        #         value="Commands and path received Algo API. Robot is ready to move.",
+        #     )
+        # )
         logger.info("Robot is ready to move.")
 
     def request_stitch(self) -> None:
@@ -409,10 +409,10 @@ class TaskOne(RaspberryPi):
 
         # TODO should retry if the response fails
         if response.status_code != 200:
-            self.android_queue.put(AndroidMessage(Category.ERROR.value, "Error when requesting stitch from the API."))
+            # self.android_queue.put(AndroidMessage(Category.ERROR.value, "Error when requesting stitch from the API."))
             logger.error("Error when requesting stitch from the API.")
             return
 
-        self.android_queue.put(AndroidMessage(Category.INFO.value, "Images stitched!"))
+        # self.android_queue.put(AndroidMessage(Category.INFO.value, "Images stitched!"))
         logger.info("Images stitched!")
         self.finish_all.set()
