@@ -399,6 +399,7 @@ class TaskOne(RaspberryPi):
         #     )
         # )
         logger.info("Robot is ready to move.")
+        self.unpause.set()
 
     def request_stitch(self) -> None:
         """Sends stitch request to the image recognition API to stitch the different images together
