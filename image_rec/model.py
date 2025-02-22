@@ -168,19 +168,25 @@ def predict_image(model, image_path, output_dir, selection_mode='largest'):
 #         image_id = '39'
 #     return image_id
 
-def stitch_image():
-    image_folder = "../api/image_rec_files/output"  
-    output_name = "concatenated.jpg"
+
+def stitch_image(output_dir):
+    output_filename = f"concatenated.jpg"
+    output_path = output_dir / output_filename
 
     try:
-        image_files = [f for f in os.listdir(image_folder) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+        image_files = [
+            path.name for path in list(output_dir.iterdir())
+            if path.is_file()
+            and path.name.lower().endswith(('.png', '.jpg', '.jpeg'))
+            and path.name.lower() != output_filename  # Do not include stitched image
+        ]
         if not image_files:  # Handle the case where no images are found
-            print(f"No image files found in '{image_folder}'.")
+            print(f"No image files found in '{output_dir}'.")
             return
 
         images = []
         for file in image_files:
-            img_path = os.path.join(image_folder, file)
+            img_path = output_dir / file
             try:
                 img = Image.open(img_path)
                 images.append(img)
@@ -204,11 +210,10 @@ def stitch_image():
             new_img.paste(img, (x_offset, 0))
             x_offset += img.width
 
-        output_path = os.path.join(image_folder, output_name)
         new_img.save(output_path)
         print(f"Concatenated image saved to: {output_path}")
-        
-        return new_img 
+
+        return new_img
 
     except Exception as e:
         print(f"An error occurred: {e}")
