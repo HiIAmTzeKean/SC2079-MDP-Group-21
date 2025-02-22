@@ -1,5 +1,5 @@
 from typing import List
-from algo.tools.consts import SCREENSHOT_COST, TOO_CLOSE_COST, PADDING, MID_TURN_PADDING, TURN_PADDING, ARENA_HEIGHT, ARENA_WIDTH, OFFSET
+from algo.tools.consts import SCREENSHOT_COST, DISTANCE_COST, PADDING, MID_TURN_PADDING, TURN_PADDING, ARENA_HEIGHT, ARENA_WIDTH, OFFSET
 from algo.tools.movement import Direction
 from math import sqrt
 
@@ -97,14 +97,17 @@ class Obstacle(CellState):
                 # robot camera is right of obstacle
                 (self.x + 1, self.y + 2 + OFFSET),
                 # robot camera is directly in front of obstacle
-                (self.x, self.y + 1 + OFFSET),
+                # (self.x, self.y + 1 + OFFSET),
                 (self.x, self.y + 2 + OFFSET),
+                # robot camera is further away from obstacle
+                (self.x, self.y + 3 + OFFSET),
             ]
             costs = [
                 SCREENSHOT_COST,        # robot camera is left of obstacle
                 SCREENSHOT_COST,        # robot camera is right of obstacle
-                TOO_CLOSE_COST,         # robot camera is directly in front of obstacle
+                # DISTANCE_COST,        # robot camera is directly in front of obstacle
                 0,                      # robot camera is positioned just nice
+                DISTANCE_COST           # robot camera is further away from obstacle
             ]
 
             for idx, pos in enumerate(positions):
@@ -119,14 +122,14 @@ class Obstacle(CellState):
             positions = [
                 (self.x + 1, self.y - 2 - OFFSET),
                 (self.x - 1, self.y - 2 - OFFSET),
-                (self.x, self.y - 1 - OFFSET),
                 (self.x, self.y - 2 - OFFSET),
+                (self.x, self.y - 3 - OFFSET),
             ]
             costs = [
                 SCREENSHOT_COST,
                 SCREENSHOT_COST,
-                TOO_CLOSE_COST,
                 0,
+                DISTANCE_COST,
             ]
 
             for idx, pos in enumerate(positions):
@@ -141,14 +144,14 @@ class Obstacle(CellState):
             positions = [
                 (self.x + 2 + OFFSET, self.y + 1),
                 (self.x + 2 + OFFSET, self.y - 1),
-                (self.x + 1 + OFFSET, self.y),
                 (self.x + 2 + OFFSET, self.y),
+                (self.x + 3 + OFFSET, self.y),
             ]
             costs = [
                 SCREENSHOT_COST,
                 SCREENSHOT_COST,
-                TOO_CLOSE_COST,
                 0,
+                DISTANCE_COST,
             ]
 
             for idx, pos in enumerate(positions):
@@ -163,14 +166,14 @@ class Obstacle(CellState):
             positions = [
                 (self.x - 2 - OFFSET, self.y + 1),
                 (self.x - 2 - OFFSET, self.y - 1),
-                (self.x - 1 - OFFSET, self.y),
                 (self.x - 2 - OFFSET, self.y),
+                (self.x - 3 - OFFSET, self.y),
             ]
             costs = [
                 SCREENSHOT_COST,
                 SCREENSHOT_COST,
-                TOO_CLOSE_COST,
                 0,
+                DISTANCE_COST,
             ]
 
             for idx, pos in enumerate(positions):
