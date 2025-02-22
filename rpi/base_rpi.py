@@ -27,10 +27,12 @@ class RaspberryPi(ABC):
 
         self.android_dropped = self.manager.Event()
         """Event to indicate that the connection with Android has been dropped"""
-        self.outstanding_stm_instructions = self.manager.Value("i", 0)
-        """Number of outstanding instructions for STM32"""
+        # self.outstanding_stm_instructions = self.manager.Value("i", 0)
+        # """Number of outstanding instructions for STM32"""
         self.unpause = self.manager.Event()
         """Event to indicate that the robot has been unpaused"""
+        self.finish_all = self.manager.Event()
+        """Event to indicate that all processes should finish"""
 
         self.movement_lock = self.manager.Lock()
         """locks the movement"""
@@ -54,8 +56,8 @@ class RaspberryPi(ABC):
         self.proc_rpi_action: Process
         """proc action"""
 
-        self.obstacles = self.manager.Value("i", 0)
-        """Number of obstacles left to detect by the robot"""
+        # self.obstacles = self.manager.Value("i", 0)
+        # """Number of obstacles left to detect by the robot"""
 
         self.current_location = self.manager.dict()
 

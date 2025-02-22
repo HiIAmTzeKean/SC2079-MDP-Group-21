@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import time
 
 import cv2
 import numpy as np
@@ -165,6 +166,7 @@ def snap_using_picamera(
     url: str,
 ) -> str:
     my_file = open(filename, "wb")
+    time.sleep(1)
     with PiCamera() as camera:
         camera.resolution = (640, 480)
         camera.start_preview()
