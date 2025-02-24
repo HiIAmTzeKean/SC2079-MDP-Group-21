@@ -1,6 +1,6 @@
 from algo.tools.movement import Motion
 from algo.entities.entity import Obstacle
-from typing import List
+# from typing import List # deprecated since python 3.9
 from algo.tools.consts import OFFSET
 
 """
@@ -47,37 +47,46 @@ class CommandGenerator:
     # BACKWARD_IR_DIST_R = "r"        # go backward until right IR sensor is greater than value provided.
 
     # unit distance
-    UNIT_DIST = 10
+    UNIT_DIST: int = 10
 
     # TUNABLE VALUES
     # sharpness of turn angles
-    FORWARD_TURN_ANGLE_LEFT = -25
-    FORWARD_TURN_ANGLE_RIGHT = 25
-    BACKWARD_TURN_ANGLE_LEFT = -25
-    BACKWARD_TURN_ANGLE_RIGHT = 25
+    FORWARD_TURN_ANGLE_LEFT: int = -25
+    FORWARD_TURN_ANGLE_RIGHT: int = 25
+    BACKWARD_TURN_ANGLE_LEFT: int = -25
+    BACKWARD_TURN_ANGLE_RIGHT: int = 25
 
     # final turn angles
-    FORWARD_FINAL_ANGLE_LEFT = 90
-    FORWARD_FINAL_ANGLE_RIGHT = 90
-    BACKWARD_FINAL_ANGLE_LEFT = 90
-    BACKWARD_FINAL_ANGLE_RIGHT = 90
+    FORWARD_FINAL_ANGLE_LEFT: int = 90
+    FORWARD_FINAL_ANGLE_RIGHT: int = 90
+    BACKWARD_FINAL_ANGLE_LEFT: int = 90
+    BACKWARD_FINAL_ANGLE_RIGHT: int = 90
 
     # final half-turn angles
-    FORWARD_HALFTURN_FINAL_ANGLE_LEFT = 45
-    FORWARD_HALFTURN_FINAL_ANGLE_RIGHT = 45
-    BACKWARD_HALFTURN_FINAL_ANGLE_LEFT = 45
-    BACKWARD_HALFTURN_FINAL_ANGLE_RIGHT = 45
+    FORWARD_HALFTURN_FINAL_ANGLE_LEFT: int = 45
+    FORWARD_HALFTURN_FINAL_ANGLE_RIGHT: int = 45
+    BACKWARD_HALFTURN_FINAL_ANGLE_LEFT: int = 45
+    BACKWARD_HALFTURN_FINAL_ANGLE_RIGHT: int = 45
 
-    def __init__(self, straight_speed: int = 50, turn_speed: int = 50):
+    def __init__(self, straight_speed: int = 50, turn_speed: int = 50) -> None:
         """
         A class to generate commands for the robot to follow
 
         range of speed: 0-100
         """
-        self.straight_speed = straight_speed
-        self.turn_speed = turn_speed
+        self.straight_speed: int = straight_speed
+        self.turn_speed: int = turn_speed
 
-    def _generate_command(self, motion: Motion, num_motions: int = 1):
+    def _generate_command(self, motion: Motion, num_motions: int = 1) -> list[str]:
+        """Generates movement commands based on motion type.
+
+        Args:
+            motion (Motion): Type of motion to execute.
+            num_motions (int, optional): Number of repeated motions. Defaults to 1.
+
+        Returns:
+            list[str]: List of command strings.
+        """
         if num_motions > 1:
             dist = num_motions * self.UNIT_DIST
             # angle = num_motions * 90 # useful when combining turns which has been disabled due to tuning
@@ -131,7 +140,7 @@ class CommandGenerator:
                 f"Invalid motion {motion}. This should never happen.")
         return [cmd1, cmd2]
 
-    def _generate_away_command(self, view_state, obstacle):
+    def _generate_away_command(self, view_state, obstacle: Obstacle) -> list[str]:
         """
             Generate commands to calibrate robot position before scanning obstacle
         """
@@ -146,18 +155,17 @@ class CommandGenerator:
         return [f"{self.FORWARD_DIST_AWAY}{self.straight_speed}{self.SEP}{0}{self.SEP}{dist_away}",
                 f"{self.BACKWARD_DIST_AWAY}{self.straight_speed}{self.SEP}{0}{self.SEP}{dist_away}"]
 
-    def generate_commands(self, motions, obstacle_id_with_signals, scanned_obstacles: List[Obstacle], optimal_path):
+    def generate_commands(self, motions: list[Motion], obstacle_id_with_signals: list[str], scanned_obstacles: list[Obstacle], optimal_path) -> list[str]:
         """
         Generate commands based on the list of motions
         """
         if not motions:
             return []
-        view_states = [
-            position for position in optimal_path if position.screenshot_id != None]
-        commands = []
-        prev_motion = motions[0]
-        num_motions = 1
-        snap_count = 0
+        view_states = [position for position in optimal_path if position.screenshot_id != None]
+        commands: list[str] = []
+        prev_motion: Motion = motions[0]
+        num_motions: int = 1
+        snap_count: int = 0
         for motion in motions[1:]:
             # if combinable motions
             if motion == prev_motion and motion.is_combinable():
