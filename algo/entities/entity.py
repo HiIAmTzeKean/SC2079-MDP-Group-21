@@ -1,4 +1,3 @@
-from typing import List
 from algo.tools.consts import SCREENSHOT_COST, DISTANCE_COST, PADDING, MID_TURN_PADDING, TURN_PADDING, ARENA_HEIGHT, ARENA_WIDTH, OFFSET, MIN_CLEARANCE, OBSTACLE_SIZE
 from algo.tools.movement import Direction
 from math import sqrt
@@ -7,15 +6,15 @@ from math import sqrt
 class CellState:
     """Base class for all objects on the arena, such as cells, obstacles, etc"""
 
-    def __init__(self, x, y, direction: Direction = Direction.NORTH, screenshot_id=None, penalty=0):
-        self.x = x
-        self.y = y
-        self.direction = direction
+    def __init__(self, x: int, y: int, direction: Direction = Direction.NORTH, screenshot_id: int | None = None, penalty: int = 0):
+        self.x: int = x
+        self.y: int = y
+        self.direction: Direction = direction
         # If screenshot_id != None, the snapshot is taken at that position is for obstacle with obstacle_id = screenshot_id
-        self.screenshot_id = screenshot_id
-        self.penalty = penalty  # Penalty for the view point of taking picture
+        self.screenshot_id: int | None = screenshot_id
+        self.penalty: int = penalty  # Penalty for the view point of taking picture
 
-    def cmp_position(self, x, y) -> bool:
+    def cmp_position(self, x: int, y: int) -> bool:
         """Compare given (x,y) position with cell state's position
 
         Args:
@@ -27,7 +26,7 @@ class CellState:
         """
         return self.x == x and self.y == y
 
-    def is_eq(self, x, y, direction):
+    def is_eq(self, x: int, y: int, direction: Direction) -> bool:
         """Compare given x, y, direction with cell state's position and direction
 
         Args:
@@ -40,10 +39,11 @@ class CellState:
         """
         return self.x == x and self.y == y and self.direction == direction
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """String representation of cell state"""
         return "Cellstate(x: {}, y: {}, direction: {}, screenshot: {})".format(self.x, self.y, Direction(self.direction), self.screenshot_id)
 
-    def set_screenshot(self, screenshot_id):
+    def set_screenshot(self, screenshot_id: int) -> None:
         """Set screenshot id for cell
 
         Args:
@@ -51,7 +51,7 @@ class CellState:
         """
         self.screenshot_id = screenshot_id
 
-    def get_dict(self):
+    def get_dict(self) -> dict[str, int | None]:
         """Returns a dictionary representation of the cell
 
         Returns:
@@ -63,11 +63,11 @@ class CellState:
 class Obstacle(CellState):
     """Obstacle class, inherited from CellState"""
 
-    def __init__(self, x: int, y: int, direction: Direction, obstacle_id: int):
+    def __init__(self, x: int, y: int, direction: Direction, obstacle_id: int) -> None:
         super().__init__(x, y, direction)
-        self.obstacle_id = obstacle_id
+        self.obstacle_id: int = obstacle_id
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         """Checks if this obstacle is the same as input in terms of x, y, and direction
 
         Args:
@@ -78,14 +78,14 @@ class Obstacle(CellState):
         """
         return self.x == other.x and self.y == other.y and self.direction == other.direction
 
-    def get_view_state(self) -> List[CellState]:
+    def get_view_state(self) -> list[CellState]:
         """
         Constructs the list of CellStates from which the robot can view the image on the obstacle properly.
         Currently checks a T shape of grids in front of the image
         "TODO: tune the grid values based on testing
 
         Returns:
-            List[CellState]: Valid cell states where robot can be positioned to view the symbol on the obstacle
+            list[CellState]: Valid cell states where robot can be positioned to view the symbol on the obstacle
         """
         cells = []
 
@@ -182,10 +182,10 @@ class Obstacle(CellState):
                     )
         return cells
 
-    def get_obstacle_id(self):
+    def get_obstacle_id(self) -> int:
         return self.obstacle_id
 
-    def is_valid_position(self, center_x: int, center_y: int):
+    def is_valid_position(self, center_x: int, center_y: int) -> bool:
         """Checks if given position is within bounds
 
         Inputs
@@ -205,7 +205,7 @@ class Grid:
     Grid object that contains the size of the grid and a list of obstacles
     """
 
-    def __init__(self, size_x: int, size_y: int):
+    def __init__(self, size_x: int, size_y: int) -> None:
         """
         Args:
             size_x (int): Size of the grid in the x direction
@@ -213,9 +213,9 @@ class Grid:
         """
         self.size_x = size_x
         self.size_y = size_y
-        self.obstacles: List[Obstacle] = []
+        self.obstacles: list[Obstacle] = []
 
-    def add_obstacle(self, obstacle: Obstacle):
+    def add_obstacle(self, obstacle: Obstacle) -> None:
         """
         Add a new obstacle to the Grid object, ignores if duplicate obstacle. 
         Ensures that list of Obstacles is always sorted so that the same optimal path is returned for the same obstacles in different orders.
@@ -231,13 +231,13 @@ class Grid:
             self.obstacles.append(obstacle)
             self.obstacles.sort(key=lambda ob: (ob.x, ob.y))
 
-    def reset_obstacles(self):
+    def reset_obstacles(self) -> None:
         """
         Resets the obstacles in the grid
         """
         self.obstacles = []
 
-    def get_obstacles(self):
+    def get_obstacles(self) -> list[Obstacle]:
         """
         Returns the list of obstacles in the grid
         """
@@ -351,7 +351,7 @@ class Grid:
         """
         return self.is_valid_coord(state.x, state.y)
 
-    def get_view_obstacle_positions(self) -> List[List[CellState]]:
+    def get_view_obstacle_positions(self) -> list[list[CellState]]:
         """
         This function return a list of desired states for the robot to achieve based on the obstacle position and direction.
         The state is the position that the robot can see the image of the obstacle and is safe to reach without collision
@@ -369,7 +369,7 @@ class Grid:
             optimal_positions.append(view_states)
         return optimal_positions
 
-    def find_obstacle_by_id(self, obstacle_id: int) -> Obstacle:
+    def find_obstacle_by_id(self, obstacle_id: int) -> Obstacle | None:
         """
         Return obstacle object by its id
         """
@@ -381,7 +381,7 @@ class Grid:
     @staticmethod
     def _get_turn_checking_points(
         x: int, y: int, new_x: int, new_y: int, direction: Direction
-    ):
+    ) -> list[tuple[int, int]]:
         """
         Finds 3 points near the curve followed by the robot during the turn. Near the curve since it is difficult to
         approximate points on the curve since it is not a part of a circle, but rather an irregular ellipse.
