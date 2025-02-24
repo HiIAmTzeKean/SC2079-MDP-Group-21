@@ -137,12 +137,12 @@ class CommandGenerator:
         """
         # dist btw obstacle & view state position - offset since sensor is at front of car - obstacle size + extra clearance
         OBSTACLE_SIZE = 1
-        CLEARANCE = 0.5
+        CLEARANCE = 1
         unit_dist_from_obstacle = max(
             abs(view_state.x - obstacle.x),
             abs(view_state.y - obstacle.y)
         ) - OFFSET - OBSTACLE_SIZE + CLEARANCE
-        dist_away = unit_dist_from_obstacle * self.UNIT_DIST
+        dist_away = int(unit_dist_from_obstacle * self.UNIT_DIST)
         return [f"{self.FORWARD_DIST_AWAY}{self.straight_speed}{self.SEP}{0}{self.SEP}{dist_away}",
                 f"{self.BACKWARD_DIST_AWAY}{self.straight_speed}{self.SEP}{0}{self.SEP}{dist_away}"]
 
