@@ -116,43 +116,6 @@ class TaskA5(RaspberryPi):
             else:
                 raise Exception(f"Unknown command: {command}")
 
-    def reconnect_android(self) -> None:
-        """Handles the reconnection to Android in the event of a lost connection."""
-        logger.info("Reconnection handler is watching...")
-
-        while True:
-            # Wait for android connection to drop
-            self.android_dropped.wait()
-
-            logger.error("Android is down")
-
-            # Kill child processes
-            logger.debug("Stopping android child processes")
-            self.proc_android_controller.kill()
-            self.proc_recv_android.kill()
-
-            # Wait for the child processes to finish
-            #self.proc_android_controller.join()
-            #self.proc_recv_android.join()
-            #assert self.proc_android_controller.is_alive() is False
-            #assert self.proc_recv_android.is_alive() is False
-            #logger.debug("Android process stopped")
-
-            # Clean up old sockets
-            #self.android_link.disconnect()
-            #self.android_link.connect()
-
-            # Recreate Android processes
-            #self.proc_recv_android = Process(target=self.recv_android)
-            #self.proc_android_controller = Process(target=self.android_controller)
-            #self.proc_recv_android.start()
-            #self.proc_android_controller.start()
-
-            logger.info("Android processes restarted")
-            # self.android_queue.put(AndroidMessage(Category.INFO.value, "You are reconnected!"))
-            # self.android_queue.put(AndroidMessage(Category.MODE.value, "path"))
-
-            #self.android_dropped.clear()
 
     def android_controller(self) -> None:
         """
