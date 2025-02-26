@@ -1,5 +1,6 @@
 package com.mdp25.forever21;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.BroadcastReceiver;
@@ -97,7 +98,9 @@ public class CanvasActivity extends AppCompatActivity {
         sendbtn = findViewById(R.id.btnSend);
         sendbtn.setOnClickListener(view -> sendChatMessage());
         startbtn = findViewById(R.id.btnRobotStart);
-        startbtn.setOnClickListener(view -> startRobot());
+        startbtn.setOnClickListener(view -> {
+            if (myApp.btConnection() != null) showConfirmationDialog();
+        });
 
         // Bind movement buttons
         findViewById(R.id.btnRobotForward).setOnClickListener(view -> {
@@ -129,6 +132,15 @@ public class CanvasActivity extends AppCompatActivity {
     private void startRobot() {
         BluetoothMessage msg = BluetoothMessage.ofRobotStartMessage();
         myApp.btConnection().sendMessage(msg.getAsJsonMessage().getAsJson());
+    }
+
+    private void showConfirmationDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Confirm Start")
+                .setMessage("Are you sure you want to start the robot?")
+                .setPositiveButton("Confirm", (dialog, which) -> startRobot())
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                .show();
     }
 
     private void applyInputFilter(EditText input) {
@@ -163,7 +175,8 @@ public class CanvasActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
         });
     }
 
@@ -205,11 +218,16 @@ public class CanvasActivity extends AppCompatActivity {
 
     private Facing convertFacing(String facing) {
         switch (facing.toUpperCase()) {
-            case "NORTH": return Facing.NORTH;
-            case "SOUTH": return Facing.SOUTH;
-            case "EAST": return Facing.EAST;
-            case "WEST": return Facing.WEST;
-            default: return Facing.NORTH;
+            case "NORTH":
+                return Facing.NORTH;
+            case "SOUTH":
+                return Facing.SOUTH;
+            case "EAST":
+                return Facing.EAST;
+            case "WEST":
+                return Facing.WEST;
+            default:
+                return Facing.NORTH;
         }
     }
 
