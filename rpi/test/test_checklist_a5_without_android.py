@@ -10,65 +10,58 @@ import requests
 import os
 import sys
 
-
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-
-from base_rpi import RaspberryPi
-from communication.android import AndroidMessage
-from communication.camera import snap_using_libcamera, snap_using_picamera
-from communication.pi_action import PiAction
-from constant.consts import Category, manual_commands, stm32_prefixes
-from constant.settings import URL
+from ..base_rpi import RaspberryPi
+from ..communication.android import AndroidMessage
+from ..communication.camera import snap_using_libcamera, snap_using_picamera
+from ..communication.pi_action import PiAction
+from ..constant.consts import Category, manual_commands, stm32_prefixes
+from ..constant.settings import URL
 
 
 logger = logging.getLogger(__name__)
 
 
-class TaskOne(RaspberryPi):
+class TaskA5(RaspberryPi):
     def __init__(self) -> None:
         super().__init__()
 
     def start(self) -> None:
         """Starts the RPi orchestrator"""
         logger.info("starting the start function")
+        self.unpause.clear()
+        self.clear_queues()
+        logger.debug("All ready")
         try:
-            ### Start up initialization ###
-            # self.android_link.connect()
-            # # self.android_queue.put(AndroidMessage(cat="info", value="You are connected to the RPi!"))
             self.stm_link.connect()
-            self.check_api()
 
             # Define child processes
             self.proc_recv_android = Process(target=self.recv_android)
-            self.proc_recv_stm32 = Process(target=self.recv_stm)
-            # self.proc_android_controller = Process(target=self.android_controller)
             self.proc_command_follower = Process(target=self.command_follower)
+            self.proc_recv_stm32 = Process(target=self.recv_stm)
             self.proc_rpi_action = Process(target=self.rpi_action)
 
             # Start child processes
             self.proc_recv_android.start()
             self.proc_recv_stm32.start()
-            self.proc_android_controller.start()
             self.proc_command_follower.start()
             self.proc_rpi_action.start()
 
             logger.info("Child Processes started")
-
-            # # self.android_queue.put(AndroidMessage(Category.INFO.value, "Robot is ready!"))
-            # # self.android_queue.put(AndroidMessage(Category.MODE.value, "path"))
-            
-            # Reconnect Android if connection is lost
-            # Handled in main process
-            # self.reconnect_android()
-        except KeyboardInterrupt:
-            self.stop()
+            while True:
+                continue
+        except Exception as e:
+            pass
 
     def rpi_action(self) -> None:
         """
         [Child Process] For processing the actions that the RPi needs to take.
         """
         while True:
-            action = self.rpi_action_queue.get()
+            try:
+                action = self.rpi_action_queue.get()
+            except Exception as e:
+                continue
+            
             logger.debug(f"PiAction retrieved from queue: {action.cat} {action.value}")
             ## obstacle ID
             if action.cat == Category.OBSTACLE.value:
@@ -86,16 +79,13 @@ class TaskOne(RaspberryPi):
         [Child Process]
         """
         while True:
+            self.unpause.wait()
+            
             command: str = self.command_queue.get()
             logger.debug(f"command dequeued: {command}")
 
-            self.unpause.wait()
-
-            # Acquire lock first (needed for both moving, and snapping pictures)
             logger.debug("Acquiring movement lock...")
             self.movement_lock.acquire()
-
-            logger.debug(f"command for movement lock: {command}")
             if command.startswith(stm32_prefixes):
                 strings = str(command)
                 # t|100|100|100
@@ -105,14 +95,7 @@ class TaskOne(RaspberryPi):
 
             elif command.startswith("SNAP"):
                 obstacle_id_with_signal = command.replace("SNAP", "")
-
                 self.rpi_action_queue.put(PiAction(cat=Category.SNAP, value=obstacle_id_with_signal))
-                time.sleep(1)
-                try:
-                    self.movement_lock.release()
-                    logger.debug("movement_lock released")
-                except:
-                    pass
 
             elif command == Category.FIN.value:
                 logger.info(f"At FIN->self.current_location: {self.current_location}")
@@ -149,27 +132,27 @@ class TaskOne(RaspberryPi):
             self.proc_recv_android.kill()
 
             # Wait for the child processes to finish
-            self.proc_android_controller.join()
-            self.proc_recv_android.join()
-            assert self.proc_android_controller.is_alive() is False
-            assert self.proc_recv_android.is_alive() is False
-            logger.debug("Android process stopped")
+            #self.proc_android_controller.join()
+            #self.proc_recv_android.join()
+            #assert self.proc_android_controller.is_alive() is False
+            #assert self.proc_recv_android.is_alive() is False
+            #logger.debug("Android process stopped")
 
             # Clean up old sockets
-            self.android_link.disconnect()
-            self.android_link.connect()
+            #self.android_link.disconnect()
+            #self.android_link.connect()
 
             # Recreate Android processes
-            self.proc_recv_android = Process(target=self.recv_android)
-            self.proc_android_controller = Process(target=self.android_controller)
-            self.proc_recv_android.start()
-            self.proc_android_controller.start()
+            #self.proc_recv_android = Process(target=self.recv_android)
+            #self.proc_android_controller = Process(target=self.android_controller)
+            #self.proc_recv_android.start()
+            #self.proc_android_controller.start()
 
             logger.info("Android processes restarted")
             # self.android_queue.put(AndroidMessage(Category.INFO.value, "You are reconnected!"))
             # self.android_queue.put(AndroidMessage(Category.MODE.value, "path"))
 
-            self.android_dropped.clear()
+            #self.android_dropped.clear()
 
     def android_controller(self) -> None:
         """
@@ -205,16 +188,6 @@ class TaskOne(RaspberryPi):
                     self.current_location["y"] = cur_location["y"]
                     self.current_location["d"] = cur_location["d"]
                     logger.info(f"current location = {self.current_location}")
-                    # self.android_queue.put(
-                    #     AndroidMessage(
-                    #         Category.LOCATION.value,
-                    #         {
-                    #             "x": cur_location["x"],
-                    #             "y": cur_location["y"],
-                    #             "d": cur_location["d"],
-                    #         },
-                    #     )
-                    # )
                     logger.debug(f"stm finish {message}")
                     logger.info("Releasing movement lock.")
                     self.movement_lock.release()
@@ -230,9 +203,8 @@ class TaskOne(RaspberryPi):
         [Child Process] Processes the messages received from Android
         """
         self.rpi_action_queue.put(PiAction(cat=Category.OBSTACLE, value=""))
-        logger.debug("PiAction obstacles appended to queue")
+        logger.debug("PiAction obstacles obtained")
 
-    # TODO fix the library camera call
     def recognize_image(self, obstacle_id_with_signal: str) -> None:
         """
         RPi snaps an image and calls the API for image-rec.
@@ -259,16 +231,16 @@ class TaskOne(RaspberryPi):
         if results["image_id"] != "NA":
             self.stop()
             time.sleep(100)
+        self.movement_lock.release()
         
-
-    # TODO implement retrying flag
     def request_algo(self, data: dict, retrying=False) -> None:
         """
         Requests for a series of commands and the path from the Algo API.
         The received commands and path are then queued in the respective queues
         """
         logger.debug("Requesting path from algo")
-        # self.android_queue.put(AndroidMessage(cat=Category.INFO.value, value="Requesting path from algo..."))
+        
+        self.check_api()
         
         # incase android cannot support we will use this
         data = {
@@ -312,11 +284,10 @@ class TaskOne(RaspberryPi):
             "retrying": retrying,
         }
         logger.debug(f"{body}")
-        response = requests.post(url=f"{URL}/path", json=body, timeout=1.0)
+        response = requests.post(url=f"{URL}/path", json=body, timeout=3.0)
 
         if response.status_code != 200:
             logger.error("Error when requesting path from Algo API.")
-            # self.android_queue.put(AndroidMessage(Category.ERROR.value, "Error when requesting path from Algo API."))
             return
 
         result = json.loads(response.content)["data"]
@@ -348,10 +319,8 @@ class TaskOne(RaspberryPi):
 
         # TODO should retry if the response fails
         if response.status_code != 200:
-            # self.android_queue.put(AndroidMessage(Category.ERROR.value, "Error when requesting stitch from the API."))
             logger.error("Error when requesting stitch from the API.")
             return
 
-        # self.android_queue.put(AndroidMessage(Category.INFO.value, "Images stitched!"))
         logger.info("Images stitched!")
         self.finish_all.set()
