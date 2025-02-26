@@ -1,7 +1,7 @@
 from algo.tools.movement import Motion
 from algo.entities.entity import Obstacle
 from typing import List
-from algo.tools.consts import OFFSET
+from algo.tools.consts import OFFSET, OBSTACLE_SIZE
 
 """
 Generate commands in format requested by STM (refer to commands_FLAGS.h in STM repo): 
@@ -36,9 +36,11 @@ class CommandGenerator:
 
     # Flags
     FORWARD_DIST_TARGET = "T"       # go forward for a target distance/angle.
-    FORWARD_DIST_AWAY = "W"         # go forward until within a certain distance away from obstacle (more accurate than target dist, within 50cm range)
+    # go forward until within a certain distance away from obstacle (more accurate than target dist, within 50cm range)
+    FORWARD_DIST_AWAY = "W"
     BACKWARD_DIST_TARGET = "t"      # go backward for a target distance/angle.
-    BACKWARD_DIST_AWAY = "w"        # go backward until a certain distance away from obstacle (more accurate than target dist, within 50cm range)
+    # go backward until a certain distance away from obstacle (more accurate than target dist, within 50cm range)
+    BACKWARD_DIST_AWAY = "w"
 
     # # IR Sensors based motion
     # FORWARD_IR_DIST_L = "L"         # go forward until left IR sensor is greater than value provided.
@@ -135,9 +137,9 @@ class CommandGenerator:
         """
             Generate commands to calibrate robot position before scanning obstacle
         """
-        # dist btw obstacle & view state position - offset since sensor is at front of car - obstacle size + extra clearance
-        OBSTACLE_SIZE = 1
-        CLEARANCE = 1
+        # dist btw obstacle & view state position - offset since sensor is at front of car - obstacle size + extra clearance if needed
+        CLEARANCE = 0
+
         unit_dist_from_obstacle = max(
             abs(view_state.x - obstacle.x),
             abs(view_state.y - obstacle.y)
