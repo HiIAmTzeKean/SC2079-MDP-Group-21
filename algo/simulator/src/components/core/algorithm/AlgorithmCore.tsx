@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { NavigationGrid } from "./NavigationGrid";
 import { CoreContainter } from "../CoreContainter";
-import { Position } from "../../../schemas/entity";
+import { Direction, Position } from "../../../schemas/entity";
 import {
 	GRID_ANIMATION_SPEED,
+	GRID_TOTAL_WIDTH,
 	ROBOT_INITIAL_POSITION,
 } from "../../../constants";
 import {
@@ -36,6 +37,34 @@ export const AlgorithmCore = () => {
 	const totalSteps = robotPositions?.length ?? 0;
 	const [robotCommands, setRobotCommands] = useState<string[]>();
 	const [robotMotions, setRobotMotions] = useState<string[]>();
+
+	// Robot Starting Position	
+	const [robotStartPosition, setRobotStartPosition] = useState<Position>(ROBOT_INITIAL_POSITION);
+	const [robotStartX, setRobotStartX] = useState<number>(ROBOT_INITIAL_POSITION.x);
+	const [robotStartY, setRobotStartY] = useState<number>(ROBOT_INITIAL_POSITION.y);
+	const [robotStartDirection, setRobotStartDirection] = useState<Direction>(ROBOT_INITIAL_POSITION.d);
+
+	const validateRobotPosition = (input: string) => {
+		const number = Math.round(Number(input));
+		if (number > GRID_TOTAL_WIDTH - 1) {
+			return GRID_TOTAL_WIDTH - 1;
+		} else if (number < 0) {
+			return 0;
+		} else {
+			return number;
+		}
+	}
+
+	useEffect(() => {
+		const newPosition: Position = {
+			x: robotStartX,
+			y: robotStartY,
+			d: robotStartDirection,
+			s: null
+		}
+		setRobotStartPosition(newPosition);
+		setCurrentRobotPosition(newPosition);
+	}, [robotStartX, robotStartY, robotStartDirection]);
 
 	// Algorithm Runtime & Cost
 	const [algoRuntime, setAlgoRuntime] = useState<number | null>();
@@ -79,9 +108,9 @@ export const AlgorithmCore = () => {
 				};
 			}),
 			retrying: isRetrying,
-			robot_dir: ROBOT_INITIAL_POSITION.d,
-			robot_x: ROBOT_INITIAL_POSITION.x,
-			robot_y: ROBOT_INITIAL_POSITION.y,
+			robot_dir: robotStartPosition.d,
+			robot_x: robotStartPosition.x,
+			robot_y: robotStartPosition.y,
 			num_runs: numberOfAlgoRuns,
 		};
 		try {
@@ -147,7 +176,7 @@ export const AlgorithmCore = () => {
 
 	const resetNavigationGrid = () => {
 		setCurrentStep(-1);
-		setCurrentRobotPosition(ROBOT_INITIAL_POSITION);
+		setCurrentRobotPosition(robotStartPosition);
 		setRobotPositions(undefined);
 		setRobotCommands(undefined);
 		setRobotMotions(undefined);
@@ -283,6 +312,52 @@ export const AlgorithmCore = () => {
 				selectedTest={selectedTest}
 				setSelectedTest={setSelectedTest}
 			/>
+
+			<div className="flex gap-8 mb-4 items-center">
+				<span className="font-bold">Robot Start Position</span>
+				<div>
+					<label className="font-bold">X: </label>
+					<input
+						type="number"
+						min={1}
+						max={18}
+						value={robotStartX}
+						onChange={(e) => {
+							setRobotStartX(validateRobotPosition(e.target.value))
+						}}
+						step={1}
+						className="rounded-lg"
+					/>
+				</div>
+				<div>
+					<label className="font-bold">Y: </label>
+					<input
+						type="number"
+						min={1}
+						max={18}
+						value={robotStartY}
+						onChange={(e) => {
+							setRobotStartY(validateRobotPosition(e.target.value))
+						}}
+						step={1}
+						className="rounded-lg"
+					/>
+				</div>
+				<div>
+					<label className="font-bold">D: </label>
+					<select
+						value={robotStartDirection}
+						onChange={(e) => {
+							setRobotStartDirection(Number(e.target.value) as Direction)
+						}}
+					>
+						<option value={Direction.NORTH}>NORTH</option>
+						<option value={Direction.EAST}>EAST</option>
+						<option value={Direction.SOUTH}>SOUTH</option>
+						<option value={Direction.WEST}>WEST</option>
+					</select>
+				</div>
+			</div>
 
 			{/* TODO: Algo input parameters Retrying*/}
 			<div className="flex gap-8 items-center justify-center mb-4">
@@ -425,7 +500,7 @@ export const AlgorithmCore = () => {
 
 			{/* Navigation Grid */}
 			<NavigationGrid
-				robotPosition={currentRobotPosition ?? ROBOT_INITIAL_POSITION}
+				robotPosition={currentRobotPosition ?? robotStartPosition}
 				robotPath={robotPositions?.slice(0, currentStep + 1)}
 				obstacles={selectedTest.obstacles}
 				canAddObstacle={selectedTestEnum === AlgoTestEnum.Custom}

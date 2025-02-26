@@ -112,8 +112,8 @@ export const CustomTest = (props: CustomTestProps) => {
 
     const validateObstaclePosition = (input: string) => {
         const number = Math.round(Number(input));
-        if (number > 19) {
-            return 19;
+        if (number > GRID_TOTAL_WIDTH - 1) {
+            return GRID_TOTAL_WIDTH - 1;
         } else if (number < 0) {
             return 0;
         } else {
