@@ -5,6 +5,8 @@ EXPANDED_CELL = 1
 # dimensions of arena (in 10 cm units)
 ARENA_WIDTH = 20
 ARENA_HEIGHT = 20
+# no. of cells taken up by obstacle (in 10 cm units)
+OBSTACLE_SIZE = 1
 
 # no. of iterations to run algorithm for to find the most accurate shortest path
 ITERATIONS = 2000
@@ -16,7 +18,7 @@ SAFE_COST = 1000
 # Cost of taking an image off center.
 # The higher the value, the less likely the robot takes pictures from a position that is not directly in front of image.
 SCREENSHOT_COST = 100
-TOO_CLOSE_COST = 50  # the cost for when the robot is too close to the obstacle
+DISTANCE_COST = 50  # the cost for when the robot is too close or too far from the obstacle
 
 # Cost of turning the robot.
 # The higher the value, the less likely the robot is to turn.
@@ -42,7 +44,7 @@ X ←----┐  .  .
 
 0: long axis, 1: short axis
 """
-TURN_DISPLACEMENT = [4, 4]
+TURN_DISPLACEMENT = [3, 3]
 
 # offset due to position of robot's center / how many cells more the robot occupies from its center cell
 OFFSET = 1
@@ -50,6 +52,9 @@ OFFSET = 1
 TURN_PADDING = (OFFSET + 1) * EXPANDED_CELL
 MID_TURN_PADDING = (OFFSET + 1) * EXPANDED_CELL
 PADDING = (OFFSET + 1) * EXPANDED_CELL
+
+# minimum number of cells away front of robot should be from obstacle in view state generation
+MIN_CLEARANCE = 2  # front of robot 20cm away
 
 """
 The number of grid squares the robot moves for TWO half turns on each axis. This must be tuned based on real robot movement.
@@ -63,3 +68,6 @@ eg. Motion.FORWARD_OFFSET_LEFT: TWO half turns to end up diagonally in the speci
 0: long axis, 1: short axis
 """
 HALF_TURNS_DISPLACEMENT = [6, 2]
+
+# TODO: remove when done testing
+W_COMMAND_FLAG = 0  # 0: disable w/W commands, 1: enable w/W cmoomands

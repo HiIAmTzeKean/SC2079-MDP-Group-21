@@ -109,11 +109,11 @@ class PathFinding(Resource):
             logger.debug(f"cost to travel: {cost} units")
 
             # Based on the shortest path, generate commands for the robot
-            motions, obstacle_ids = maze_solver.optimal_path_to_motion_path(
+            motions, obstacle_id_with_signals, scanned_obstacles = maze_solver.optimal_path_to_motion_path(
                 optimal_path)
             command_generator = CommandGenerator()
             commands = command_generator.generate_commands(
-                motions, obstacle_ids)
+                motions, obstacle_id_with_signals, scanned_obstacles, optimal_path)
 
             # Get the starting location and add it to path_results
             path_results = []
@@ -186,11 +186,11 @@ class SimulatorPathFinding(Resource):
                 logger.debug(f"cost to travel: {cost} units")
 
                 # Based on the shortest path, generate commands for the robot
-                motions, obstacle_ids = maze_solver.optimal_path_to_motion_path(
+                motions, obstacle_id_with_signals, scanned_obstacles = maze_solver.optimal_path_to_motion_path(
                     optimal_path)
                 command_generator = CommandGenerator()
                 commands = command_generator.generate_commands(
-                    motions, obstacle_ids)
+                    motions, obstacle_id_with_signals, scanned_obstacles, optimal_path)
 
             # Get the starting location and add it to path_results
             path_results = []
