@@ -68,3 +68,6 @@ eg. Motion.FORWARD_OFFSET_LEFT: TWO half turns to end up diagonally in the speci
 0: long axis, 1: short axis
 """
 HALF_TURNS_DISPLACEMENT = [6, 2]
+
+# TODO: remove when done testing
+W_COMMAND_FLAG = 0  # 0: disable w/W commands, 1: enable w/W cmoomands

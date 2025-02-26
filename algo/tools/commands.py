@@ -1,7 +1,7 @@
 from algo.tools.movement import Motion
 from algo.entities.entity import Obstacle
 from typing import List
-from algo.tools.consts import OFFSET, OBSTACLE_SIZE
+from algo.tools.consts import OFFSET, OBSTACLE_SIZE, W_COMMAND_FLAG
 
 """
 Generate commands in format requested by STM (refer to commands_FLAGS.h in STM repo): 
@@ -168,10 +168,11 @@ class CommandGenerator:
             # convert prev motion to command
             else:
                 if prev_motion == Motion.CAPTURE:
-                    commands.extend(
-                        self._generate_away_command(
-                            view_states[snap_count], scanned_obstacles[snap_count])
-                    )
+                    if W_COMMAND_FLAG:
+                        commands.extend(
+                            self._generate_away_command(
+                                view_states[snap_count], scanned_obstacles[snap_count])
+                        )
                     commands.append(
                         f"SNAP{obstacle_id_with_signals[snap_count]}")
                     snap_count += 1
@@ -185,10 +186,11 @@ class CommandGenerator:
 
         # add the last command
         if prev_motion == Motion.CAPTURE:
-            commands.extend(
-                self._generate_away_command(
-                    view_states[snap_count], scanned_obstacles[snap_count])
-            )
+            if W_COMMAND_FLAG:
+                commands.extend(
+                    self._generate_away_command(
+                        view_states[snap_count], scanned_obstacles[snap_count])
+                )
             commands.append(
                 f"SNAP{obstacle_id_with_signals[snap_count]}")
         else:
