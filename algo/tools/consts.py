@@ -5,6 +5,8 @@ EXPANDED_CELL = 1
 # dimensions of arena (in 10 cm units)
 ARENA_WIDTH = 20
 ARENA_HEIGHT = 20
+# no. of cells taken up by obstacle (in 10 cm units)
+OBSTACLE_SIZE = 1
 
 # no. of iterations to run algorithm for to find the most accurate shortest path
 ITERATIONS = 2000
@@ -42,7 +44,7 @@ X ←----┐  .  .
 
 0: long axis, 1: short axis
 """
-TURN_DISPLACEMENT = [4, 4]
+TURN_DISPLACEMENT = [3, 3]
 
 # offset due to position of robot's center / how many cells more the robot occupies from its center cell
 OFFSET = 1
@@ -50,6 +52,9 @@ OFFSET = 1
 TURN_PADDING = (OFFSET + 1) * EXPANDED_CELL
 MID_TURN_PADDING = (OFFSET + 1) * EXPANDED_CELL
 PADDING = (OFFSET + 1) * EXPANDED_CELL
+
+# minimum number of cells away front of robot should be from obstacle in view state generation
+MIN_CLEARANCE = 2  # front of robot 20cm away
 
 """
 The number of grid squares the robot moves for TWO half turns on each axis. This must be tuned based on real robot movement.
