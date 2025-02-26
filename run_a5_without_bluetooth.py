@@ -1,4 +1,4 @@
-from rpi.test_checklist_a5_without_android import TaskA5
+from rpi.test.test_checklist_a5_without_android import TaskA5
 
 
 if __name__ == "__main__":
