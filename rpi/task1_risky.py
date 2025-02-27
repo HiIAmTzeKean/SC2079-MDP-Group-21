@@ -7,68 +7,79 @@ from typing import Any, Optional
 
 import requests
 
-import os
-import sys
-
-from ..base_rpi import RaspberryPi
-from ..communication.android import AndroidMessage
-from ..communication.camera import snap_using_libcamera, snap_using_picamera
-from ..communication.pi_action import PiAction
-from ..constant.consts import Category, manual_commands, stm32_prefixes
-from ..constant.settings import URL
+from .base_rpi import RaspberryPi
+from .communication.android import AndroidMessage
+from .communication.camera import snap_using_libcamera, snap_using_picamera
+from .communication.pi_action import PiAction
+from .constant.consts import Category, manual_commands, stm32_prefixes
+from .constant.settings import URL
 
 
 logger = logging.getLogger(__name__)
 
 
-class TaskA5(RaspberryPi):
+class TaskOne(RaspberryPi):
     def __init__(self) -> None:
         super().__init__()
 
     def start(self) -> None:
         """Starts the RPi orchestrator"""
         logger.info("starting the start function")
-        self.unpause.clear()
-        self.clear_queues()
-        logger.debug("All ready")
         try:
+            ### Start up initialization ###
+            self.android_link.connect()
+            self.android_queue.put(AndroidMessage(cat="info", value="You are connected to the RPi!"))
             self.stm_link.connect()
+            self.check_api()
 
             # Define child processes
             self.proc_recv_android = Process(target=self.recv_android)
-            self.proc_command_follower = Process(target=self.command_follower)
             self.proc_recv_stm32 = Process(target=self.recv_stm)
+            self.proc_android_controller = Process(target=self.android_controller)
+            self.proc_command_follower = Process(target=self.command_follower)
             self.proc_rpi_action = Process(target=self.rpi_action)
 
             # Start child processes
             self.proc_recv_android.start()
             self.proc_recv_stm32.start()
+            self.proc_android_controller.start()
             self.proc_command_follower.start()
             self.proc_rpi_action.start()
 
             logger.info("Child Processes started")
-            while True:
-                continue
-        except Exception as e:
-            pass
+
+            self.android_queue.put(AndroidMessage(Category.INFO.value, "Robot is ready!"))
+            self.android_queue.put(AndroidMessage(Category.MODE.value, "path"))
+            
+            # Reconnect Android if connection is lost
+            # Handled in main process
+            self.reconnect_android()
+        except KeyboardInterrupt:
+            self.stop()
 
     def rpi_action(self) -> None:
         """
         [Child Process] For processing the actions that the RPi needs to take.
         """
         while True:
-            try:
-                action = self.rpi_action_queue.get()
-            except Exception as e:
-                continue
-            
+            action = self.rpi_action_queue.get()
             logger.debug(f"PiAction retrieved from queue: {action.cat} {action.value}")
             ## obstacle ID
             if action.cat == Category.OBSTACLE.value:
-                self.request_algo({})
+                for _ in action.value[Category.OBSTACLE.value]:
+                    self.obstacles.value += 1
+                self.current_location["x"] = int(action.value["robot_x"])
+                self.current_location["y"] = int(action.value["robot_y"])
+                self.current_location["d"] = int(action.value["robot_dir"])
+                self.request_algo(action.value)
 
             elif action.cat == Category.SNAP.value:
+                while True:
+                    # wait for all STM instructions to finish
+                    if self.outstanding_stm_instructions.get() == 0:
+                        break
                 self.recognize_image(obstacle_id_with_signal=action.value)
+                self.movement_lock.release()
 
             elif action.cat == Category.STITCH.value:
                 self.request_stitch()
@@ -79,35 +90,38 @@ class TaskA5(RaspberryPi):
         [Child Process]
         """
         while True:
-            self.unpause.wait()
-            
             command: str = self.command_queue.get()
             logger.debug(f"command dequeued: {command}")
 
-            logger.debug("Acquiring movement lock...")
+            self.unpause.wait()
+
+            # Acquire lock first (needed for both moving, and snapping pictures)
+            logger.debug(f"command for movement lock: {command}")
             self.movement_lock.acquire()
             if command.startswith(stm32_prefixes):
                 strings = str(command)
                 # t|100|100|100
                 parts = strings.split("|")
+                self.outstanding_stm_instructions.set(self.outstanding_stm_instructions.get()+1)
                 self.stm_link.send_cmd(parts[0][0], int(parts[0][1:]), int(parts[1]), int(parts[2]))
                 logger.debug(f"Sending to STM32: {command}")
-
+                self.movement_lock.release()
+                
             elif command.startswith("SNAP"):
                 obstacle_id_with_signal = command.replace("SNAP", "")
                 self.rpi_action_queue.put(PiAction(cat=Category.SNAP, value=obstacle_id_with_signal))
 
             elif command == Category.FIN.value:
+                while True:
+                    # wait for all STM instructions to finish
+                    if self.obstacles.get() == 0:
+                        break
+                
                 logger.info(f"At FIN->self.current_location: {self.current_location}")
                 self.unpause.clear()
                 logger.debug("unpause cleared")
-                try:
-                    logger.debug("releasing movement_lock.")
-                    self.movement_lock.release()
-                except:
-                    pass
                 logger.info("Commands queue finished.")
-                # self.android_queue.put(AndroidMessage(Category.STATUS.value, "finished"))
+                self.android_queue.put(AndroidMessage(Category.STATUS.value, "finished"))
                 self.rpi_action_queue.put(PiAction(cat=Category.STITCH, value=""))
                 self.finish_all.wait()
                 self.finish_all.clear()
@@ -116,6 +130,43 @@ class TaskA5(RaspberryPi):
             else:
                 raise Exception(f"Unknown command: {command}")
 
+    def reconnect_android(self) -> None:
+        """Handles the reconnection to Android in the event of a lost connection."""
+        logger.info("Reconnection handler is watching...")
+
+        while True:
+            # Wait for android connection to drop
+            self.android_dropped.wait()
+
+            logger.error("Android is down")
+
+            # Kill child processes
+            logger.debug("Stopping android child processes")
+            self.proc_android_controller.kill()
+            self.proc_recv_android.kill()
+
+            # Wait for the child processes to finish
+            self.proc_android_controller.join()
+            self.proc_recv_android.join()
+            assert self.proc_android_controller.is_alive() is False
+            assert self.proc_recv_android.is_alive() is False
+            logger.debug("Android process stopped")
+
+            # Clean up old sockets
+            self.android_link.disconnect()
+            self.android_link.connect()
+
+            # Recreate Android processes
+            self.proc_recv_android = Process(target=self.recv_android)
+            self.proc_android_controller = Process(target=self.android_controller)
+            self.proc_recv_android.start()
+            self.proc_android_controller.start()
+
+            logger.info("Android processes restarted")
+            self.android_queue.put(AndroidMessage(Category.INFO.value, "You are reconnected!"))
+            self.android_queue.put(AndroidMessage(Category.MODE.value, "path"))
+
+            self.android_dropped.clear()
 
     def android_controller(self) -> None:
         """
@@ -151,9 +202,18 @@ class TaskA5(RaspberryPi):
                     self.current_location["y"] = cur_location["y"]
                     self.current_location["d"] = cur_location["d"]
                     logger.info(f"current location = {self.current_location}")
+                    self.android_queue.put(
+                        AndroidMessage(
+                            Category.LOCATION.value,
+                            {
+                                "x": cur_location["x"],
+                                "y": cur_location["y"],
+                                "d": cur_location["d"],
+                            },
+                        )
+                    )
                     logger.debug(f"stm finish {message}")
-                    logger.info("Releasing movement lock.")
-                    self.movement_lock.release()
+                    self.outstanding_stm_instructions.set(self.outstanding_stm_instructions.get()-1)
                 elif message.startswith("r"):
                     logger.debug(f"stm ack {message}")
                 else:
@@ -165,9 +225,46 @@ class TaskA5(RaspberryPi):
         """
         [Child Process] Processes the messages received from Android
         """
-        self.rpi_action_queue.put(PiAction(cat=Category.OBSTACLE, value=""))
-        logger.debug("PiAction obstacles obtained")
+        while True:
+            android_str: Optional[str] = None
+            try:
+                android_str = self.android_link.recv()
+            except OSError:
+                self.android_dropped.set()
+                logger.debug("OSError. Event set: Android dropped")
 
+            if android_str is None:
+                logger.debug("Empty message from andriod")
+                continue
+
+            message: dict = json.loads(android_str)
+
+            ## Command: Set obstacles ##
+            logger.info(f"message obtained is {message['cat']}")
+            if message["cat"] == Category.OBSTACLE.value:
+                self.rpi_action_queue.put(PiAction(cat=Category.OBSTACLE, value=message["value"]))
+                logger.debug(f"PiAction obstacles appended to queue: {message}")
+
+            elif message["cat"] == Category.MANUAL.value:
+                command = manual_commands.get(message["value"])
+                if command is None:
+                    logger.error("Invalid manual command!")
+                self.stm_link.send_cmd(**command)
+                
+            ## Command: Start Moving ##
+            elif message["cat"] == "control":
+                if message["value"] == "start":
+                    # Commencing path following
+                    if not self.command_queue.empty():
+                        self.unpause.set()
+                        
+                        logger.info("Start command received, starting robot on path!")
+                        self.android_queue.put(AndroidMessage(Category.INFO.value, "Starting robot on path!"))
+                    else:
+                        logger.warning("The command queue is empty, please set obstacles.")
+                        self.android_queue.put(AndroidMessage(Category.ERROR.value, "Command queue empty (no obstacles)"))
+
+    # TODO fix the library camera call
     def recognize_image(self, obstacle_id_with_signal: str) -> None:
         """
         RPi snaps an image and calls the API for image-rec.
@@ -177,6 +274,7 @@ class TaskA5(RaspberryPi):
         """
         obstacle_id, signal = obstacle_id_with_signal.split("_")
         logger.info(f"Capturing image for obstacle id: {obstacle_id}")
+        self.android_queue.put(AndroidMessage(Category.INFO.value, f"Capturing image for obstacle id: {obstacle_id}"))
         url = f"{URL}/image"
 
         filename = f"/home/rpi21/cam/{int(time.time())}_{obstacle_id}_{signal}.jpg"
@@ -189,55 +287,18 @@ class TaskA5(RaspberryPi):
             url=url,
             # auto_callibrate=False,
         )
+        self.android_queue.put(AndroidMessage(Category.IMAGE_REC.value, value=results))
+        self.obstacles.value -= 1
         
-        ## Checklist component
-        if results["image_id"] != "NA":
-            self.stop()
-            time.sleep(100)
-        self.movement_lock.release()
-        
+
+    # TODO implement retrying flag
     def request_algo(self, data: dict, retrying=False) -> None:
         """
         Requests for a series of commands and the path from the Algo API.
         The received commands and path are then queued in the respective queues
         """
         logger.debug("Requesting path from algo")
-        
-        self.check_api()
-        
-        # incase android cannot support we will use this
-        data = {
-            "obstacles": [
-                {
-                "x": 10,
-                "y": 10,
-                "d": 0,
-                "id": 0
-                },
-                {
-                "x": 10,
-                "y": 10,
-                "d": 2,
-                "id": 1
-                },
-                {
-                "x": 10,
-                "y": 10,
-                "d": 4,
-                "id": 2
-                },
-                {
-                "x": 10,
-                "y": 10,
-                "d": 6,
-                "id": 3
-                }
-            ],
-            "retrying": False,
-            "robot_dir": 0,
-            "robot_x": 10,
-            "robot_y": 1
-        }
+        self.android_queue.put(AndroidMessage(cat=Category.INFO.value, value="Requesting path from algo..."))
 
         body = {
             **data,
@@ -247,10 +308,11 @@ class TaskA5(RaspberryPi):
             "retrying": retrying,
         }
         logger.debug(f"{body}")
-        response = requests.post(url=f"{URL}/path", json=body, timeout=3.0)
+        response = requests.post(url=f"{URL}/path", json=body, timeout=1.0)
 
         if response.status_code != 200:
             logger.error("Error when requesting path from Algo API.")
+            self.android_queue.put(AndroidMessage(Category.ERROR.value, "Error when requesting path from Algo API."))
             return
 
         result = json.loads(response.content)["data"]
@@ -269,9 +331,14 @@ class TaskA5(RaspberryPi):
             
         for p in path:
             self.path_queue.put(p)
-        
+
+        self.android_queue.put(
+            AndroidMessage(
+                cat=Category.INFO.value,
+                value="Commands and path received Algo API. Robot is ready to move.",
+            )
+        )
         logger.info("Robot is ready to move.")
-        self.unpause.set()
 
     def request_stitch(self) -> None:
         """Sends stitch request to the image recognition API to stitch the different images together
@@ -282,8 +349,10 @@ class TaskA5(RaspberryPi):
 
         # TODO should retry if the response fails
         if response.status_code != 200:
+            self.android_queue.put(AndroidMessage(Category.ERROR.value, "Error when requesting stitch from the API."))
             logger.error("Error when requesting stitch from the API.")
             return
 
+        self.android_queue.put(AndroidMessage(Category.INFO.value, "Images stitched!"))
         logger.info("Images stitched!")
         self.finish_all.set()
