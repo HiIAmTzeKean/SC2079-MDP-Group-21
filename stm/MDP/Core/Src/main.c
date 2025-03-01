@@ -17,7 +17,6 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include <getConversion.h>
 #include "main.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -49,7 +48,7 @@
 #define BRAKE_SPEED 20
 #define TICKS_ES_MAX 10
 #define PI 3.14159265359
-#define DEG_TO_RAD 180/ PI
+#define DEG_TO_RAD 180 / PI
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -171,8 +170,9 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
   */
 int main(void)
 {
-  /* USER CODE BEGIN 1 */
 
+  /* USER CODE BEGIN 1 */
+  uint8_t clear[30] = {0};
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -281,6 +281,8 @@ int main(void)
   OLED_ShowString(0, 0, "Active.");
   OLED_Refresh_Gram();
 
+  char uart_msg[128];  // Buffer for UART message
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -301,6 +303,13 @@ int main(void)
 	motion_sen_read_accel();
 	motion_sen_read_gyroZ();
 	motion_sen_read_irDist();
+
+	write_motion(sensors.accel[2],sensors.gyroZ,sensors.heading);
+
+
+	//sprintf(clear, "L:%.2f, R: %.2f, US: %.2f\0",  sensors.irDist[0],sensors.irDist[1],sensors.usDist);
+	//OLED_ShowString(0, 10, clear);
+	//OLED_Refresh_Gram();
 //	heading = read_mag_angle();
 //	headingRads = heading * DEG_TO_RAD;
 //	x += motor_getDist() * cosf(headingRads);
@@ -358,28 +367,49 @@ int main(void)
 						break;
 
 					case INFO_DIST:
-						shouldTrackDist = !shouldTrackDist;
-						if (shouldTrackDist) {
-							distTrack = 0;	//Set back to Zero
-						} else {
-							//write distance tracked into string.
-							free(cmd->str);
-							cmd->str_size = 9; //D<6.2f>\n\0 = 9 characters
-							cmd->str = malloc(cmd->str_size * sizeof(uint8_t));
-							//sprintf(cmd->str, "D%6.2f\n", distTrack);
-							snprintf(cmd->str, cmd->str_size, "D%6.2f\n", distTrack); //Returning Distance when needed
-							//HAL_UART_Transmit(&huart3, (uint8_t*)hello, strlen(hello), HAL_MAX_DELAY);
-							shouldTrackDist = 0; // Reset to Zero to fix bug
-							distTrack = 0;
-						}
+					    shouldTrackDist = !shouldTrackDist;
+					    if (shouldTrackDist) {
+					        distTrack = 0;
+					    } else {
+					        free(cmd->str);
+					        // Format response according to protocol: "Dxx.xx\n"
+					        cmd->str_size = 8;  // "Dxx.xx\n" + null terminator
+					        cmd->str = malloc(cmd->str_size);
+					        snprintf(cmd->str, cmd->str_size, "D%6.2f\n", distTrack);
 
-						commands_end(&huart3, cmd);
-						cmd = NULL;
-						break;
+					        // Send via standard command completion
+					        shouldTrackDist = 0;
+					        distTrack = 0;
+					    }
+					    commands_end(&huart3, cmd);
+					    cmd = NULL;
+					    break;
 					case INFO_MARKER:
 						commands_end(&huart3, cmd);
 						cmd = NULL;
 						break;
+					case TURN_IN_PLACE: {
+					    // Set motors to turn in place
+					    motor_setDifferential(1, cmd->speed, -1, cmd->speed);
+						angleToSteer = cmd->angleToSteer;
+						servo_setAngle(angleToSteer);
+					    // Reset angle tracking
+					    estAngle = 0;
+					    float target_angle = cmd->val;  // From command
+
+					    // Track angle using gyro
+					    while (fabs(estAngle) < fabs(target_angle)) {
+					        float wGyro = sensors.gyroZ;  // Get angular velocity
+					        estAngle += wGyro * MS_FRAME; // Integrate over time
+					        HAL_Delay(MS_FRAME);
+					    }
+
+					    // Stop after completing turn
+					    motor_setDrive(0, 0);
+					    commands_end(&huart3, cmd);
+					    cmd = NULL;
+					    break;
+					}
 				}
 			}
 		} else {
@@ -623,7 +653,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
   hadc1.Init.Resolution = ADC_RESOLUTION_12B;
   hadc1.Init.ScanConvMode = DISABLE;
-  hadc1.Init.ContinuousConvMode = ENABLE;
+  hadc1.Init.ContinuousConvMode = DISABLE;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
@@ -638,7 +668,7 @@ static void MX_ADC1_Init(void)
 
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
-  sConfig.Channel = ADC_CHANNEL_13;
+  sConfig.Channel = ADC_CHANNEL_11;
   sConfig.Rank = 1;
   sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)

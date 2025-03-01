@@ -12,7 +12,8 @@ enum _cmdOpType {
 
 	//Commands related to relaying information.
 	INFO_DIST,		//toggle start/stop of accumulative distance tracking.
-	INFO_MARKER		//arbitary marker.
+	INFO_MARKER,		//arbitary marker.
+	TURN_IN_PLACE  // New drive mode
 };
 enum _cmdDistType {
 	TARGET,			//drive for this distance

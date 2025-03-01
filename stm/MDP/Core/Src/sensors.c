@@ -3,7 +3,7 @@
 static const uint8_t GYRO_SENS = GYRO_FULL_SCALE_250DPS;
 static const uint8_t ACCEL_SENS = ACCEL_FULL_SCALE_2G;
 static const float a_irDist = 0.95;
-static const float a_usDist = 0.58;
+static const float a_usDist = 0.1;
 static const float a_accel = 0.8;
 static const float a_mag = 0.9;
 static float magOld[2];
@@ -49,8 +49,40 @@ void motion_sen_init(I2C_HandleTypeDef *i2c_ptr, ADC_HandleTypeDef *adc_L_ptr, A
 	float mag_angle = read_mag_angle();
 	sens_ptr->heading_bias = mag_angle;
 	angle_init(mag_angle);
+
+
+
+
+
+
+
+
+
+
+
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;  // Enable DWT
+    DWT->CYCCNT = 0;  // Reset cycle counter
+    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;  // Enable cycle counter
+
 }
 
+void dwt_delay_us(uint32_t us) {
+    uint32_t start = DWT->CYCCNT;
+    uint32_t ticks = (SystemCoreClock / 1000000) * us;  // Convert microseconds to CPU cycles
+    while ((DWT->CYCCNT - start) < ticks);
+}
+
+
+void motion_sen_us_trig() {
+    US_TRIG_CLR();  // Ensure trigger is LOW
+    //dwt_delay_us(2);  // Short delay for stability (optional)
+
+    US_TRIG_SET();  // Set trigger HIGH
+    dwt_delay_us(10);  // 10µs pulse width
+    US_TRIG_CLR();  // Set trigger LOW
+}
+
+/*
 void motion_sen_us_trig() {
 	US_TRIG_CLR();
 	delay_us_wait(5);
@@ -59,7 +91,7 @@ void motion_sen_us_trig() {
 	US_TRIG_SET();
 	delay_us_wait(10);
 	US_TRIG_CLR();
-}
+}*/
 
 void sensors_read_usDist(float pulse_s) {
 	float new_dist = pulse_s * 34300 / 2;

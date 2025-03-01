@@ -26,8 +26,10 @@ typedef struct {
 
 #define US_MIN_DELAY 20.0f //minimum delay
 #define US_IC_CHANNEL TIM_CHANNEL_1
-#define US_TRIG_SET() HAL_GPIO_WritePin(US_TRIG_GPIO_Port,US_TRIG_Pin,GPIO_PIN_SET)
-#define US_TRIG_CLR() HAL_GPIO_WritePin(US_TRIG_GPIO_Port,US_TRIG_Pin,GPIO_PIN_RESET)
+//#define US_TRIG_SET() HAL_GPIO_WritePin(US_TRIG_GPIO_Port,US_TRIG_Pin,GPIO_PIN_SET)
+//#define US_TRIG_CLR() HAL_GPIO_WritePin(US_TRIG_GPIO_Port,US_TRIG_Pin,GPIO_PIN_RESET)
+#define US_TRIG_SET()  (US_TRIG_GPIO_Port->BSRR = US_TRIG_Pin)        // Set HIGH
+#define US_TRIG_CLR()  (US_TRIG_GPIO_Port->BSRR = (US_TRIG_Pin << 16)) // Set LOW
 
 void motion_sen_init(I2C_HandleTypeDef *hi2c1_ptr, ADC_HandleTypeDef *adc_L_ptr, ADC_HandleTypeDef *adc_R_ptr, TIM_HandleTypeDef *ic_ptr, Sensors *sensors_ptr);
 void motion_sen_read_irDist();

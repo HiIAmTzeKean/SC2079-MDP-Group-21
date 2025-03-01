@@ -29,6 +29,7 @@ static void commands_ack(UART_HandleTypeDef *uart, Command *cmd, uint8_t indicat
 }
 
 void commands_process(UART_HandleTypeDef *uart, uint8_t *buf, uint8_t size) {
+	//HAL_UART_Transmit(uart, (uint8_t *)"CMD Received!\n", 14, HAL_MAX_DELAY);
 	Command *next = get_new_cmd();
 
 	uint8_t c = *buf, *temp = buf;
@@ -81,6 +82,15 @@ void commands_process(UART_HandleTypeDef *uart, uint8_t *buf, uint8_t size) {
 			next->dir = -1;
 			next->distType = STOP_R;
 			break;
+		case CMD_TURN_IN_PLACE:
+		    next->opType = TURN_IN_PLACE;
+		    temp++;
+		    next->speed = parse_uint16_t_until(&temp, CMD_SEP, 3);  // Turn speed
+		    temp++;
+		    next->angleToSteer = parse_float_until(&temp, CMD_SEP, 6);
+		    temp++;
+		    next->val = parse_float_until(&temp, CMD_END, 6);       // Target angle (degrees)
+		    break;
 		default:
 			//invalid command, return.
 			return;
@@ -115,7 +125,7 @@ void commands_process(UART_HandleTypeDef *uart, uint8_t *buf, uint8_t size) {
 	}
 
 //	//acknowledge command has been received and queued.
-//	commands_ack(uart, next, CMD_RCV);
+	commands_ack(uart, next, CMD_RCV);
 }
 
 

@@ -43,6 +43,7 @@
  * */
 
 #define CMD_FULL_STOP 'S'				//bring car to a complete stop. (all other fields are not required, i.e., send 'S\n')
+#define CMD_TURN_IN_PLACE 'P'  // Pivot turn command
 
 #define CMD_FORWARD_DIST_TARGET 'T'		//go forward for a target distance/angle.
 #define CMD_FORWARD_DIST_AWAY 'W'		//go forward until within a certain distance.

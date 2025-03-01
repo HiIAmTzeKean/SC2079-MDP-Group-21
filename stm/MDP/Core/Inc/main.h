@@ -63,10 +63,10 @@ void Error_Handler(void);
 #define OLED_SCLK_GPIO_Port GPIOE
 #define OLED_SDIN_Pin GPIO_PIN_6
 #define OLED_SDIN_GPIO_Port GPIOE
+#define IR_L_V0_Pin GPIO_PIN_1
+#define IR_L_V0_GPIO_Port GPIOC
 #define IR_R_V0_Pin GPIO_PIN_2
 #define IR_R_V0_GPIO_Port GPIOC
-#define IR_L_V0_Pin GPIO_PIN_3
-#define IR_L_V0_GPIO_Port GPIOC
 #define MOTORA_IN2_Pin GPIO_PIN_2
 #define MOTORA_IN2_GPIO_Port GPIOA
 #define MOTORA_IN1_Pin GPIO_PIN_3
@@ -87,6 +87,8 @@ void Error_Handler(void);
 #define SERVO_PWM_GPIO_Port GPIOE
 #define BTN_USER_Pin GPIO_PIN_8
 #define BTN_USER_GPIO_Port GPIOD
+#define TIM4_CH1_US_ECHO_Pin GPIO_PIN_12
+#define TIM4_CH1_US_ECHO_GPIO_Port GPIOD
 #define MOTORA_PWM_Pin GPIO_PIN_6
 #define MOTORA_PWM_GPIO_Port GPIOC
 #define MOTORB_PWM_Pin GPIO_PIN_7

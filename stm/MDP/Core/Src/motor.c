@@ -222,3 +222,18 @@ void motor_setDrive(int8_t dir, uint8_t speed) {
 	setDriveDir(dir);
 	setPwmLR();
 }
+
+void motor_setDifferential(int8_t left_dir, uint8_t left_speed, int8_t right_dir, uint8_t right_speed) {
+    // Stop motors first
+    motor_setDrive(0, 0);
+
+    // Set left motor direction and speed
+    HAL_GPIO_WritePin(MOTORA_IN1_GPIO_Port, MOTORA_IN1_Pin, (left_dir > 0) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(MOTORA_IN2_GPIO_Port, MOTORA_IN2_Pin, (left_dir > 0) ? GPIO_PIN_RESET : GPIO_PIN_SET);
+    __HAL_TIM_SetCompare(motor_pwm_tim, L_CHANNEL, getSpeedPwm(left_speed));
+
+    // Set right motor direction and speed
+    HAL_GPIO_WritePin(MOTORB_IN1_GPIO_Port, MOTORB_IN1_Pin, (right_dir > 0) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(MOTORB_IN2_GPIO_Port, MOTORB_IN2_Pin, (right_dir > 0) ? GPIO_PIN_RESET : GPIO_PIN_SET);
+    __HAL_TIM_SetCompare(motor_pwm_tim, R_CHANNEL, getSpeedPwm(right_speed));
+}
