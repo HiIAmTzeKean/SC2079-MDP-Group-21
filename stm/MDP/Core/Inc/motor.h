@@ -31,5 +31,6 @@ void motor_setDrive(int8_t dir, uint8_t speed);
 void setManualPwmLR(int value);
 
 void motor_setDifferential(int8_t left_dir, uint8_t left_speed, int8_t right_dir, uint8_t right_speed);
+void motor_freewheel(int8_t side);
 
 #endif /* INC_MOTOR_H_ */

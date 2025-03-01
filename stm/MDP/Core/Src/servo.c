@@ -4,9 +4,9 @@ static TIM_HandleTypeDef *pwm_tim;
 
 #define SERVO_LOOKUP_SIZE 38
 static float anglePWMTable[38][2] = {
-	{-35, 3200},
-	{-32, 3300},
-	{-29, 3400},
+	{-36, 3400},
+	{-32, 3410},
+	{-29, 3420},
 	{-26, 3500},
 	{-24, 3600},
 	{-22, 3750},
@@ -43,7 +43,8 @@ static float anglePWMTable[38][2] = {
 	//{25, 7000}, //Tryna see if same angle
 	{25.5, 6700},
 	//{25.5, 7050},
-	{26, 6800}
+	//original{26, 6800}
+	{36, 7350}
 	//{26, 7100}
 };
 

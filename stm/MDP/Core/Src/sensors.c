@@ -125,7 +125,10 @@ void motion_sen_read_irDist() {
 void motion_sen_read_gyroZ() {
 	float val;
 	ICM20948_readGyroscope_Z(hi2c_ptr, ICM_I2C_ADDR, GYRO_SENS, &val);
+
+
 	sensors_ptr->gyroZ = (val - sensors_ptr->gyroZ_bias) / 1000; //convert to ms
+	//sensors_ptr->gyroZ = val;
 }
 
 

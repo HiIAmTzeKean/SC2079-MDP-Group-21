@@ -270,6 +270,7 @@ int main(void)
   float wDiff = 0, wTarget = 0;					//current angular velocity difference and target.
   float rBack = 0, rRobot = 0;					//turning radii at the back and centre of robot.
 
+  uint32_t lastOLEDUpdate = 0;
   /* ----- End: OS Parameters ----- */
 
   /* ----- Start: Interrupts ----- */
@@ -282,6 +283,13 @@ int main(void)
   OLED_Refresh_Gram();
 
   char uart_msg[128];  // Buffer for UART message
+  float gyro_bearing = 0;
+  float gyroZ = 0;
+  float last_time = 0;
+  float GYRO_HPF_FREQ = 0.16;
+
+  float gyro_drift_dps = 0;
+
 
   /* USER CODE END 2 */
 
@@ -303,13 +311,22 @@ int main(void)
 	motion_sen_read_accel();
 	motion_sen_read_gyroZ();
 	motion_sen_read_irDist();
+/*
+	//band reject between HPF_FREQ +- 0.005;
+	gyroZ = sensors.gyroZ;
+	if(!((gyroZ * MS_FRAME < GYRO_HPF_FREQ + 0.05) && (gyroZ * MS_FRAME > GYRO_HPF_FREQ - 0.05)))
+	{
+		gyro_bearing += gyroZ * MS_FRAME;
+	}
 
-	write_motion(sensors.accel[2],sensors.gyroZ,sensors.heading);
-
-
-	//sprintf(clear, "L:%.2f, R: %.2f, US: %.2f\0",  sensors.irDist[0],sensors.irDist[1],sensors.usDist);
-	//OLED_ShowString(0, 10, clear);
-	//OLED_Refresh_Gram();
+	//write_motion(sensors.accel[3],sensors.heading,sensors.gyroZ);
+	if (HAL_GetTick() - lastOLEDUpdate >= 1000) { // Update every 100ms
+	    lastOLEDUpdate = HAL_GetTick();
+	    sprintf(clear, "%f\0", gyro_bearing);
+	    OLED_ShowString(0, 10, clear);
+	    OLED_Refresh_Gram();
+	}
+*/
 //	heading = read_mag_angle();
 //	headingRads = heading * DEG_TO_RAD;
 //	x += motor_getDist() * cosf(headingRads);
@@ -360,6 +377,12 @@ int main(void)
 								rRobot = 0;
 								wTarget = 0;
 							}
+
+
+							//if (angleToSteer == 35) motor_freewheel(1);  // Freewheel right motor
+							//else if (angleToSteer == -35) motor_freewheel(-1);  // Freewheel left motor
+							//else motor_setDrive(cmd->dir, cmd->speed);
+
 						} else {
 							commands_end(&huart3, cmd);
 							cmd = NULL;
@@ -444,6 +467,8 @@ int main(void)
 		wDiff = (wGyro - wTarget); //gyro is flipped when going backwards.
 
 		float angleDiff = wGyro * MS_FRAME;
+		//if(!((angleDiff < GYRO_HPF_FREQ + 0.03) && (angleDiff > GYRO_HPF_FREQ - 0.03)));
+		//else angleDiff = 0;
 		if (cmd->angleToSteer < 0) angleDiff = -angleDiff;
 		estAngle += angleDiff;
 
@@ -500,10 +525,7 @@ int main(void)
 		next = commands_peek_next_drive();
 		float queueAngle = next != NULL ? next->angleToSteer : 0;
 		float queueAngleDiff = abs_float(queueAngle - cmd->angleToSteer);
-		uint8_t shouldBrake = cmd->distType == STOP_AWAY
-				? 1
-				: next != NULL
-				? next->dir != cmd->dir
+		uint8_t shouldBrake = cmd->distType == STOP_AWAY ? 1 : next != NULL ? next->dir != cmd->dir
 					|| queueAngleDiff > SERVO_WIDTH			//too large a turn.
 					|| queueAngle * cmd->angleToSteer < 0	//opposite direction.
 				: 1;
@@ -515,6 +537,8 @@ int main(void)
 			brakingDist, cmd->distType,
 			shouldBrake ? 0 : turnSpeed
 		);
+		//if (cmd->angleToSteer == 35) motor_freewheel(1);  // Freewheel right motor
+		//else if (cmd->angleToSteer == -35) motor_freewheel(-1);  // Freewheel left motor
 
 		float timeLeft = estSpeed > 0 ? distDiff / estSpeed : 1e10;
 
@@ -544,7 +568,7 @@ int main(void)
 		ticksES = shouldTick ? ticksES + 1 : 0;
 
 		shouldEnd |= ticksES >= TICKS_ES_MAX	//minimum error threshold ticks met.
-					|| distDiff < -0.5; 		//prevent overshoot.
+					|| distDiff < 0.9; 		//prevent overshoot.
 
 		if (shouldEnd) {
 			//target achieved; move to next command.

@@ -30,6 +30,7 @@ const static float Kp_distAway = 1.55;
 const static float Ki_distAway = 7e-5;
 const static float Kd_distAway = 0.25;
 
+
 void motor_init(TIM_HandleTypeDef *pwm, TIM_HandleTypeDef *l_enc, TIM_HandleTypeDef *r_enc) {
 	//assign timer pointers.
 	motor_pwm_tim = pwm;
@@ -168,6 +169,8 @@ void motor_pwmCorrection(float wDiff, float rBack, float distDiff, float braking
 	}
 
 	float lScale = 1, rScale = 1;
+
+
 	if (rBack != 0) {
 		float B2 = WHEELBASE_CM_BACK / 2;
 		if (rBack < 0) {
@@ -236,4 +239,17 @@ void motor_setDifferential(int8_t left_dir, uint8_t left_speed, int8_t right_dir
     HAL_GPIO_WritePin(MOTORB_IN1_GPIO_Port, MOTORB_IN1_Pin, (right_dir > 0) ? GPIO_PIN_SET : GPIO_PIN_RESET);
     HAL_GPIO_WritePin(MOTORB_IN2_GPIO_Port, MOTORB_IN2_Pin, (right_dir > 0) ? GPIO_PIN_RESET : GPIO_PIN_SET);
     __HAL_TIM_SetCompare(motor_pwm_tim, R_CHANNEL, getSpeedPwm(right_speed));
+}
+
+
+void motor_freewheel(int8_t side) {
+    if (side == 1) {  // Right motor freewheels
+        HAL_GPIO_WritePin(MOTORB_IN1_GPIO_Port, MOTORB_IN1_Pin, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(MOTORB_IN2_GPIO_Port, MOTORB_IN2_Pin, GPIO_PIN_RESET);
+        __HAL_TIM_SetCompare(motor_pwm_tim, R_CHANNEL, 0);
+    } else if (side == -1) {  // Left motor freewheels
+        HAL_GPIO_WritePin(MOTORA_IN1_GPIO_Port, MOTORA_IN1_Pin, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(MOTORA_IN2_GPIO_Port, MOTORA_IN2_Pin, GPIO_PIN_RESET);
+        __HAL_TIM_SetCompare(motor_pwm_tim, L_CHANNEL, 0);
+    }
 }
