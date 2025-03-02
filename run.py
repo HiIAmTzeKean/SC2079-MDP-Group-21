@@ -1,2 +1,6 @@
 # change the import to the code you want to run
-import rpi.test.test_checklist_a1
+from rpi.task1 import TaskOne
+
+if __name__ == "__main__":
+    bot = TaskOne()
+    bot.start()

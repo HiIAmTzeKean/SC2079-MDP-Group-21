@@ -1,13 +1,15 @@
 import logging
+import multiprocessing as mp
 from abc import ABC, abstractmethod
 from multiprocessing import Manager, Process
 from queue import Queue
 
 import requests
-from communication.android import AndroidLink, AndroidMessage
-from communication.pi_action import PiAction
-from communication.stm32 import STMLink
-from constant.settings import API_IP, API_PORT
+
+from .communication.android import AndroidLink, AndroidMessage
+from .communication.pi_action import PiAction
+from .communication.stm32 import STMLink
+from .constant.settings import API_IP, API_PORT
 
 
 logger = logging.getLogger(__name__)
@@ -27,6 +29,8 @@ class RaspberryPi(ABC):
         """Event to indicate that the connection with Android has been dropped"""
         self.unpause = self.manager.Event()
         """Event to indicate that the robot has been unpaused"""
+        self.finish_all = self.manager.Event()
+        """Event to indicate that all processes should finish"""
 
         self.movement_lock = self.manager.Lock()
         """locks the movement"""
@@ -50,9 +54,10 @@ class RaspberryPi(ABC):
         self.proc_rpi_action: Process
         """proc action"""
 
-        self.success_obstacles = self.manager.list()
-        self.failed_obstacles = self.manager.list()
-        self.obstacles = self.manager.dict()
+        self.outstanding_stm_instructions = self.manager.Value("i", 0)
+        """Number of outstanding instructions for STM32"""
+        self.obstacles = self.manager.Value("i", 0)
+        """Number of obstacles left to detect by the robot"""
 
         self.current_location = self.manager.dict()
 
@@ -67,8 +72,18 @@ class RaspberryPi(ABC):
         self.android_link.disconnect()
         self.stm_link.disconnect()
         self.clear_queues()
+        self.clear_proccess()
         logger.info("Program exited!")
 
+    def clear_proccess(self) -> None:
+        # get all self attributes that start with 'proc_'
+        processes = [getattr(self, attr) for attr in dir(self) if attr.startswith("proc_")]
+        for process in processes:
+            try:
+                process.kill()
+            except Exception as e:
+                logger.error(f"Error killing process: {e}")
+    
     def clear_queues(self) -> None:
         """Clear both command and path queues"""
         while not self.command_queue.empty():

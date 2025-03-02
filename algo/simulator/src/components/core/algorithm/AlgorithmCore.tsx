@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { NavigationGrid } from "./NavigationGrid";
 import { CoreContainter } from "../CoreContainter";
-import { Position } from "../../../schemas/entity";
+import { Direction, Position } from "../../../schemas/entity";
 import {
 	GRID_ANIMATION_SPEED,
+	GRID_TOTAL_WIDTH,
 	ROBOT_INITIAL_POSITION,
 } from "../../../constants";
 import {
@@ -36,6 +37,34 @@ export const AlgorithmCore = () => {
 	const totalSteps = robotPositions?.length ?? 0;
 	const [robotCommands, setRobotCommands] = useState<string[]>();
 	const [robotMotions, setRobotMotions] = useState<string[]>();
+
+	// Robot Starting Position	
+	const [robotStartPosition, setRobotStartPosition] = useState<Position>(ROBOT_INITIAL_POSITION);
+	const [robotStartX, setRobotStartX] = useState<number>(ROBOT_INITIAL_POSITION.x);
+	const [robotStartY, setRobotStartY] = useState<number>(ROBOT_INITIAL_POSITION.y);
+	const [robotStartDirection, setRobotStartDirection] = useState<Direction>(ROBOT_INITIAL_POSITION.d);
+
+	const validateRobotPosition = (input: string) => {
+		const number = Math.round(Number(input));
+		if (number > GRID_TOTAL_WIDTH - 1) {
+			return GRID_TOTAL_WIDTH - 1;
+		} else if (number < 0) {
+			return 0;
+		} else {
+			return number;
+		}
+	}
+
+	useEffect(() => {
+		const newPosition: Position = {
+			x: robotStartX,
+			y: robotStartY,
+			d: robotStartDirection,
+			s: null
+		}
+		setRobotStartPosition(newPosition);
+		setCurrentRobotPosition(newPosition);
+	}, [robotStartX, robotStartY, robotStartDirection]);
 
 	// Algorithm Runtime & Cost
 	const [algoRuntime, setAlgoRuntime] = useState<number | null>();
@@ -79,9 +108,9 @@ export const AlgorithmCore = () => {
 				};
 			}),
 			retrying: isRetrying,
-			robot_dir: ROBOT_INITIAL_POSITION.d,
-			robot_x: ROBOT_INITIAL_POSITION.x,
-			robot_y: ROBOT_INITIAL_POSITION.y,
+			robot_dir: robotStartPosition.d,
+			robot_x: robotStartPosition.x,
+			robot_y: robotStartPosition.y,
 			num_runs: numberOfAlgoRuns,
 		};
 		try {
@@ -147,7 +176,7 @@ export const AlgorithmCore = () => {
 
 	const resetNavigationGrid = () => {
 		setCurrentStep(-1);
-		setCurrentRobotPosition(ROBOT_INITIAL_POSITION);
+		setCurrentRobotPosition(robotStartPosition);
 		setRobotPositions(undefined);
 		setRobotCommands(undefined);
 		setRobotMotions(undefined);
@@ -183,25 +212,27 @@ export const AlgorithmCore = () => {
 	useEffect(() => {
 		if (!robotCommands || !robotMotions) return;
 
+		let mergedCommands: string[] = [];
+		let currentGroup: string[] = [];
 		// merge commands for the same motion
-		let mergedCommands = [];
-		for (let i = 0; i < robotCommands.length; i++) {
-			let currentCommand = robotCommands[i];
-
-			if (currentCommand.startsWith("M0|0|0")) {
-				let merged = [currentCommand]; // Collect parts of the merged command
-
-				// Check if the next commands are "SNAP" or "FIN"
-				while (i + 1 < robotCommands.length &&
-					(robotCommands[i + 1].startsWith("SNAP") || robotCommands[i + 1] === "FIN")) {
-					merged.push(robotCommands[++i]); // Add and move to the next
-				}
-
-				mergedCommands.push(merged.join(" ")); // Merge and store
+		robotCommands.forEach((command) => {
+			if (command.startsWith('W') || command.startsWith('w') || command.startsWith('SNAP') || command === 'FIN') {
+				// If it starts with W, w, SNAP or is FIN, group it
+				currentGroup.push(command);
 			} else {
-				mergedCommands.push(currentCommand);
+				// If there is an ongoing group, merge it and push to the final result
+				if (currentGroup.length > 0) {
+					mergedCommands.push(currentGroup.join(' '));
+					currentGroup = [];  // Reset the group
+				}
+				mergedCommands.push(command);  // Add the non-group command
 			}
+		});
+		// If there's any remaining group, add it to the result
+		if (currentGroup.length > 0) {
+			mergedCommands.push(currentGroup.join(' '));
 		}
+		console.log(mergedCommands);
 
 
 		// TODO: refactor to switch statement for ALL possible motions for easy change when there are extra commands for a motion after tuning
@@ -281,6 +312,52 @@ export const AlgorithmCore = () => {
 				selectedTest={selectedTest}
 				setSelectedTest={setSelectedTest}
 			/>
+
+			<div className="flex gap-8 mb-4 items-center">
+				<span className="font-bold">Robot Start Position</span>
+				<div>
+					<label className="font-bold">X: </label>
+					<input
+						type="number"
+						min={1}
+						max={18}
+						value={robotStartX}
+						onChange={(e) => {
+							setRobotStartX(validateRobotPosition(e.target.value))
+						}}
+						step={1}
+						className="rounded-lg"
+					/>
+				</div>
+				<div>
+					<label className="font-bold">Y: </label>
+					<input
+						type="number"
+						min={1}
+						max={18}
+						value={robotStartY}
+						onChange={(e) => {
+							setRobotStartY(validateRobotPosition(e.target.value))
+						}}
+						step={1}
+						className="rounded-lg"
+					/>
+				</div>
+				<div>
+					<label className="font-bold">D: </label>
+					<select
+						value={robotStartDirection}
+						onChange={(e) => {
+							setRobotStartDirection(Number(e.target.value) as Direction)
+						}}
+					>
+						<option value={Direction.NORTH}>NORTH</option>
+						<option value={Direction.EAST}>EAST</option>
+						<option value={Direction.SOUTH}>SOUTH</option>
+						<option value={Direction.WEST}>WEST</option>
+					</select>
+				</div>
+			</div>
 
 			{/* TODO: Algo input parameters Retrying*/}
 			<div className="flex gap-8 items-center justify-center mb-4">
@@ -423,7 +500,7 @@ export const AlgorithmCore = () => {
 
 			{/* Navigation Grid */}
 			<NavigationGrid
-				robotPosition={currentRobotPosition ?? ROBOT_INITIAL_POSITION}
+				robotPosition={currentRobotPosition ?? robotStartPosition}
 				robotPath={robotPositions?.slice(0, currentStep + 1)}
 				obstacles={selectedTest.obstacles}
 				canAddObstacle={selectedTestEnum === AlgoTestEnum.Custom}

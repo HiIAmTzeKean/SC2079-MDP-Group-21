@@ -50,72 +50,88 @@ id_map = {
     "dot": 40
 }
 
+# id_map = {
+#     "10": 10, # Bullseye 
+#     "11": 11, # 1 
+#     "12": 12, # 2
+#     "13": 13, # 3 
+#     "14": 14, # 4
+#     "15": 15, # 5
+#     "16": 16, # 6 
+#     "17": 17, # 7 
+#     "18": 18, # 8
+#     "19": 19, # 9
+#     "20": 20, # a 
+#     "21": 21, # b
+#     "22": 22, # c
+#     "23": 23, # d 
+#     "24": 24, # e
+#     "25": 25, # f
+#     "26": 26, # g
+#     "27": 27, # h
+#     "28": 28, # s
+#     "29": 29, # t 
+#     "30": 30, # u
+#     "31": 31, # v
+#     "32": 32, # w
+#     "33": 33, # x 
+#     "34": 34, # y
+#     "35": 35, # z 
+#     "36": 36, # Up Arrow  
+#     "37": 37, # Down Arrow
+#     "38": 38, # Right Arrow 
+#     "39": 39, # Left Arrow 
+#     "40": 40  # target 
+# }
 
 def load_model():
     model = YOLO(MODEL_CONFIG["path"])
     model.to(device)
     return model
 
-
 def get_random_string(length):
     result = ''.join(random.choice(string.ascii_letters) for i in range(length))
     return result
 
 # Filter and select the best bounding box based on selection mode
-def find_largest_or_central_bbox(bboxes, selection_mode='largest', confidence_adjustment=False):
+def find_largest_or_central_bbox(bboxes, signal):
     if not bboxes:
         return "NA", 0.0
 
-    valid_bboxes = []
-
-    # Filter bboxes based on confidence threshold
-    for bbox in bboxes:
-        if bbox["confidence"] > 0.3:  # Confidence threshold
-            valid_bboxes.append(bbox)
+    # Exclude 'end' class
+    valid_bboxes = [bbox for bbox in bboxes if bbox["label"] != "end" and bbox["confidence"] > 0.3]
 
     if not valid_bboxes:
         return "NA", 0.0
 
-    # Sort valid bboxes by area (largest first)
-    valid_bboxes.sort(key=lambda x: x["bbox_area"], reverse=True)
+    # Find the largest bounding box area
+    max_area = max(bbox["bbox_area"] for bbox in valid_bboxes)
+    largest_bboxes = [bbox for bbox in valid_bboxes if bbox["bbox_area"] == max_area]
 
-    if selection_mode == 'largest':
-        # Return the largest bbox
-        return valid_bboxes[0]["label"], valid_bboxes[0]["bbox_area"]
+    # If there is only one largest bounding box, return it
+    if len(largest_bboxes) == 1:
+        return largest_bboxes[0]["label"], largest_bboxes[0]["bbox_area"]
 
-    elif selection_mode == 'C':  # Central mode
-        # Filter bboxes within a central area (adjust as needed)
-        central_bboxes = []
-        current_area = valid_bboxes[0]["bbox_area"]
-        for bbox in valid_bboxes:
-            if (current_area * 0.7 <= bbox["bbox_area"]) or (bbox["label"] == "One" and current_area * 0.5 <= bbox["bbox_area"]):
-                central_bboxes.append(bbox)
-                current_area = bbox["bbox_area"]
-
-        if not central_bboxes:
-            return "NA", 0.0
-
-        # Choose the most central bbox
-        center_x = 320  # Adjust based on your image width
-        central_bbox = min(central_bboxes, key=lambda x: abs(x["xywh"][0] - center_x))
-        return central_bbox["label"], central_bbox["bbox_area"]
-
-    elif selection_mode in ['L', 'R']:  # Left or Right mode
-        # Sort bboxes by x-coordinate (leftmost or rightmost)
-        valid_bboxes.sort(key=lambda x: x["xywh"][0])
-
-        if selection_mode == 'L':
-            return valid_bboxes[0]["label"], valid_bboxes[0]["bbox_area"]
-        else:
-            return valid_bboxes[-1]["label"], valid_bboxes[-1]["bbox_area"]
-
+    # Tie-breaking logic using signal
+    if signal == 'L':  
+        # Pick the rightmost object (higher x-coordinate)
+        chosen_bbox = max(largest_bboxes, key=lambda x: x["xywh"][0])
+    elif signal == 'R':  
+        # Pick the leftmost object (lower x-coordinate)
+        chosen_bbox = min(largest_bboxes, key=lambda x: x["xywh"][0])
     else:
-        # Default to largest bbox
-        return valid_bboxes[0]["label"], valid_bboxes[0]["bbox_area"]
+        # Default: Pick the first bbox in the list
+        chosen_bbox = largest_bboxes[0]
+
+    return chosen_bbox["label"], chosen_bbox["bbox_area"]
     
+# Heuristics 
+# 1. Ignore the bullseyes 
+# 2. Filter by bounding box size ( take the symbol with the largest bounding box size)
+# 3. Filter by Signal from algorithm, If car is on the left singal is Left. If car is on the right, signal on the right. (used to break a tie)
 
 # Predict and Annotate image .
-def predict_image(model, image_path, output_dir, selection_mode='largest'):
+def predict_image(model, image_path, output_dir, signal):
     """Predict and annotate image."""
     formatted_time = datetime.now().strftime('%d-%m_%H-%M-%S.%f')[:-3]
     img_name = f"processed_{formatted_time}.jpg"
@@ -135,8 +151,7 @@ def predict_image(model, image_path, output_dir, selection_mode='largest'):
 
     os.makedirs(output_dir, exist_ok=True)
     labeled_img_path.rename(output_file_path)
-
-    # Extract bounding boxes
+# Extract bounding boxes
     bboxes = []
     if results[0].boxes:  # If there are any detected objects
         for result in results:
@@ -151,7 +166,7 @@ def predict_image(model, image_path, output_dir, selection_mode='largest'):
         # No Objects Deteced Null Check, set confidence to 0
         bboxes.append({"label": "NA", "xywh": [0, 0, 0, 0], "bbox_area": 0.0, "confidence": 0.0})
 
-    selected_label, selected_area = find_largest_or_central_bbox(bboxes, selection_mode)
+    selected_label, selected_area = find_largest_or_central_bbox(bboxes,signal)
     
     image_id = id_map.get(selected_label, "NA")
 
@@ -162,52 +177,75 @@ def predict_image(model, image_path, output_dir, selection_mode='largest'):
 
     return image_id
 
-# WIP For Task 2 ( Left and Right )
-# def predict_image_t2(image, model):
-#     img = Image.open(os.path.join('uploads', image))
-#     results = model(img)
-#     results.save('runs')
-#     df = results.pandas().xyxy[0]
-   
-#     df['boxHeight'] = df['ymax'] - df['ymin']
-#     df['bboxWt'] = df['xmax'] - df['xmin']
-#     df['boxArea'] = df['boxHeight'] * df['boxWidth']
+## Task 2
+def predict_image_t2(model, image_path, output_dir, signal):
+    """Predict and annotate image, identifying only 'left' or 'right'.
+       Defaults to 'left' (39) if no valid detection is found.
+    """
+    formatted_time = datetime.now().strftime('%d-%m_%H-%M-%S.%f')[:-3]
+    img_name = f"processed_{formatted_time}.jpg"
 
-#     df = df.sort_values('boxArea', ascending=False)
-#     pred_list = df 
-#     pred = 'NA'
-#     if pred_list.size != 0:
-#         for _, row in pred_list.iterrows():
-#             if row['name'] != 'Bullseye' and row['confidence'] > 0.3:
-#                 pred = row    
-#                 break
+    id_map = {
+        "end": 10,
+        "right": 38,
+        "left": 39,
+    }
 
-#         if not isinstance(pred,str):
-#             draw_box(np.array(img), pred['xmin'], pred['ymin'], pred['xmax'], pred['ymax'], pred['name'])
-        
-#     id_map = {
-#         "NA": 'NA',
-#         "Bullseye": 10,
-#         "Right": 38,
-#         "Left": 39,
-#         "Right-Arrow": 38,
-#         "Left-Arrow": 39,
-#     }
-#     if not isinstance(pred,str):
-#         image_id = str(id_map[pred['name']])
-#         print(f"Final result: {image_id}")
-#     else:
-#         ## fail case is go left
-#         image_id = '39'
-#     return image_id
+    # Perform inference
+    results = model.predict(
+        source=image_path,
+        save=True,
+        conf=MODEL_CONFIG["conf"],
+        imgsz=640,
+        device=device
+    )
+
+    # Save YOLO-labeled image
+    labeled_img_path = Path(results[0].save_dir) / image_path.name
+    output_file_path = output_dir / img_name
+
+    os.makedirs(output_dir, exist_ok=True)
+    if labeled_img_path.exists():
+        labeled_img_path.rename(output_file_path)
+    else:
+        print(f"Warning: Labeled image not found at {labeled_img_path}")
+
+    # Extract bounding boxes
+    bboxes = []
+    if results[0].boxes:  # If there are any detected objects
+        for result in results:
+            for box in result.boxes:
+                cls_index = int(box.cls.tolist()[0])
+                label = result.names[cls_index]
+                xywh = box.xywh.tolist()[0]
+                bbox_area = xywh[2] * xywh[3]
+                confidence = box.conf.tolist()[0]
+
+                # Only consider 'left' and 'right' with confidence > 0.3
+                if label in ["left", "right"] and confidence > 0.3:
+                    bboxes.append({"label": label, "xywh": xywh, "bbox_area": bbox_area, "confidence": confidence})
+
+    # Select the largest bounding box
+    selected_label, selected_area = find_largest_or_central_bbox(bboxes, signal)
+
+    # If no valid detection or class is 'end', default to "left" (39)
+    if selected_label == "end" or selected_label == "NA":
+        image_id = 39
+    else:
+        image_id = id_map.get(selected_label, 39)  # Default to left if key is missing
+
+    print(f"Image '{image_path.name}': Detected '{selected_label}' with bbox area {selected_area:.2f} (ID: {image_id})")
+
+    return image_id
 
 def stitch_image():
     image_folder = "../api/image_rec_files/output"  
     output_name = "concatenated.jpg"
 
     try:
+        # Get all image files
         image_files = [f for f in os.listdir(image_folder) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
-        if not image_files:  # Handle the case where no images are found
+        if not image_files:  
             print(f"No image files found in '{image_folder}'.")
             return
 
@@ -218,30 +256,33 @@ def stitch_image():
                 img = Image.open(img_path)
                 images.append(img)
             except Exception as e:
-                print(f"Error opening image {file}: {e}")
-                return # Exit early if an image can't be opened
+                print(f"Skipping image {file} due to error: {e}")
+                continue  # Skip faulty images instead of returning
 
         if not images:  # Check if any images were successfully loaded
-            print("No images could be loaded.")
+            print("No valid images to stitch.")
             return
 
+        # Get total width and max height
         widths, heights = zip(*(i.size for i in images))
-
         total_width = sum(widths)
         max_height = max(heights)
 
-        new_img = Image.new('RGB', (total_width, max_height))  # RGB for JPG compatibility
+        # Create new blank image
+        new_img = Image.new('RGB', (total_width, max_height))  
 
+        # Stitch images side by side
         x_offset = 0
         for img in images:
             new_img.paste(img, (x_offset, 0))
             x_offset += img.width
 
+        # Save output
         output_path = os.path.join(image_folder, output_name)
         new_img.save(output_path)
         print(f"Concatenated image saved to: {output_path}")
-        
-        return new_img 
+
+        return new_img
 
     except Exception as e:
         print(f"An error occurred: {e}")

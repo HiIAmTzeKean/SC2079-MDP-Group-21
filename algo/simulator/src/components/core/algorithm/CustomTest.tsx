@@ -47,7 +47,7 @@ export const CustomTest = (props: CustomTestProps) => {
                 (o) => o.x === customObstacle_X && o.y === customObstacle_Y
             ).length > 0
         ) {
-            return toast.error("Cell is already occupied by an Obstacle!");
+            toast.error("Placing multiple obstacles on the same cell! Please manually edit the direction in 'Manage Obstacles'.");
         }
 
         const updated = {
@@ -107,19 +107,19 @@ export const CustomTest = (props: CustomTestProps) => {
             return { x, y, id: i + 1, d };
         });
 
-		setSelectedTest({ obstacles });
-	};
+        setSelectedTest({ obstacles });
+    };
 
-	const validateObstaclePosition = (input: string) => {
-		const number = Math.round(Number(input));
-		if (number > 19) {
-			return 19;
-		} else if (number < 0) {
-			return 0;
-		} else {
-			return number;
-    }
-	};
+    const validateObstaclePosition = (input: string) => {
+        const number = Math.round(Number(input));
+        if (number > GRID_TOTAL_WIDTH - 1) {
+            return GRID_TOTAL_WIDTH - 1;
+        } else if (number < 0) {
+            return 0;
+        } else {
+            return number;
+        }
+    };
 
     return (
         <div>
@@ -185,41 +185,41 @@ export const CustomTest = (props: CustomTestProps) => {
 
                             {/* X */}
                             <div className="flex gap-2 items-center my-2">
-								<label className="font-bold">X: </label>
+                                <label className="font-bold">X: </label>
                                 <input
-									type="number"
+                                    type="number"
                                     min={0}
                                     max={19}
                                     value={customObstacle_X}
                                     onChange={(e) => {
-										setCustomObstacle_X(
-											validateObstaclePosition(
-												e.target.value
-											)
-										);
+                                        setCustomObstacle_X(
+                                            validateObstaclePosition(
+                                                e.target.value
+                                            )
+                                        );
                                     }}
                                     step={1}
-									className="rounded-lg"
+                                    className="rounded-lg"
                                 />
                             </div>
 
                             {/* Y */}
-							<div className="flex gap-2 items-center mb-4">
-								<label className="font-bold">Y: </label>
+                            <div className="flex gap-2 items-center mb-4">
+                                <label className="font-bold">Y: </label>
                                 <input
-									type="number"
+                                    type="number"
                                     min={0}
                                     max={19}
                                     value={customObstacle_Y}
                                     onChange={(e) => {
-										setCustomObstacle_Y(
-											validateObstaclePosition(
-												e.target.value
-											)
-										);
+                                        setCustomObstacle_Y(
+                                            validateObstaclePosition(
+                                                e.target.value
+                                            )
+                                        );
                                     }}
                                     step={1}
-									className="rounded-lg"
+                                    className="rounded-lg"
                                 />
                             </div>
 
@@ -234,7 +234,7 @@ export const CustomTest = (props: CustomTestProps) => {
                                         setCustomObstacle_Direction(Direction.NORTH)
                                     }
                                 >
-									N ↑
+                                    N ↑
                                 </Button>
                                 <Button
                                     className={`${customObstacle_Direction === Direction.SOUTH &&
@@ -244,7 +244,7 @@ export const CustomTest = (props: CustomTestProps) => {
                                         setCustomObstacle_Direction(Direction.SOUTH)
                                     }
                                 >
-									S ↓
+                                    S ↓
                                 </Button>
                                 <Button
                                     className={`${customObstacle_Direction === Direction.EAST &&
@@ -306,12 +306,12 @@ interface CustomObstacleItemProps {
 
 const CustomObstacleItem = (props: CustomObstacleItemProps) => {
     const { setSelectedTest, obstacle } = props;
-	const { x, y, d, id } = obstacle;
+    const { x, y, d, id } = obstacle;
 
     const handleRemoveObstacle = () => {
         setSelectedTest((prev) => {
             const cleanedObstacles = prev.obstacles.filter(
-                (o) => !(o.x === obstacle.x && o.y === obstacle.y)
+                (o) => !(o.id === obstacle.id)
             )
                 .map((o, index) => ({ ...o, id: index + 1 })); // reassign IDs starting from 1
 
@@ -323,7 +323,7 @@ const CustomObstacleItem = (props: CustomObstacleItemProps) => {
 
     return (
         <div className="flex items-center w-full gap-2 font-bold">
-			<span>{id}.</span>
+            <span>{id}.</span>
             <span>X: {x},</span>
             <span>Y: {y},</span>
             <span>Face: {DirectionStringMapping[d]}</span>

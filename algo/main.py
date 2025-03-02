@@ -8,7 +8,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from algo.algorithms.algo import MazeSolver  # nopep8
 from algo.tools.commands import CommandGenerator  # nopep8
 from algo.tools.movement import Direction  # nopep8
-from algo.algorithms.simulation import MazeSolverSimulation  # nopep8
 
 obstacles = [
     {"x": 0, "y": 17, "d": Direction.EAST, "id": 1},
@@ -20,27 +19,6 @@ obstacles = [
     {"x": 19, "y": 9, "d": Direction.WEST, "id": 7}
 ]
 
-
-# -------------------- TESTING MATPLOTLIB SIMULATOR --------------------
-# sim = MazeSolverSimulation(
-#     grid_size_x=20,
-#     grid_size_y=20,
-#     robot_x=1,
-#     robot_y=1,
-#     robot_direction=Direction.NORTH,
-# )
-
-# sim.enable_debug(0)
-
-# # sim.load_obstacles(0)  # load obstacles from file option 0 for last
-# # sim.generate_random_obstacles(2)
-# for ob in obstacles:
-#     sim.maze_solver.add_obstacle(ob["x"], ob["y"], ob["d"], ob["id"])
-
-# sim.plot_optimal_path_animation(testing=True)
-
-
-# -------------------- TESTING ACTUAL ALGO --------------------
 maze_solver = MazeSolver(size_x=20, size_y=20, robot_x=1,
                          robot_y=1, robot_direction=Direction.NORTH)
 

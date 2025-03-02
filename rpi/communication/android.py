@@ -5,7 +5,7 @@ import socket
 from typing import Dict, Optional, Union
 
 import bluetooth
-from communication.link import Link
+from .link import Link
 
 
 logger = logging.getLogger(__name__)
@@ -68,82 +68,6 @@ class AndroidMessage:
             # return values in the dictionary as string
             return f"{self._cat};{','.join([str(v) for v in self._value.values()])}"
         return f"{self._cat};{self._value}"
-
-
-class AndroidDummy(Link):
-    """
-    Just to mimic android but I used PC to test it out
-    """
-
-    def __init__(self, host="0.0.0.0", port=1337):
-        """
-        Contructor for AndroidDummy.
-        """
-        super().__init__()
-        self.host = host
-        self.port = port
-        self.server_sock = None
-        self.client_sock = None
-
-    def connect(self):
-        """
-        Connect to Android Dummy
-        """
-        # print("Connected to Android dummy.")
-        logger.info("TCP Connection Attempt Start")
-        try:
-            # TCP Server Socket
-            self.server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.server_sock.bind((self.host, self.port))
-            self.server_sock.listen(1)
-
-            logger.info(f"Awaiting TCP connection on {self.host}:{self.port}")
-            self.client_sock, client_info = self.server_sock.accept()
-            logger.info(f"Connected to Android Dummy from: {client_info}")
-        except Exception as e:
-            logger.error(f"Error in TCP link connectio: {e}")
-            if self.server_sock:
-                self.server_sock.close()
-            if self.client_sock:
-                self.client_sock.close()
-
-    def disconnect(self):
-        """
-        Disconnect from PC TCP Connection and Shutdown all socket
-        """
-        try:
-            logger.debug("Disconnecting TCP Link")
-            if self.server_sock:
-                self.server_sock.shutdown(socket.SHUT_RDWR)
-                self.server_sock.close()
-            if self.client_sock:
-                self.client_sock.shutdown(socket.SHUT_RDWR)
-                self.client_sock.close()
-            self.client_sock = None
-            logger.info("Disconnected from Android Dummy")
-        except Exception as e:
-            logger.error(f"Failed to disconnect TCP link: {e}")
-
-    def send(self, message: AndroidMessage):
-        """Send message to PC"""
-        try:
-            self.client_sock.sendall(f"{message.jsonify()}".encode("utf-8"))
-            logger.debug(f"Sent to PC: {message.jsonify()}")
-        except OSError as e:
-            logger.error(f"Error sending message to PC: {e}")
-            raise e
-
-    def recv(self):
-        """Receive message from PC"""
-        try:
-            tmp = self.client_sock.recv(1024)
-            logger.debug(tmp)
-            message = tmp.strip().decode("utf-8")
-            logger.debug(f"Received from PC: {message}")
-            return message
-        except OSError as e:
-            logger.error(f"Error receiving message from PC: {e}")
-            raise e
 
 
 class AndroidLink(Link):
@@ -237,8 +161,9 @@ class AndroidLink(Link):
         """
         Connect to Andriod by Bluetooth
         """
-        logger.info("Bluetooth connection started")
+        logger.debug("Bluetooth connection started")
         try:
+            os.system("sudo chmod o+rw /var/run/sdp")
             os.system("sudo hciconfig hci0 piscan")
             logger.debug("Bluetooth device set to discoverable")
             # Initialize server socket
@@ -259,7 +184,7 @@ class AndroidLink(Link):
                 profiles=[bluetooth.SERIAL_PORT_PROFILE],
             )
 
-            logger.info(f"Awaiting Bluetooth connection on RFCOMM CHANNEL {port}")
+            logger.debug(f"Awaiting Bluetooth connection on RFCOMM CHANNEL {port}")
             self.client_sock, client_info = self.server_sock.accept()
             logger.info(f"Accepted connection from: {client_info}")
 
@@ -287,9 +212,9 @@ class AndroidLink(Link):
         try:
             # TODO change to string format
             self.client_sock.send(f"{message.to_string()}\n".encode("utf-8"))
-            logger.debug(f"Sent to Android: {message.jsonify}")
+            logger.debug(f"android: {message.jsonify}")
         except OSError as e:
-            logger.error(f"Error sending message to Android: {e}")
+            logger.error(f"android: {e}")
             raise e
 
     def recv(self) -> Optional[str]:
@@ -298,8 +223,8 @@ class AndroidLink(Link):
             tmp = self.client_sock.recv(1024)
             logger.debug(tmp)
             message = tmp.strip().decode("utf-8")
-            logger.debug(f"Received from Android: {message}")
+            logger.debug(f"android: {message}")
             return message
-        except OSError as e:  # connection broken, try to reconnect
-            logger.error(f"Error receiving message from Android: {e}")
+        except OSError as e:
+            logger.error(f"android: {e}")
             raise e

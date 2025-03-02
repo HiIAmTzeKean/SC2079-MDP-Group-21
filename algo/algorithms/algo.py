@@ -10,10 +10,12 @@ from algo.tools.consts import (
     ITERATIONS,
     SAFE_COST,
     TURN_DISPLACEMENT,
-    HALF_TURNS,
+    HALF_TURNS_DISPLACEMENT,
     REVERSE_FACTOR,
     PADDING,
-    HALF_TURN_FACTOR
+    HALF_TURN_FACTOR,
+    ARENA_WIDTH,
+    ARENA_HEIGHT,
 )
 from algo.tools.movement import (
     Direction,
@@ -29,8 +31,8 @@ class MazeSolver:
 
     def __init__(
             self,
-            size_x: int = 20,
-            size_y: int = 20,
+            size_x: int = ARENA_WIDTH,
+            size_y: int = ARENA_HEIGHT,
             robot: Robot = None,
             robot_x: int = 1,
             robot_y: int = 1,
@@ -198,7 +200,7 @@ class MazeSolver:
 
         return optimal_path, min_dist
 
-    def _generate_paths(self, states) -> int:
+    def _generate_paths(self, states) -> None:
         """
         Generate and store the path between all states in a list of states using astar search
         """
@@ -753,19 +755,19 @@ class MazeSolver:
     def _get_half_turn_displacement(direction: Direction):
         # calculate delta small and delta big based on the direction
         if direction == Direction.NORTH:
-            dx = HALF_TURNS[1]
-            dy = HALF_TURNS[0]
+            dx = HALF_TURNS_DISPLACEMENT[1]
+            dy = HALF_TURNS_DISPLACEMENT[0]
 
         elif direction == Direction.SOUTH:
-            dx = -HALF_TURNS[1]
-            dy = -HALF_TURNS[0]
+            dx = -HALF_TURNS_DISPLACEMENT[1]
+            dy = -HALF_TURNS_DISPLACEMENT[0]
 
         elif direction == Direction.EAST:
-            dx = HALF_TURNS[0]
-            dy = HALF_TURNS[1]
+            dx = HALF_TURNS_DISPLACEMENT[0]
+            dy = HALF_TURNS_DISPLACEMENT[1]
         elif direction == Direction.WEST:
-            dx = -HALF_TURNS[0]
-            dy = -HALF_TURNS[1]
+            dx = -HALF_TURNS_DISPLACEMENT[0]
+            dy = -HALF_TURNS_DISPLACEMENT[1]
         else:
             raise ValueError(
                 f"Invalid direction {direction}. This should never happen.")
@@ -823,7 +825,8 @@ class MazeSolver:
         """
         # requires the path table to be filled and the optimal path to be calculated
         motion_path = []
-        obstacle_ids = []
+        obstacle_id_with_signals = []
+        scanned_obstacles = []
         for i in range(len(optimal_path) - 1):
             from_state = optimal_path[i]
             to_state = optimal_path[i + 1]
@@ -848,6 +851,10 @@ class MazeSolver:
             # check if the robot is taking a screenshot
             if to_state.screenshot_id != None:
                 motion_path.append(Motion.CAPTURE)
-                obstacle_ids.append(to_state.screenshot_id)
+                obstacle_id_with_signals.append(to_state.screenshot_id)
+                obstacle_id = int(to_state.screenshot_id.split("_")[0])
+                scanned_obstacles.append(
+                    self.grid.find_obstacle_by_id(obstacle_id)
+                )
 
-        return motion_path, obstacle_ids
+        return motion_path, obstacle_id_with_signals, scanned_obstacles

@@ -1,4 +1,7 @@
 from algo.tools.movement import Motion
+from algo.entities.entity import Obstacle
+from typing import List
+from algo.tools.consts import OFFSET, OBSTACLE_SIZE, W_COMMAND_FLAG
 
 """
 Generate commands in format requested by STM (refer to commands_FLAGS.h in STM repo): 
@@ -28,15 +31,16 @@ class CommandGenerator:
     END = "\n"
     # RCV = 'r'
     FIN = 'FIN'
-    # signal command has been passed. (used for tracking)
-    INFO_MARKER = 'M'
+    # INFO_MARKER = 'M'              # signal command has been passed. (used for tracking)
     # INFO_DIST = 'D'                # signal start/stop of accumulative distance tracking
 
     # Flags
     FORWARD_DIST_TARGET = "T"       # go forward for a target distance/angle.
-    # FORWARD_DIST_AWAY = "W"         # go forward until within a certain distance.
+    # go forward until within a certain distance away from obstacle (more accurate than target dist, within 50cm range)
+    FORWARD_DIST_AWAY = "W"
     BACKWARD_DIST_TARGET = "t"      # go backward for a target distance/angle.
-    # BACKWARD_DIST_AWAY = "w"        # go backward until a certain distance apart.
+    # go backward until a certain distance away from obstacle (more accurate than target dist, within 50cm range)
+    BACKWARD_DIST_AWAY = "w"
 
     # # IR Sensors based motion
     # FORWARD_IR_DIST_L = "L"         # go forward until left IR sensor is greater than value provided.
@@ -129,12 +133,29 @@ class CommandGenerator:
                 f"Invalid motion {motion}. This should never happen.")
         return [cmd1, cmd2]
 
-    def generate_commands(self, motions, obstacle_ids):
+    def _generate_away_command(self, view_state, obstacle):
+        """
+            Generate commands to calibrate robot position before scanning obstacle
+        """
+        # dist btw obstacle & view state position - offset since sensor is at front of car - obstacle size + extra clearance if needed
+        CLEARANCE = 0
+
+        unit_dist_from_obstacle = max(
+            abs(view_state.x - obstacle.x),
+            abs(view_state.y - obstacle.y)
+        ) - OFFSET - OBSTACLE_SIZE + CLEARANCE
+        dist_away = int(unit_dist_from_obstacle * self.UNIT_DIST)
+        return [f"{self.FORWARD_DIST_AWAY}{self.straight_speed}{self.SEP}{0}{self.SEP}{dist_away}",
+                f"{self.BACKWARD_DIST_AWAY}{self.straight_speed}{self.SEP}{0}{self.SEP}{dist_away}"]
+
+    def generate_commands(self, motions, obstacle_id_with_signals, scanned_obstacles: List[Obstacle], optimal_path):
         """
         Generate commands based on the list of motions
         """
         if not motions:
             return []
+        view_states = [
+            position for position in optimal_path if position.screenshot_id != None]
         commands = []
         prev_motion = motions[0]
         num_motions = 1
@@ -147,22 +168,31 @@ class CommandGenerator:
             # convert prev motion to command
             else:
                 if prev_motion == Motion.CAPTURE:
-                    commands.append(f"{self.INFO_MARKER}0|0|0")
-                    commands.append(f"SNAP{obstacle_ids[snap_count]}")
+                    if W_COMMAND_FLAG:
+                        commands.extend(
+                            self._generate_away_command(
+                                view_states[snap_count], scanned_obstacles[snap_count])
+                        )
+                    commands.append(
+                        f"SNAP{obstacle_id_with_signals[snap_count]}")
                     snap_count += 1
                     prev_motion = motion
                     continue
                 else:
                     cur_cmd = self._generate_command(prev_motion, num_motions)
                 commands.extend(cur_cmd)
-                num_motions = 1
-
+                num_motions = 1  # reset since new motion
             prev_motion = motion
 
         # add the last command
         if prev_motion == Motion.CAPTURE:
-            commands.append(f"{self.INFO_MARKER}0|0|0")
-            commands.append(f"SNAP{obstacle_ids[snap_count]}")
+            if W_COMMAND_FLAG:
+                commands.extend(
+                    self._generate_away_command(
+                        view_states[snap_count], scanned_obstacles[snap_count])
+                )
+            commands.append(
+                f"SNAP{obstacle_id_with_signals[snap_count]}")
         else:
             cur_cmd = self._generate_command(prev_motion, num_motions)
             commands.extend(cur_cmd)
