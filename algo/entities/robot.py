@@ -1,10 +1,9 @@
-from typing import List
 from algo.entities.entity import CellState
 from algo.tools.movement import Direction
 
 
 class Robot:
-    def __init__(self, center_x: int, center_y: int, start_direction: Direction):
+    def __init__(self, center_x: int, center_y: int, start_direction: Direction) -> None:
         """Robot object class
 
         Args:
@@ -15,10 +14,10 @@ class Robot:
         Internals:
             states: List of cell states of the robot's historical path
         """
-        self.states: List[CellState] = [
+        self.states: list[CellState] = [
             CellState(center_x, center_y, start_direction)]
 
-    def get_start_state(self):
+    def get_start_state(self) -> CellState:
         """Returns the starting cell state of the robot
 
         Returns:

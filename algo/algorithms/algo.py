@@ -33,11 +33,11 @@ class MazeSolver:
             self,
             size_x: int = ARENA_WIDTH,
             size_y: int = ARENA_HEIGHT,
-            robot: Robot = None,
+            robot: Robot | None = None,
             robot_x: int = 1,
             robot_y: int = 1,
             robot_direction: Direction = Direction.NORTH,
-    ):
+    ) -> None:
         self.neighbor_cache = {}  # Store precomputed neighbors
         """
         :param size_x: size of the grid in x direction. Default is 20
@@ -75,7 +75,7 @@ class MazeSolver:
         """
         self.grid.reset_obstacles()
 
-    def get_optimal_path(self):
+    def get_optimal_path(self) -> tuple[list[CellState], float]:
         """
         Get the optimal path from the using dynamic programming
 
@@ -200,7 +200,7 @@ class MazeSolver:
 
         return optimal_path, min_dist
 
-    def _generate_paths(self, states) -> None:
+    def _generate_paths(self, states: list[CellState]) -> None:
         """
         Generate and store the path between all states in a list of states using astar search
         """
@@ -326,8 +326,8 @@ class MazeSolver:
                         x, y, direction)
 
     def _get_neighboring_states(
-            self, x, y, direction
-    ):  # TODO: see the behavior of the robot and adjust...
+            self, x: int, y: int, direction: Direction
+    ) -> list[tuple[int, int, Direction, int, Motion]]:  # TODO: see the behavior of the robot and adjust...
         """
         Return a list of tuples with format:
         newX, newY, new_direction
@@ -667,7 +667,7 @@ class MazeSolver:
                 return SAFE_COST
         return 0
 
-    def _record_path(self, start: CellState, end: CellState, parent: dict, cost: int):
+    def _record_path(self, start: CellState, end: CellState, parent: dict[tuple[int, int, Direction], tuple[int, int, Direction]], cost: int) -> None:
         """
         Record the path between two states. Should be called only during the A* search.
         """
@@ -689,7 +689,7 @@ class MazeSolver:
 
     @staticmethod
     def _estimate_distance(
-            start: CellState, end: CellState, level=0,
+            start: CellState, end: CellState, level: int = 0,
     ) -> int:
         """
         Estimate the distance between two states.
@@ -707,7 +707,7 @@ class MazeSolver:
         return abs(horizontal_distance) + abs(vertical_distance)
 
     @staticmethod
-    def _get_visit_options(n):
+    def _get_visit_options(n: int) -> list[str]:
         """
         Generate all possible visit options for n-digit binary numbers
         """
@@ -718,12 +718,12 @@ class MazeSolver:
 
     @staticmethod
     def _generate_combinations(
-            view_positions,
+            view_positions: list[list[CellState]],
             index: int,
-            current,
-            result,
+            current: list[int],
+            result: list[list[int]],
             num_iters: int,
-    ):
+    ) -> list[list[int]]:
         """
         Generate all possible combinations of the view positions, where one view state is selected for each obstacle
 
@@ -752,7 +752,7 @@ class MazeSolver:
         return result
 
     @staticmethod
-    def _get_half_turn_displacement(direction: Direction):
+    def _get_half_turn_displacement(direction: Direction) -> tuple[int, int]:
         # calculate delta small and delta big based on the direction
         if direction == Direction.NORTH:
             dx = HALF_TURNS_DISPLACEMENT[1]
@@ -818,8 +818,8 @@ class MazeSolver:
             )
 
     def optimal_path_to_motion_path(
-            self, optimal_path
-    ):
+            self, optimal_path: list[CellState]
+    ) -> tuple[list[Motion], list[str], list[Obstacle]]:
         """
         Convert the optimal path to a list of motions that the robot needs to take
         """

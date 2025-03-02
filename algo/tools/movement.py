@@ -3,17 +3,17 @@ from enum import Enum
 
 
 class Direction(int, Enum):
-    NORTH = 0
-    EAST = 2
-    SOUTH = 4
-    WEST = 6
-    SKIP = 8
+    NORTH: int = 0
+    EAST: int = 2
+    SOUTH: int = 4
+    WEST: int = 6
+    SKIP: int = 8
 
-    def __int__(self):
+    def __int__(self) -> int:
         return self.value
 
     @staticmethod
-    def rotation_cost(d1, d2):
+    def rotation_cost(d1: "Direction", d2: "Direction") -> int:
         """
         Calculate the cost of turning from direction d1 to direction d2
         If the robot does not turn, the cost is 0.
@@ -53,15 +53,15 @@ class Direction(int, Enum):
         else:
             raise ValueError(f"direction {d1} is not a valid direction.")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.name
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
 # move direction is a list of the possible moves the robot can make
-MOVE_DIRECTION = [
+MOVE_DIRECTION: list[tuple[int, int, Direction]]= [
     (1, 0, Direction.EAST),
     (-1, 0, Direction.WEST),
     (0, 1, Direction.NORTH),
@@ -83,49 +83,51 @@ class Motion(int, Enum):
     """
     # the robot can move in 10 different ways from one cell to another
     # designed so that 10 - motion = opposite motion
-    FORWARD_LEFT_TURN = 0
-    FORWARD_OFFSET_LEFT = 1
-    FORWARD = 2
-    FORWARD_OFFSET_RIGHT = 3
-    FORWARD_RIGHT_TURN = 4
+    FORWARD_LEFT_TURN: int = 0
+    FORWARD_OFFSET_LEFT: int = 1
+    FORWARD: int = 2
+    FORWARD_OFFSET_RIGHT: int = 3
+    FORWARD_RIGHT_TURN: int = 4
 
-    REVERSE_LEFT_TURN = 10
-    REVERSE_OFFSET_RIGHT = 9
-    REVERSE = 8
-    REVERSE_OFFSET_LEFT = 7
-    REVERSE_RIGHT_TURN = 6
+    REVERSE_LEFT_TURN: int = 10
+    REVERSE_OFFSET_RIGHT: int = 9
+    REVERSE: int = 8
+    REVERSE_OFFSET_LEFT: int = 7
+    REVERSE_RIGHT_TURN: int = 6
 
-    CAPTURE = 1000
+    CAPTURE: int = 1000
 
-    def __int__(self):
+    def __int__(self) -> int:
         return self.value
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.name
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
-    def __eq__(self, other: 'Motion'):
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Motion):
+            return NotImplemented
         return self.value == other.value
 
-    def opposite_motion(self):
+    def opposite_motion(self) -> "Motion":
         if self == Motion.CAPTURE:
             return Motion.CAPTURE
 
-        opp_val = 10 - self.value
+        opp_val: int = 10 - self.value
         if opp_val == 5 or opp_val < 0 or opp_val > 10:
             raise ValueError(
                 f"Invalid motion {self}. This should never happen.")
 
         return Motion(opp_val)
 
-    def is_combinable(self):
+    def is_combinable(self) -> bool:
         if self == Motion.CAPTURE:
             return False
         return self in [Motion.REVERSE, Motion.FORWARD]
 
-    def reverse_cost(self):
+    def reverse_cost(self) -> int:
         if self == Motion.CAPTURE:
             raise ValueError("Capture motion does not have a reverse cost")
         elif self in [
@@ -139,7 +141,7 @@ class Motion(int, Enum):
         else:
             return 0
 
-    def half_turn_cost(self):
+    def half_turn_cost(self) -> int:
         """
         If the motion is a half turn motion, return the cost of the motion.
         Returns:

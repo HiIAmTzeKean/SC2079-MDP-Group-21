@@ -2,7 +2,7 @@ import time
 import subprocess
 import platform
 
-rpi_ssid = "mdpGroup21"
+rpi_ssid = "MDPGrp21a"
 
 
 def get_wifi_name():
