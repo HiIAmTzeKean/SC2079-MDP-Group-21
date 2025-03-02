@@ -16,11 +16,13 @@ import {
 	FaSitemap,
 	FaSpinner,
 	FaSquare,
+	FaList, // List Icon for Test All Button
 } from "react-icons/fa";
 import {
 	AlgoTestDataInterface,
 	AlgoTestEnum,
 	AlgoTestEnumMapper,
+	AlgoTestEnumsList, // List of all test enum values for iterating
 } from "../../../tests/algorithm";
 import { Button } from "../../common";
 import toast from "react-hot-toast";
@@ -28,6 +30,16 @@ import { TestSelector } from "./TestSelector";
 import { ServerStatus } from "./ServerStatus";
 import useFetch from "../../../hooks/useFetch";
 import { AlgoInput, AlgoOutput } from "../../../schemas/request";
+
+// Intraface to store test results for each test case
+interface TestResult {
+	testName: string;
+	runtime: number;
+	cost: number;
+	success: boolean;
+	obstaclesScanned: number;
+	totalObstacles: number;
+}
 
 export const AlgorithmCore = () => {
 	const fetch = useFetch();
@@ -78,6 +90,11 @@ export const AlgorithmCore = () => {
 		AlgoTestEnumMapper[AlgoTestEnum.Custom]
 	);
 
+	// state variables for Test All Results
+	const [testAllResults, setTestAllResults] = useState<TestResult[]>([]);
+	const [isTestingAll, setIsTestingAll] = useState<boolean>(false);
+	const [showTestResults, setShowTestResults] = useState<boolean>(false);
+
 	// Select Tests
 	useEffect(() => {
 		const selectedTest = AlgoTestEnumMapper[selectedTestEnum];
@@ -91,6 +108,122 @@ export const AlgorithmCore = () => {
 	// Run Algorithm
 	const [isAlgorithmLoading, setIsAlgorithmLoading] = useState(false);
 	const [numberOfAlgoRuns, setNumberOfAlgoRuns] = useState<number>(1);
+
+	// Check if all obstacles were scanned in the path
+	const checkAllObstaclesScanned = (path: Position[], obstacles: any[]): { scanned: number, total: number } => {
+		// Collect all obstacle IDs in the path that were scanned
+		const scannedIDs = new Set<string>();
+		// Check each position in the path
+		path.forEach(pos => {
+			if (pos.s) {
+				// If there's a scan value, add it to scanned IDs
+				scannedIDs.add(pos.s);
+			}
+		});
+		
+		return {
+			scanned: scannedIDs.size,
+			total: obstacles.length
+		};
+	};
+
+	// Run Algorithm for a specific test case
+	const runAlgorithmForTest = async (testEnum: AlgoTestEnum): Promise<TestResult | null> => {
+		const test = AlgoTestEnumMapper[testEnum]; // Get test data for the specified enum
+
+		// Set up algorithm input with test case obstacles and default robot position
+		const algoInput: AlgoInput = {
+			obstacles: test.obstacles.map((o) => {
+				return {
+					id: o.id,
+					x: o.x,
+					y: o.y,
+					d: o.d,
+				};
+			}),
+			retrying: isRetrying,
+			robot_dir: ROBOT_INITIAL_POSITION.d,
+			robot_x: ROBOT_INITIAL_POSITION.x,
+			robot_y: ROBOT_INITIAL_POSITION.y,
+			num_runs: numberOfAlgoRuns,
+		};
+		
+		try {
+			const algoOutput: AlgoOutput = await fetch.post("/simulator_path", algoInput);
+
+			// Check if all obstacles were scanned
+			const scanResult = checkAllObstaclesScanned(algoOutput.data.path, test.obstacles);
+			const allObstaclesScanned = scanResult.scanned === scanResult.total;
+			
+			return {
+				testName: testEnum,
+				runtime: algoOutput.data.runtime,
+				cost: algoOutput.data.distance,
+				success: allObstaclesScanned, // Only successful if all obstacles scanned
+				obstaclesScanned: scanResult.scanned,
+				totalObstacles: scanResult.total
+			};
+		} catch (e) {
+			return {
+				testName: testEnum,
+				runtime: 0,
+				cost: 0,
+				success: false,
+				obstaclesScanned: 0,
+				totalObstacles: test.obstacles.length
+			};
+		}
+	};
+
+	// Run Algorithm on all test cases
+	const handleTestAll = async () => {
+		if (isAlgorithmLoading || isTestingAll) return;
+		
+		setIsTestingAll(true);
+		setShowTestResults(true);
+		setTestAllResults([]);
+		
+		const results: TestResult[] = [];
+		let completedTests = 0;
+		const totalTests = AlgoTestEnumsList.length;
+		
+		toast.success("Starting to test all algorithm test cases...");
+		
+		// Iterate through all test cases
+		for (const testEnum of AlgoTestEnumsList) {
+			// Skip the Custom test as it might not have consistent obstacles
+			if (testEnum === AlgoTestEnum.Custom) {
+				completedTests++;
+				continue;
+			}
+			
+			// Show loading toast for current test case
+			toast.loading(`Testing ${testEnum} (${completedTests + 1}/${totalTests})...`, 
+				{ id: `test-${testEnum}` });
+			
+			// Run algorithm for the current test case	
+			const result = await runAlgorithmForTest(testEnum);
+			if (result) {
+				results.push(result);
+				if (result.success) {
+					toast.success(`Completed ${testEnum}`, { id: `test-${testEnum}` });
+				} else if (result.obstaclesScanned > 0) {
+					toast.error(`Partial scan in ${testEnum}: ${result.obstaclesScanned}/${result.totalObstacles}`, { id: `test-${testEnum}` });
+				} else {
+					toast.error(`Failed ${testEnum}`, { id: `test-${testEnum}` });
+				}
+			} else {
+				toast.error(`Failed ${testEnum}`, { id: `test-${testEnum}` });
+			}
+			
+			completedTests++;
+		}
+
+		// Update state with all test results and reset flags
+		setTestAllResults(results);
+		setIsTestingAll(false);
+		toast.success("Completed testing all algorithm test cases!");
+	};
 
 	// Run Algorithm
 	const handleRunAlgorithm = async () => {
@@ -122,7 +255,14 @@ export const AlgorithmCore = () => {
 
 			setAlgoRuntime(algoOutput.data.runtime);
 			setAlgoCost(algoOutput.data.distance);
-			toast.success("Algorithm ran successfully.");
+
+			// Check if all obstacles were scanned
+			const scanResult = checkAllObstaclesScanned(algoOutput.data.path, selectedTest.obstacles);
+			if (scanResult.scanned === scanResult.total) {
+				toast.success("Algorithm ran successfully. All obstacles scanned!");
+			} else {
+				toast.error(`Algorithm ran, but only scanned ${scanResult.scanned}/${scanResult.total} obstacles.`);
+			}
 		} catch (e) {
 			toast.error("Failed to run algorithm. Server Error: " + e);
 		}
@@ -372,7 +512,7 @@ export const AlgorithmCore = () => {
 				</div>
 			</div>
 
-			{/* Run Algo N times*/}
+			{/* Modified: Added Test All button alongside Run Algorithm button */}
 			<div className="mb-4 flex justify-center items-center gap-8">
 				<Button onClick={handleRunAlgorithm}>
 					<span>Run Algorithm</span>
@@ -396,7 +536,61 @@ export const AlgorithmCore = () => {
 					/>
 					<label>times</label>
 				</div>
+				{/* Test All button */}
+				<Button 
+					onClick={isTestingAll || isAlgorithmLoading ? undefined : handleTestAll}
+				>
+					<span>Test All Cases</span>
+					{isTestingAll ? (
+						<FaSpinner className="animate-spin" />
+					) : (
+						<FaList className="text-[18px]" />
+					)}
+				</Button>
+				{/* Toggle button to show/hide test results */}
+				{testAllResults.length > 0 && (
+					<Button 
+						onClick={() => setShowTestResults(!showTestResults)}
+					>
+						<span>{showTestResults ? 'Hide Results' : 'Show Results'}</span>
+					</Button>
+				)}
 			</div>
+
+			{/* Section to display test results in a table */}
+			{showTestResults && testAllResults.length > 0 && (
+				<div className="mb-4 p-4 border rounded">
+					<h3 className="text-center font-bold text-lg mb-2">Test Results</h3>
+					<div className="max-h-64 overflow-y-auto">
+						<table className="w-full border-collapse">
+							<thead>
+								<tr className="bg-gray-100">
+									<th className="border p-2 text-left">Test Case</th>
+									<th className="border p-2 text-right">Runtime (s)</th>
+									<th className="border p-2 text-right">Cost</th>
+									<th className="border p-2 text-center">Status</th>
+								</tr>
+							</thead>
+							<tbody>
+								{testAllResults.map((result, index) => (
+									<tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : ''}>
+										<td className="border p-2">{result.testName}</td>
+										<td className="border p-2 text-right">{result.runtime.toFixed(2)}</td>
+										<td className="border p-2 text-right">{result.cost.toFixed(2)}</td>
+										<td className="border p-2 text-center">
+											{result.success ? (
+												<span className="text-green-600 font-bold">Success</span>
+											) : (
+												<span className="text-red-600 font-bold">Failed</span>
+											)}
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</div>
+				</div>
+			)}
 
 			{/* Algo Runtime */}
 			{robotPositions && algoRuntime && algoCost ? (
