@@ -53,23 +53,32 @@ public class RobotView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        // Match how obstacles are placed
-        int left = offsetX + robot.getPosition().getXInt() * cellSize;
-        int top = offsetY + (Grid.GRID_SIZE - 1 - robot.getPosition().getYInt()) * cellSize;
-        int right = left + cellSize;
-        int bottom = top + cellSize;
+        // Calculate new dimensions to fit the 20cm x 21cm robot in the grid
+        int robotWidth = cellSize * 2;  // Robot spans 2 grid cells in width
+        int robotHeight = (int) (cellSize * 2.1);  // Robot spans ~2.1 grid cells in height
 
-        if (robot.getFacing() == Facing.NORTH) {
-            canvas.drawBitmap(robotFacingNorth, null, new Rect(left, top, right, bottom), null);
-        }
-        else if (robot.getFacing() == Facing.EAST) {
-            canvas.drawBitmap(robotFacingEast, null, new Rect(left, top, right, bottom), null);
-        }
-        else if (robot.getFacing() == Facing.SOUTH) {
-            canvas.drawBitmap(robotFacingSouth, null, new Rect(left, top, right, bottom), null);
-        }
-        else if (robot.getFacing() == Facing.WEST) {
-            canvas.drawBitmap(robotFacingWest, null, new Rect(left, top, right, bottom), null);
+        // Calculate the position of the robot centered on its current grid cell
+        int centerX = offsetX + (robot.getPosition().getXInt() * cellSize) + (cellSize / 2);
+        int centerY = offsetY + (Grid.GRID_SIZE - 1 - robot.getPosition().getYInt()) * cellSize + (cellSize / 2);
+
+        // Adjust the position so the robot is centered correctly
+        int left = centerX - (robotWidth / 2);
+        int top = centerY - (robotHeight / 2);
+        int right = left + robotWidth;
+        int bottom = top + robotHeight;
+
+        // Choose the correct robot facing bitmap
+        Bitmap currentRobotBitmap = switch (robot.getFacing()) {
+            case NORTH -> robotFacingNorth;
+            case EAST -> robotFacingEast;
+            case SOUTH -> robotFacingSouth;
+            case WEST -> robotFacingWest;
+            case SKIP -> null;
+        };
+
+        // Draw the scaled and centered robot bitmap
+        if (currentRobotBitmap != null) {
+            canvas.drawBitmap(currentRobotBitmap, null, new Rect(left, top, right, bottom), null);
         }
     }
 
