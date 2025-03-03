@@ -135,17 +135,17 @@
 
         <EditText
             android:id="@+id/inputY"
-            android:layout_width="146dp"
+            android:layout_width="73dp"
             android:layout_height="48dp"
             android:hint="@string/y_coordinate"
             android:inputType="number"
             android:textSize="18sp"
-            app:layout_constraintEnd_toStartOf="@+id/spinnerRobotFacing"
+            app:layout_constraintEnd_toStartOf="@+id/btnInitializeRobot"
             app:layout_constraintTop_toTopOf="parent" />
 
         <EditText
             android:id="@+id/inputX"
-            android:layout_width="146dp"
+            android:layout_width="73dp"
             android:layout_height="48dp"
             android:hint="@string/x_coordinate"
             android:inputType="number"
@@ -157,16 +157,15 @@
             android:id="@+id/spinnerRobotFacing"
             android:layout_width="146dp"
             android:layout_height="48dp"
-            app:layout_constraintEnd_toStartOf="@+id/btnInitializeRobot"
+            app:layout_constraintEnd_toStartOf="@+id/inputX"
             app:layout_constraintTop_toTopOf="parent" />
 
         <Button
             android:id="@+id/btnInitializeRobot"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="9dp"
             android:text="@string/initialize_robot"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/btnSendData"
             app:layout_constraintTop_toTopOf="parent" />
 
         <ScrollView
@@ -213,6 +212,14 @@
                 android:text="@string/robot_status_waiting"
                 android:gravity="center"/>
         </LinearLayout>
+
+        <Button
+            android:id="@+id/btnSendData"
+            android:layout_width="152dp"
+            android:layout_height="48dp"
+            android:text="@string/send_data"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>
