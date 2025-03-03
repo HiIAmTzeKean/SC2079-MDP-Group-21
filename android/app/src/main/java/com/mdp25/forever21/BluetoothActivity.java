@@ -5,8 +5,6 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -27,6 +25,7 @@ import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -37,11 +36,8 @@ import com.mdp25.forever21.bluetooth.BluetoothInfoReceiver;
 import com.mdp25.forever21.bluetooth.BluetoothMessage;
 import com.mdp25.forever21.bluetooth.BluetoothMessageParser;
 import com.mdp25.forever21.bluetooth.BluetoothMessageReceiver;
-import com.mdp25.forever21.bluetooth.JsonMessage;
-import com.mdp25.forever21.canvas.GridObstacle;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class BluetoothActivity extends AppCompatActivity {
 
@@ -58,8 +54,8 @@ public class BluetoothActivity extends AppCompatActivity {
 
     // UI variables below
     private TextView receivedMsgView;
-    private TextView statusView;
-    private TextInputEditText msgInput;
+    private LinearLayout connectedPanel;
+    private TextView connectedText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -132,36 +128,18 @@ public class BluetoothActivity extends AppCompatActivity {
         findViewById(R.id.btnScan).setOnClickListener(view -> refreshDeviceList());
         findViewById(R.id.btnDiscover).setOnClickListener(view -> enableDeviceDiscovery());
 
-        // these should be moved to CanvasActivity eventually
-        receivedMsgView = findViewById(R.id.textRecievedMsg);
-        receivedMsgView.setText("Received Messages:\n");
-        statusView = findViewById(R.id.textStatus);
-        msgInput = findViewById(R.id.msgInput);
-        findViewById(R.id.btnSend).setOnClickListener(view -> {
-            if (msgInput.getText() != null) {
-                String s = msgInput.getText().toString();
-                if (!s.isEmpty()) {
-                    myApp.btConnection().sendMessage(msgInput.getText().toString());
-                }
-            }
-        });
 
-        Button canvasButton = findViewById(R.id.btnTemp);
+        Button canvasButton = findViewById(R.id.btnCanvas);
         canvasButton.setOnClickListener(view -> {
             startActivity(new Intent(this, CanvasActivity.class));
         });
 
-        // TEMP
-        findViewById(R.id.testBtn).setOnClickListener(view -> {
-            BluetoothMessage msg = BluetoothMessage.ofObstaclesMessage(new Position(1, 1), Facing.NORTH, List.of((GridObstacle.of(1,7,Facing.EAST))));
-            myApp.btConnection().sendMessage(msg.getAsJsonMessage().getAsJson());
-        });
-
-        // TEMP
-        findViewById(R.id.tesetBtn2).setOnClickListener(view -> {
-            BluetoothMessage msg = BluetoothMessage.ofRobotStartMessage();
-            myApp.btConnection().sendMessage(msg.getAsJsonMessage().getAsJson());
-        });
+        connectedPanel = findViewById(R.id.connectedLayout);
+        if (myApp.btConnection() == null)
+            connectedPanel.setVisibility(View.INVISIBLE); //set invisible if no connection
+        receivedMsgView = findViewById(R.id.textReceivedMsg);
+        receivedMsgView.setText("Received Messages:\n");
+        connectedText = findViewById(R.id.textConnectedStatus);
     }
 
     @Override
@@ -261,6 +239,11 @@ public class BluetoothActivity extends AppCompatActivity {
                     Toast.makeText(this, "Reconnecting to " + device.getName(), Toast.LENGTH_SHORT).show();
                     myApp.btInterface().connectAsClient(device);
                 }
+                connectedPanel.setVisibility(connected ? View.VISIBLE : View.INVISIBLE);
+                connectedText.setText("Connected to " + device.getName());
+
+                // refresh the device list
+                refreshDeviceList();
             }
         }
     }
@@ -268,8 +251,6 @@ public class BluetoothActivity extends AppCompatActivity {
     private void onMsgReceived(BluetoothMessage btMsg) {
         if (btMsg instanceof BluetoothMessage.PlainStringMessage m) {
             receivedMsgView.append(m.rawMsg() + "\n");
-        } else if (btMsg instanceof BluetoothMessage.RobotStatusMessage m) {
-            statusView.setText(m.status());
         } else if (btMsg instanceof BluetoothMessage.TargetFoundMessage m) {
             receivedMsgView.append("image-rec! " + m.rawMsg() + "\n"); // just print on ui for now
         } else if (btMsg instanceof BluetoothMessage.RobotPositionMessage m) {

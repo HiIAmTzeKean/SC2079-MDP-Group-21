@@ -2,12 +2,17 @@
     <string name="app_name">MDP Grp21 Controller</string>
     <string name="action_settings">Settings</string>
     <!-- Strings used for fragments for navigation -->
-    <string name="first_fragment_label">First Fragment</string>
-    <string name="second_fragment_label">Second Fragment</string>
     <string name="next">Next</string>
     <string name="previous">Previous</string>
 
-    <!-- Strings used for buttons in canvas_activity.xml -->
+    <!-- Strings used for buttons in activity_bluetooth.xml -->
+    <string name="scan">Scan Devices</string>
+    <string name="discoverable">Discoverable</string>
+    <string name="canvas">To Canvas</string>
+    <string name="connected">Connected</string>
+
+
+    <!-- Strings used for buttons in activity_canvas.xml -->
     <string name="move_backward">Move Backward</string>
     <string name="move_forward">Move Forward</string>
     <string name="move_right">Move Right</string>

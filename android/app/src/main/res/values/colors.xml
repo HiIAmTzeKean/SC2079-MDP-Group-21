@@ -2,7 +2,11 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="bt_device_list_bg">#FF000000</color>
-    <color name="paired_device_bg">#2F2F2F00</color>
+    <color name="bg_grey">#dddddd</color>
+    <color name="primary">#68569A</color>
+    <color name="secondary">#4F8B51</color>
+    <color name="accent">#8BC34A</color>
+    <color name="tertiary">#5A68B5</color>
+    <color name="bt_device_list_bg">#B0FFFFFF</color>
     <color name="button_pressed_grey">#808080</color>
 </resources>
