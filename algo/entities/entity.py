@@ -1,5 +1,5 @@
 from typing import List
-from algo.tools.consts import SCREENSHOT_COST, TOO_CLOSE_COST, PADDING, MID_TURN_PADDING, TURN_PADDING, ARENA_HEIGHT, ARENA_WIDTH, OFFSET
+from algo.tools.consts import SCREENSHOT_COST, DISTANCE_COST, PADDING, MID_TURN_PADDING, TURN_PADDING, ARENA_HEIGHT, ARENA_WIDTH, OFFSET, MIN_CLEARANCE, OBSTACLE_SIZE
 from algo.tools.movement import Direction
 from math import sqrt
 
@@ -93,18 +93,19 @@ class Obstacle(CellState):
         if self.direction == Direction.NORTH:
             positions = [
                 # robot camera is left of obstacle
-                (self.x - 1, self.y + 2 + OFFSET),
+                (self.x - 1, self.y + MIN_CLEARANCE + OBSTACLE_SIZE + OFFSET),
                 # robot camera is right of obstacle
-                (self.x + 1, self.y + 2 + OFFSET),
-                # robot camera is directly in front of obstacle
-                (self.x, self.y + 1 + OFFSET),
-                (self.x, self.y + 2 + OFFSET),
+                (self.x + 1, self.y + MIN_CLEARANCE + OBSTACLE_SIZE + OFFSET),
+                # robot camera is further away from obstacle
+                (self.x, self.y + MIN_CLEARANCE + OBSTACLE_SIZE + OFFSET),
+                # robot camera is close to obstacle
+                # (self.x, self.y + MIN_CLEARANCE - 1 + OBSTACLE_SIZE + OFFSET),
             ]
             costs = [
                 SCREENSHOT_COST,        # robot camera is left of obstacle
                 SCREENSHOT_COST,        # robot camera is right of obstacle
-                TOO_CLOSE_COST,         # robot camera is directly in front of obstacle
                 0,                      # robot camera is positioned just nice
+                # DISTANCE_COST,          # robot camera is close to obstacle
             ]
 
             for idx, pos in enumerate(positions):
@@ -117,16 +118,16 @@ class Obstacle(CellState):
         # If obstacle is facing south, then robot's cell state must be facing north
         elif self.direction == Direction.SOUTH:
             positions = [
-                (self.x + 1, self.y - 2 - OFFSET),
-                (self.x - 1, self.y - 2 - OFFSET),
-                (self.x, self.y - 1 - OFFSET),
-                (self.x, self.y - 2 - OFFSET),
+                (self.x + 1, self.y - MIN_CLEARANCE - OBSTACLE_SIZE - OFFSET),
+                (self.x - 1, self.y - MIN_CLEARANCE - OBSTACLE_SIZE - OFFSET),
+                (self.x, self.y - MIN_CLEARANCE - OBSTACLE_SIZE - OFFSET),
+                # (self.x, self.y - MIN_CLEARANCE + 1 - OBSTACLE_SIZE - OFFSET),
             ]
             costs = [
                 SCREENSHOT_COST,
                 SCREENSHOT_COST,
-                TOO_CLOSE_COST,
                 0,
+                # DISTANCE_COST,
             ]
 
             for idx, pos in enumerate(positions):
@@ -139,16 +140,16 @@ class Obstacle(CellState):
         # If obstacle is facing east, then robot's cell state must be facing west
         elif self.direction == Direction.EAST:
             positions = [
-                (self.x + 2 + OFFSET, self.y + 1),
-                (self.x + 2 + OFFSET, self.y - 1),
-                (self.x + 1 + OFFSET, self.y),
-                (self.x + 2 + OFFSET, self.y),
+                (self.x + MIN_CLEARANCE + OBSTACLE_SIZE + OFFSET, self.y + 1),
+                (self.x + MIN_CLEARANCE + OBSTACLE_SIZE + OFFSET, self.y - 1),
+                (self.x + MIN_CLEARANCE + OBSTACLE_SIZE + OFFSET, self.y),
+                # (self.x + MIN_CLEARANCE - 1 + OBSTACLE_SIZE + OFFSET, self.y),
             ]
             costs = [
                 SCREENSHOT_COST,
                 SCREENSHOT_COST,
-                TOO_CLOSE_COST,
                 0,
+                # DISTANCE_COST,
             ]
 
             for idx, pos in enumerate(positions):
@@ -161,16 +162,16 @@ class Obstacle(CellState):
         # If obstacle is facing west, then robot's cell state must be facing east
         elif self.direction == Direction.WEST:
             positions = [
-                (self.x - 2 - OFFSET, self.y + 1),
-                (self.x - 2 - OFFSET, self.y - 1),
-                (self.x - 1 - OFFSET, self.y),
-                (self.x - 2 - OFFSET, self.y),
+                (self.x - MIN_CLEARANCE - OBSTACLE_SIZE - OFFSET, self.y + 1),
+                (self.x - MIN_CLEARANCE - OBSTACLE_SIZE - OFFSET, self.y - 1),
+                (self.x - MIN_CLEARANCE - OBSTACLE_SIZE - OFFSET, self.y),
+                # (self.x - MIN_CLEARANCE + 1 - OBSTACLE_SIZE - OFFSET, self.y),
             ]
             costs = [
                 SCREENSHOT_COST,
                 SCREENSHOT_COST,
-                TOO_CLOSE_COST,
                 0,
+                # DISTANCE_COST,
             ]
 
             for idx, pos in enumerate(positions):
