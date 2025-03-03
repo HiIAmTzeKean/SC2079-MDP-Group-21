@@ -1,3 +1,4 @@
+from typing import Union
 import heapq
 import math
 import numpy as np
@@ -33,7 +34,7 @@ class MazeSolver:
             self,
             size_x: int = ARENA_WIDTH,
             size_y: int = ARENA_HEIGHT,
-            robot: Robot | None = None,
+            robot: Union[Robot, None] = None,
             robot_x: int = 1,
             robot_y: int = 1,
             robot_direction: Direction = Direction.NORTH,

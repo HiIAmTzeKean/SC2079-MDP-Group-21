@@ -1,3 +1,4 @@
+from typing import Union
 from algo.tools.consts import SCREENSHOT_COST, DISTANCE_COST, PADDING, MID_TURN_PADDING, TURN_PADDING, ARENA_HEIGHT, ARENA_WIDTH, OFFSET, MIN_CLEARANCE, OBSTACLE_SIZE
 from algo.tools.movement import Direction
 from math import sqrt
@@ -6,12 +7,12 @@ from math import sqrt
 class CellState:
     """Base class for all objects on the arena, such as cells, obstacles, etc"""
 
-    def __init__(self, x: int, y: int, direction: Direction = Direction.NORTH, screenshot_id: int | None = None, penalty: int = 0):
+    def __init__(self, x: int, y: int, direction: Direction = Direction.NORTH, screenshot_id: Union[int, None] = None, penalty: int = 0):
         self.x: int = x
         self.y: int = y
         self.direction: Direction = direction
         # If screenshot_id != None, the snapshot is taken at that position is for obstacle with obstacle_id = screenshot_id
-        self.screenshot_id: int | None = screenshot_id
+        self.screenshot_id: Union[int, None] = screenshot_id
         self.penalty: int = penalty  # Penalty for the view point of taking picture
 
     def cmp_position(self, x: int, y: int) -> bool:
@@ -51,7 +52,7 @@ class CellState:
         """
         self.screenshot_id = screenshot_id
 
-    def get_dict(self) -> dict[str, int | None]:
+    def get_dict(self) -> dict[str, Union[int, None]]:
         """Returns a dictionary representation of the cell
 
         Returns:
@@ -369,7 +370,7 @@ class Grid:
             optimal_positions.append(view_states)
         return optimal_positions
 
-    def find_obstacle_by_id(self, obstacle_id: int) -> Obstacle | None:
+    def find_obstacle_by_id(self, obstacle_id: int) -> Union[Obstacle, None]:
         """
         Return obstacle object by its id
         """
