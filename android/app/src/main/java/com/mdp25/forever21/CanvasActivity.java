@@ -1,5 +1,6 @@
 package com.mdp25.forever21;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.BroadcastReceiver;
@@ -33,6 +34,7 @@ public class CanvasActivity extends AppCompatActivity {
     private ScrollView scrollReceivedMessages;
     private Spinner spinnerRobotFacing;
     private Button btnInitializeRobot;
+    private Button btnSendData;
     private Button sendbtn;
     private Button startbtn;
     private EditText inputX;
@@ -92,12 +94,16 @@ public class CanvasActivity extends AppCompatActivity {
         setupSpinner();
 
         // Initialize buttons
+        btnSendData = findViewById(R.id.btnSendData);
+        btnSendData.setOnClickListener(view -> sendData());
         btnInitializeRobot = findViewById(R.id.btnInitializeRobot);
         btnInitializeRobot.setOnClickListener(view -> initializeRobotFromInput());
         sendbtn = findViewById(R.id.btnSend);
         sendbtn.setOnClickListener(view -> sendChatMessage());
         startbtn = findViewById(R.id.btnRobotStart);
-        startbtn.setOnClickListener(view -> startRobot());
+        startbtn.setOnClickListener(view -> {
+            if (myApp.btConnection() != null) showConfirmationDialog();
+        });
 
         // Bind movement buttons
         findViewById(R.id.btnRobotForward).setOnClickListener(view -> {
@@ -128,6 +134,26 @@ public class CanvasActivity extends AppCompatActivity {
 
     private void startRobot() {
         BluetoothMessage msg = BluetoothMessage.ofRobotStartMessage();
+        myApp.btConnection().sendMessage(msg.getAsJsonMessage().getAsJson());
+    }
+
+    private void showConfirmationDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Confirm Start")
+                .setMessage("Are you sure you want to start the robot?")
+                .setPositiveButton("Confirm", (dialog, which) -> startRobot())
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+
+    private void sendData(){
+        if (myApp.btConnection() == null) {
+            Toast.makeText(CanvasActivity.this, "Error: No Bluetooth Connection", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        BluetoothMessage msg = BluetoothMessage.ofObstaclesMessage(myApp.robot().getPosition(),
+                this.myApp.robot().getFacing(),
+                this.myApp.grid().getObstacleList());
         myApp.btConnection().sendMessage(msg.getAsJsonMessage().getAsJson());
     }
 
@@ -163,7 +189,8 @@ public class CanvasActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
         });
     }
 
@@ -190,11 +217,6 @@ public class CanvasActivity extends AppCompatActivity {
         facingDirection = convertFacing(selectedFacing);
 
         initializeRobot(x, y, facingDirection);
-
-        BluetoothMessage msg = BluetoothMessage.ofObstaclesMessage(myApp.robot().getPosition(),
-                this.myApp.robot().getFacing(),
-                this.myApp.grid().getObstacleList());
-        myApp.btConnection().sendMessage(msg.getAsJsonMessage().getAsJson());
     }
 
     private void initializeRobot(int x, int y, Facing facing) {
@@ -205,11 +227,16 @@ public class CanvasActivity extends AppCompatActivity {
 
     private Facing convertFacing(String facing) {
         switch (facing.toUpperCase()) {
-            case "NORTH": return Facing.NORTH;
-            case "SOUTH": return Facing.SOUTH;
-            case "EAST": return Facing.EAST;
-            case "WEST": return Facing.WEST;
-            default: return Facing.NORTH;
+            case "NORTH":
+                return Facing.NORTH;
+            case "SOUTH":
+                return Facing.SOUTH;
+            case "EAST":
+                return Facing.EAST;
+            case "WEST":
+                return Facing.WEST;
+            default:
+                return Facing.NORTH;
         }
     }
 

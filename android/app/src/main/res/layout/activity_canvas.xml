@@ -10,7 +10,7 @@
         android:id="@+id/canvasContainer"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/bottomLayout"
+        app:layout_constraintBottom_toTopOf="@+id/guideline4"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHeight_percent="0.5"
         app:layout_constraintStart_toStartOf="parent"
@@ -34,8 +34,9 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/canvasContainer"
-        tools:layout_editor_absoluteX="69dp">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/guideline4">
 
 
         <ImageButton
@@ -96,6 +97,7 @@
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:text="@string/start_robot"
+            app:cornerRadius="@dimen/cornerRadius"
             android:textSize="20sp"
             app:layout_constraintBottom_toTopOf="@+id/btnRobotBackward"
             app:layout_constraintEnd_toStartOf="@+id/btnRobotRight"
@@ -125,27 +127,28 @@
                 android:id="@+id/btnSend"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/send_input"
                 android:layout_gravity="bottom|end"
-                android:padding="8dp"
                 android:layout_marginEnd="8dp"
-                android:layout_marginBottom="8dp" />
+                android:layout_marginBottom="8dp"
+                android:padding="8dp"
+                app:cornerRadius="@dimen/cornerRadius"
+                android:text="@string/send_input" />
 
         </FrameLayout>
 
         <EditText
             android:id="@+id/inputY"
-            android:layout_width="146dp"
+            android:layout_width="73dp"
             android:layout_height="48dp"
             android:hint="@string/y_coordinate"
             android:inputType="number"
             android:textSize="18sp"
-            app:layout_constraintEnd_toStartOf="@+id/spinnerRobotFacing"
+            app:layout_constraintEnd_toStartOf="@+id/btnInitializeRobot"
             app:layout_constraintTop_toTopOf="parent" />
 
         <EditText
             android:id="@+id/inputX"
-            android:layout_width="146dp"
+            android:layout_width="73dp"
             android:layout_height="48dp"
             android:hint="@string/x_coordinate"
             android:inputType="number"
@@ -157,16 +160,16 @@
             android:id="@+id/spinnerRobotFacing"
             android:layout_width="146dp"
             android:layout_height="48dp"
-            app:layout_constraintEnd_toStartOf="@+id/btnInitializeRobot"
+            app:layout_constraintEnd_toStartOf="@+id/inputX"
             app:layout_constraintTop_toTopOf="parent" />
 
         <Button
             android:id="@+id/btnInitializeRobot"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="9dp"
+            app:cornerRadius="@dimen/cornerRadius"
             android:text="@string/initialize_robot"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/btnSendData"
             app:layout_constraintTop_toTopOf="parent" />
 
         <ScrollView
@@ -200,22 +203,38 @@
                 android:id="@+id/robotStatusStatic"
                 android:layout_width="match_parent"
                 android:layout_height="68dp"
+                android:gravity="center"
                 android:text="@string/robot_status"
-                android:textStyle="bold"
-                android:textSize="20sp"
                 android:textColor="#000000"
-                android:gravity="center"/>
+                android:textSize="20sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/robotStatusDynamic"
                 android:layout_width="match_parent"
                 android:layout_height="67dp"
-                android:text="@string/robot_status_waiting"
-                android:gravity="center"/>
+                android:gravity="center"
+                android:text="@string/robot_status_waiting" />
         </LinearLayout>
+
+        <Button
+            android:id="@+id/btnSendData"
+            android:layout_width="152dp"
+            android:layout_height="48dp"
+            android:text="@string/send_data"
+            app:cornerRadius="@dimen/cornerRadius"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.5" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

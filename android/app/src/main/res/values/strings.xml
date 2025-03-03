@@ -27,6 +27,7 @@
     <string name="y_coordinate">Y</string>
     <string name="robot_status">ROBOT STATUS</string>
     <string name="robot_status_waiting">waiting...</string>
+    <string name="send_data">Send Data</string>
 
 
     <string-array name="robot_facing_options">
