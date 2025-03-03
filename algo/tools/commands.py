@@ -161,7 +161,11 @@ class CommandGenerator:
             # convert prev motion to command
             else:
                 if prev_motion == Motion.CAPTURE:
-                    if W_COMMAND_FLAG:
+                    if (
+                        W_COMMAND_FLAG
+                        # only use w/W commands when robot is directly in front center of obstacle
+                        and "C" in obstacle_id_with_signals[snap_count]
+                    ):
                         commands.extend(
                             self._generate_away_command(
                                 view_states[snap_count], scanned_obstacles[snap_count])
@@ -179,7 +183,11 @@ class CommandGenerator:
 
         # add the last command
         if prev_motion == Motion.CAPTURE:
-            if W_COMMAND_FLAG:
+            if (
+                W_COMMAND_FLAG
+                # only use w/W commands when robot is directly in front center of obstacle
+                and "C" in obstacle_id_with_signals[snap_count]
+            ):
                 commands.extend(
                     self._generate_away_command(
                         view_states[snap_count], scanned_obstacles[snap_count])
