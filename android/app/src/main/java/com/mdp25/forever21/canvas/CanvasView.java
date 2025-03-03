@@ -100,9 +100,26 @@ public class CanvasView extends View {
         int gridWidth = gridSize * cellSize;
         int gridHeight = gridSize * cellSize;
 
+        Paint redPaint = new Paint();
+        redPaint.setColor(Color.RED);
+        redPaint.setStrokeWidth(2);
+        redPaint.setStyle(Paint.Style.STROKE);
+
+        Paint bluePaint = new Paint();
+        bluePaint.setColor(Color.BLUE);
+        bluePaint.setStrokeWidth(2);
+        bluePaint.setStyle(Paint.Style.STROKE);
+
+        // Draw vertical grid lines (alternating colors)
         for (int i = 0; i <= gridSize; i++) {
-            canvas.drawLine(offsetX + i * cellSize, offsetY, offsetX + i * cellSize, offsetY + gridHeight, gridPaint);
-            canvas.drawLine(offsetX, offsetY + i * cellSize, offsetX + gridWidth, offsetY + i * cellSize, gridPaint);
+            Paint paintToUse = (i % 2 == 0) ? redPaint : bluePaint;
+            canvas.drawLine(offsetX + i * cellSize, offsetY, offsetX + i * cellSize, offsetY + gridHeight, paintToUse);
+        }
+
+        // Draw horizontal grid lines (alternating colors)
+        for (int i = 0; i <= gridSize; i++) {
+            Paint paintToUse = (i % 2 == 0) ? bluePaint : redPaint;
+            canvas.drawLine(offsetX, offsetY + i * cellSize, offsetX + gridWidth, offsetY + i * cellSize, paintToUse);
         }
     }
 
