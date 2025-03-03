@@ -21,6 +21,7 @@ public class CanvasView extends View {
     private final Paint idPaint = new Paint();
     private final Paint facingPaint = new Paint();
     private final Paint targetPaint = new Paint();
+    private final Paint startRegionPaint = new Paint();
     private Grid grid;
 
     public CanvasView(Context context, AttributeSet attrs) {
@@ -64,6 +65,11 @@ public class CanvasView extends View {
         // Facing indicator styling (Orange Strip)
         facingPaint.setColor(Color.rgb(255, 165, 0)); // Orange color
         facingPaint.setStyle(Paint.Style.FILL);
+
+        // Initialize startRegionPaint
+        startRegionPaint.setColor(Color.GREEN);
+        startRegionPaint.setStrokeWidth(4);  // Make it slightly thicker
+        startRegionPaint.setStyle(Paint.Style.STROKE);
     }
 
     @Override
@@ -84,6 +90,7 @@ public class CanvasView extends View {
     protected void onDraw(@NonNull Canvas canvas) {
         super.onDraw(canvas);
         drawGrid(canvas);
+        drawStartRegion(canvas);
         drawAxisLabels(canvas);
         drawObstacles(canvas);
     }
@@ -99,13 +106,31 @@ public class CanvasView extends View {
         }
     }
 
+    private void drawStartRegion(Canvas canvas) {
+        int left = offsetX;
+        int right = offsetX + (4 * cellSize);
+        int top = offsetY + ((Grid.GRID_SIZE - 4) * cellSize); // Flip y-axis
+        int bottom = offsetY + (Grid.GRID_SIZE * cellSize);
+
+        // Draw the green boundary lines
+        canvas.drawLine(left, bottom, right, bottom, startRegionPaint); // Bottom line (0,0) to (4,0)
+        canvas.drawLine(left, top, right, top, startRegionPaint);       // Top line (0,4) to (4,4)
+        canvas.drawLine(left, top, left, bottom, startRegionPaint);     // Left line (0,0) to (0,4)
+        canvas.drawLine(right, top, right, bottom, startRegionPaint);   // Right line (4,0) to (4,4)
+    }
+
     private void drawAxisLabels(Canvas canvas) {
         int gridSize = Grid.GRID_SIZE;
+
+        // Adjustments for positioning
+        float yLabelOffsetY = cellSize / 4f;  // Shift down for Y-axis labels
+
         // Draw X-axis labels (below the grid)
         for (int x = 0; x < gridSize; x++) {
+            if (x == 0) continue; // Skip drawing "0" here to avoid duplication at (0,0)
             canvas.drawText(
                     String.valueOf(x),
-                    offsetX + x * cellSize + (cellSize / 2),  // Center text
+                    offsetX + x * cellSize,  // Align with left vertical grid line
                     offsetY + (gridSize * cellSize) + 30,    // Shift below grid
                     textPaint
             );
@@ -113,13 +138,22 @@ public class CanvasView extends View {
 
         // Draw Y-axis labels (left of the grid)
         for (int y = 0; y < gridSize; y++) {
+            if (y == 0) continue; // Skip drawing "0" here to avoid duplication at (0,0)
             canvas.drawText(
                     String.valueOf(y),
                     offsetX - 30,  // Shift left of the grid
-                    offsetY + (gridSize - y - 1) * cellSize + (cellSize / 2) + 10,  // Align correctly
+                    offsetY + (gridSize - y) * cellSize + yLabelOffsetY,  // Align with bottom horizontal grid line
                     textPaint
             );
         }
+
+        // Draw (0,0) label at bottom-left of the grid
+        canvas.drawText(
+                "0",
+                offsetX - 30,  // Align to left of the grid
+                offsetY + (gridSize * cellSize) + 30,  // Align to bottom of the grid
+                textPaint
+        );
     }
 
     private void drawObstacles(Canvas canvas) {
