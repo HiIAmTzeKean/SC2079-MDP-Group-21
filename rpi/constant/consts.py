@@ -65,4 +65,4 @@ manual_commands = {
     "bleft": ("t", 30, -20, 90)
 }
 
-stm32_prefixes = ("T", "t", "w", "W", "D", "d")
+stm32_prefixes = ("T", "t", "w", "W", "D", "d","P")
