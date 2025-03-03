@@ -247,17 +247,17 @@ public class CanvasActivity extends AppCompatActivity {
         } else if (btMsg instanceof BluetoothMessage.RobotStatusMessage m) {
             // show on ui
             robotStatusDynamic.setText(m.status());
-            receivedMessages.append("[status] " + m.rawMsg() + "\n"); // just print on ui for now
+            receivedMessages.append("\n[status] " + m.rawMsg()); // just print on ui for now
         } else if (btMsg instanceof BluetoothMessage.TargetFoundMessage m) {
             // update obstacle's target, then invalidate ui
             myApp.grid().updateObstacleTarget(m.obstacleId(), m.targetId());
             canvasView.invalidate();
-            receivedMessages.append("[image-rec] " + m.rawMsg() + "\n"); // just print on ui for now
+            receivedMessages.append("\n[image-rec] " + m.rawMsg() + "\n"); // just print on ui for now
         } else if (btMsg instanceof BluetoothMessage.RobotPositionMessage m) {
             // update robot's pos, then invalidate ui
             myApp.robot().updatePosition(m.x(), m.y());
             robotView.invalidate();
-            receivedMessages.append("[location] " + m.rawMsg() + "\n"); // just print on ui for now
+            receivedMessages.append("\n[location] " + m.rawMsg() + "\n"); // just print on ui for now
         }
     }
 }
