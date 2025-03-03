@@ -7,12 +7,12 @@ from typing import Any, Optional
 
 import requests
 
-from .base_rpi import RaspberryPi
-from .communication.android import AndroidMessage
-from .communication.camera import snap_using_libcamera, snap_using_picamera
-from .communication.pi_action import PiAction
-from .constant.consts import Category, manual_commands, stm32_prefixes
-from .constant.settings import URL
+from ..base_rpi import RaspberryPi
+from ..communication.android import AndroidMessage
+from ..communication.camera import snap_using_libcamera, snap_using_picamera
+from ..communication.pi_action import PiAction
+from ..constant.consts import Category, manual_commands, stm32_prefixes
+from ..constant.settings import URL
 
 
 logger = logging.getLogger(__name__)
