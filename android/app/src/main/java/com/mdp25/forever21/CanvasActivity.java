@@ -256,6 +256,7 @@ public class CanvasActivity extends AppCompatActivity {
         } else if (btMsg instanceof BluetoothMessage.RobotPositionMessage m) {
             // update robot's pos, then invalidate ui
             myApp.robot().updatePosition(m.x(), m.y());
+            myApp.robot().updateFacing(Facing.getFacingFromCode(m.direction()));
             robotView.invalidate();
             receivedMessages.append("\n[location] " + m.rawMsg() + "\n"); // just print on ui for now
         }

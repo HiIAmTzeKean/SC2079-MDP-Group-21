@@ -38,6 +38,8 @@ public class Robot {
     }
 
     public void updateFacing(Facing facing) {
+        if (facing.equals(Facing.SKIP))
+            return; // exit early
         this.facing = facing;
     }
 
