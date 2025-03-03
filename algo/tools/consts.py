@@ -45,7 +45,8 @@ X ←----┐  .  .
 
 0: long axis, 1: short axis
 """
-TURN_DISPLACEMENT: tuple[int, int] = [3, 3]
+# TODO: tune to 10cm interval
+TURN_DISPLACEMENT: tuple[int, int] = [3, 2]
 
 # offset due to position of robot's center / how many cells more the robot occupies from its center cell
 OFFSET: int = 1
@@ -55,7 +56,7 @@ MID_TURN_PADDING: int = (OFFSET + 1) * EXPANDED_CELL
 PADDING: int = (OFFSET + 1) * EXPANDED_CELL
 
 # minimum number of cells away front of robot should be from obstacle in view state generation
-MIN_CLEARANCE: int = 2  # front of robot 20cm away
+MIN_CLEARANCE: int = 1  # front of robot at least 10cm away
 
 """
 The number of grid squares the robot moves for TWO half turns on each axis. This must be tuned based on real robot movement.
@@ -68,7 +69,8 @@ eg. Motion.FORWARD_OFFSET_LEFT: TWO half turns to end up diagonally in the speci
 
 0: long axis, 1: short axis
 """
-HALF_TURNS_DISPLACEMENT: tuple[int, int] = [6, 2]
+# TODO: tune to 10cm interval
+HALF_TURNS_DISPLACEMENT: tuple[int, int] = [4, 2]
 
 # TODO: remove when done testing
 W_COMMAND_FLAG = 0  # 0: disable w/W commands, 1: enable w/W cmoomands

@@ -48,28 +48,9 @@ class CommandGenerator:
     # BACKWARD_IR_DIST_R = "r"        # go backward until right IR sensor is greater than value provided.
 
     # unit distance
-    UNIT_DIST: int = 10
+    UNIT_DIST: float = 10
 
-    # TUNABLE VALUES
-    # sharpness of turn angles
-    FORWARD_TURN_ANGLE_LEFT: int = -35
-    FORWARD_TURN_ANGLE_RIGHT: int = 35
-    BACKWARD_TURN_ANGLE_LEFT: int = -35
-    BACKWARD_TURN_ANGLE_RIGHT: int = 35
-
-    # final turn angles
-    FORWARD_FINAL_ANGLE_LEFT: int = 90
-    FORWARD_FINAL_ANGLE_RIGHT: int = 90
-    BACKWARD_FINAL_ANGLE_LEFT: int = 90
-    BACKWARD_FINAL_ANGLE_RIGHT: int = 90
-
-    # final half-turn angles
-    FORWARD_HALFTURN_FINAL_ANGLE_LEFT: int = 45
-    FORWARD_HALFTURN_FINAL_ANGLE_RIGHT: int = 45
-    BACKWARD_HALFTURN_FINAL_ANGLE_LEFT: int = 45
-    BACKWARD_HALFTURN_FINAL_ANGLE_RIGHT: int = 45
-
-    def __init__(self, straight_speed: int = 50, turn_speed: int = 50) -> None:
+    def __init__(self, straight_speed: int = 30, turn_speed: int = 10) -> None:
         """
         A class to generate commands for the robot to follow
 
@@ -90,52 +71,56 @@ class CommandGenerator:
         """
         if num_motions > 1:
             dist = num_motions * self.UNIT_DIST
-            # angle = num_motions * 90 # useful when combining turns which has been disabled due to tuning
         else:
             dist = self.UNIT_DIST
-            # angle = 90 # useful when combining turns which has been disabled due to tuning
 
         if motion == Motion.FORWARD:
             return [f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{0}{self.SEP}{dist}"]
         elif motion == Motion.REVERSE:
             return [f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{0}{self.SEP}{dist}"]
 
-        # TODO add forward/reverse straight line distances to make end in middle of the cell
+        # TODO tune & add forward/reverse straight line distances to make end in middle of the cell
         elif motion == Motion.FORWARD_LEFT_TURN:
-            return [f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{self.FORWARD_TURN_ANGLE_LEFT}{self.SEP}{self.FORWARD_FINAL_ANGLE_LEFT}"]
+            return [f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{-40}{self.SEP}{90}",
+                    # f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{0}{self.SEP}{7}"
+                    ]
         elif motion == Motion.FORWARD_RIGHT_TURN:
-            return [f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{self.FORWARD_TURN_ANGLE_RIGHT}{self.SEP}{self.FORWARD_FINAL_ANGLE_RIGHT}"]
+            return [f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{50}{self.SEP}{91}",
+                    # f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{0}{self.SEP}{8}"
+                    ]
         elif motion == Motion.REVERSE_LEFT_TURN:
-            return [f"{self.BACKWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{self.BACKWARD_TURN_ANGLE_LEFT}{self.SEP}{self.BACKWARD_FINAL_ANGLE_LEFT}"]
+            return [f"{self.BACKWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{-37.5}{self.SEP}{90}",
+                    # f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{0}{self.SEP}{8}"
+                    ]
         elif motion == Motion.REVERSE_RIGHT_TURN:
-            return [f"{self.BACKWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{self.BACKWARD_TURN_ANGLE_RIGHT}{self.SEP}{self.BACKWARD_FINAL_ANGLE_RIGHT}"]
-
-        # TODO tune
-        # cannot combine with other motions
+            return [f"{self.BACKWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{40}{self.SEP}{90}",
+                    # f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{0}{self.SEP}{7}"
+                    ]
+        # TODO tune & add forward/reverse straight line distances to make end in middle of the cell
         elif motion == Motion.FORWARD_OFFSET_LEFT:
             # break it down into 2 steps
             # FORWARD_LEFT_HALF_TURN
-            cmd1 = f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{self.FORWARD_TURN_ANGLE_LEFT}{self.SEP}{self.FORWARD_HALFTURN_FINAL_ANGLE_LEFT}"
+            cmd1 = f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{-40}{self.SEP}{40}"
             # FORWARD_RIGHT_HALF_TURN
-            cmd2 = f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{self.FORWARD_TURN_ANGLE_RIGHT}{self.SEP}{self.FORWARD_HALFTURN_FINAL_ANGLE_RIGHT}"
+            cmd2 = f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{40}{self.SEP}{55}"
         elif motion == Motion.FORWARD_OFFSET_RIGHT:
             # break it down into 2 steps
             # FORWARD_RIGHT_HALF_TURN
-            cmd1 = f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{self.FORWARD_TURN_ANGLE_RIGHT}{self.SEP}{self.FORWARD_HALFTURN_FINAL_ANGLE_RIGHT}"
+            cmd1 = f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{40}{self.SEP}{40}"
             # FORWARD_LEFT_HALF_TURN
-            cmd2 = f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{self.FORWARD_TURN_ANGLE_LEFT}{self.SEP}{self.FORWARD_HALFTURN_FINAL_ANGLE_LEFT}"
+            cmd2 = f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{-40}{self.SEP}{55}"
         elif motion == Motion.REVERSE_OFFSET_LEFT:
             # break it down into 2 steps
             # REVERSE_LEFT_HALF_TURN
-            cmd1 = f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{self.BACKWARD_TURN_ANGLE_LEFT}{self.SEP}{self.BACKWARD_HALFTURN_FINAL_ANGLE_LEFT}"
+            cmd1 = f"{self.BACKWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{-35}{self.SEP}{45}"
             # REVERSE_RIGHT_HALF_TURN
-            cmd2 = f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{self.BACKWARD_TURN_ANGLE_RIGHT}{self.SEP}{self.BACKWARD_HALFTURN_FINAL_ANGLE_RIGHT}"
+            cmd2 = f"{self.BACKWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{35}{self.SEP}{45}"
         elif motion == Motion.REVERSE_OFFSET_RIGHT:
             # break it down into 2 steps
             # REVERSE_RIGHT_HALF_TURN
-            cmd1 = f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{self.BACKWARD_TURN_ANGLE_RIGHT}{self.SEP}{self.BACKWARD_HALFTURN_FINAL_ANGLE_RIGHT}"
+            cmd1 = f"{self.BACKWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{35}{self.SEP}{45}"
             # REVERSE_LEFT_HALF_TURN
-            cmd2 = f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{self.BACKWARD_TURN_ANGLE_LEFT}{self.SEP}{self.BACKWARD_HALFTURN_FINAL_ANGLE_LEFT}"
+            cmd2 = f"{self.BACKWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{-35}{self.SEP}{45}"
         else:
             raise ValueError(
                 f"Invalid motion {motion}. This should never happen.")
@@ -146,7 +131,7 @@ class CommandGenerator:
             Generate commands to calibrate robot position before scanning obstacle
         """
         # dist btw obstacle & view state position - offset since sensor is at front of car - obstacle size + extra clearance if needed
-        CLEARANCE = 0
+        CLEARANCE = 0.3
 
         unit_dist_from_obstacle = max(
             abs(view_state.x - obstacle.x),
