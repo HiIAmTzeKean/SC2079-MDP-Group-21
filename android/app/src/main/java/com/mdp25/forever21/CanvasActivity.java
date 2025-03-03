@@ -34,6 +34,7 @@ public class CanvasActivity extends AppCompatActivity {
     private ScrollView scrollReceivedMessages;
     private Spinner spinnerRobotFacing;
     private Button btnInitializeRobot;
+    private Button btnSendData;
     private Button sendbtn;
     private Button startbtn;
     private EditText inputX;
@@ -93,6 +94,8 @@ public class CanvasActivity extends AppCompatActivity {
         setupSpinner();
 
         // Initialize buttons
+        btnSendData = findViewById(R.id.btnSendData);
+        btnSendData.setOnClickListener(view -> sendData());
         btnInitializeRobot = findViewById(R.id.btnInitializeRobot);
         btnInitializeRobot.setOnClickListener(view -> initializeRobotFromInput());
         sendbtn = findViewById(R.id.btnSend);
@@ -141,6 +144,17 @@ public class CanvasActivity extends AppCompatActivity {
                 .setPositiveButton("Confirm", (dialog, which) -> startRobot())
                 .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
                 .show();
+    }
+
+    private void sendData(){
+        if (myApp.btConnection() == null) {
+            Toast.makeText(CanvasActivity.this, "Error: No Bluetooth Connection", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        BluetoothMessage msg = BluetoothMessage.ofObstaclesMessage(myApp.robot().getPosition(),
+                this.myApp.robot().getFacing(),
+                this.myApp.grid().getObstacleList());
+        myApp.btConnection().sendMessage(msg.getAsJsonMessage().getAsJson());
     }
 
     private void applyInputFilter(EditText input) {
@@ -203,11 +217,6 @@ public class CanvasActivity extends AppCompatActivity {
         facingDirection = convertFacing(selectedFacing);
 
         initializeRobot(x, y, facingDirection);
-
-        BluetoothMessage msg = BluetoothMessage.ofObstaclesMessage(myApp.robot().getPosition(),
-                this.myApp.robot().getFacing(),
-                this.myApp.grid().getObstacleList());
-        myApp.btConnection().sendMessage(msg.getAsJsonMessage().getAsJson());
     }
 
     private void initializeRobot(int x, int y, Facing facing) {
