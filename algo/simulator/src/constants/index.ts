@@ -1,6 +1,6 @@
 import { Direction, Position } from "../schemas/entity";
 
-export const API_IP = ""; // TODO: replace with your PC's local IPv4 address
+export const API_IP = "localhost"; // TODO: replace with your PC's local IPv4 address
 export const PORT = "5000";
 
 // Robot's Environment - Grid Format

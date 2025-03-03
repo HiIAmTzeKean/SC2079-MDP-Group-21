@@ -19,6 +19,8 @@ import { Past_Semester_2 } from "./Past Semester 2";
 import { obstacles8tightspaces } from "./8 Obstacles, tight spaces";
 import { Past_Semester_3 } from "./Past Semester 3";
 import { Obstacles_8_long } from "./8 Obstacles long";
+import { FailTest } from "./Fail Test";
+
 
 
 
@@ -51,6 +53,8 @@ export enum AlgoTestEnum {
 	obstacles8tightspaces = "8 Obstacles, tight spaces",
 	Past_Semester_3 = "Past Semester 3",
 	Obstacles_8_long = "8 Obstacles long",
+	FailTest = "Fail Test",
+
 
 
 
@@ -78,6 +82,8 @@ export const AlgoTestEnumsList = [
 	AlgoTestEnum.obstacles8tightspaces,
 	AlgoTestEnum.Past_Semester_3,
 	AlgoTestEnum.Obstacles_8_long,
+	AlgoTestEnum.FailTest,
+
 
 
 
@@ -104,7 +110,7 @@ export const AlgoTestEnumMapper = {
 	[AlgoTestEnum.obstacles8tightspaces]: obstacles8tightspaces,
 	[AlgoTestEnum.Past_Semester_3]: Past_Semester_3,
 	[AlgoTestEnum.Obstacles_8_long]: Obstacles_8_long,
-
+	[AlgoTestEnum.FailTest]: FailTest,
 
 
 
