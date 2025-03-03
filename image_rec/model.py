@@ -238,20 +238,26 @@ def predict_image_t2(model, image_path, output_dir, signal):
 
     return image_id
 
-def stitch_image():
-    image_folder = "../api/image_rec_files/output"  
-    output_name = "concatenated.jpg"
+
+def stitch_image(output_dir):
+    output_filename = f"concatenated.jpg"
+    output_path = output_dir / output_filename
 
     try:
         # Get all image files
-        image_files = [f for f in os.listdir(image_folder) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
-        if not image_files:  
-            print(f"No image files found in '{image_folder}'.")
+        image_files = [
+            path.name for path in list(output_dir.iterdir())
+            if path.is_file()
+            and path.name.lower().endswith(('.png', '.jpg', '.jpeg'))
+            and path.name.lower() != output_filename  # Do not include stitched image
+        ]
+        if not image_files:
+            print(f"No image files found in '{output_dir}'.")
             return
 
         images = []
         for file in image_files:
-            img_path = os.path.join(image_folder, file)
+            img_path = output_dir / file
             try:
                 img = Image.open(img_path)
                 images.append(img)
@@ -278,7 +284,6 @@ def stitch_image():
             x_offset += img.width
 
         # Save output
-        output_path = os.path.join(image_folder, output_name)
         new_img.save(output_path)
         print(f"Concatenated image saved to: {output_path}")
 
