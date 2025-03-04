@@ -13,11 +13,18 @@ from rpi.communication.stm32 import STMLink
 
 stm_link = STMLink()
 stm_link.connect()
-stm_link.send_cmd("W",50,0,20)
-stm_link.send_cmd("w",50,0,50)
+#stm_link.send_cmd("W",20,0,20)
+#stm_link.recv()
+#stm_link.send_cmd("w",20,0,20)
+#stm_link.recv()t
+stm_link.send_cmd("T",50,0,50)
 stm_link.recv()
-# stm_link.send_cmd("T",50,0,10)
-# stm_link.recv()
+#stm_link.send_cmd("T",20,-40,55)
+#stm_link.send_cmd("T",30,25,40)
+#stm_link.recv()
+
+#stm_link.send_cmd("T",50,25,360)
+#stm_link.recv()
 
 # cmd_front(stm_link)
 # cmd_left(stm_link)

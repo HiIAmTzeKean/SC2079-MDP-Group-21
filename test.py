@@ -90,7 +90,7 @@ class TaskA5(RaspberryPi):
                 strings = str(command)
                 # t|100|100|100
                 parts = strings.split("|")
-                self.stm_link.send_cmd(parts[0][0], int(parts[0][1:]), float(parts[1]), float(parts[2]))
+                self.stm_link.send_cmd(parts[0][0], int(parts[0][1:]), int(parts[1]), int(parts[2]))
                 logger.debug(f"Sending to STM32: {command}")
 
             elif command.startswith("SNAP"):
@@ -191,6 +191,9 @@ class TaskA5(RaspberryPi):
         )
         
         ## Checklist component
+        if results["image_id"] != "NA":
+            self.stop()
+            time.sleep(100)
         self.movement_lock.release()
         
     def request_algo(self, data: dict, retrying=False) -> None:
@@ -213,7 +216,7 @@ class TaskA5(RaspberryPi):
                 },
                 {
                 "x": 19,
-                "y": 9,
+                "y": 8,
                 "d": 6,
                 "id": 1
                 }
