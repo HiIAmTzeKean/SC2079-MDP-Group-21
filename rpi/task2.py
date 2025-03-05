@@ -18,7 +18,7 @@ from .constant.settings import URL
 logger = logging.getLogger(__name__)
 
 
-class TaskOne(RaspberryPi):
+class TaskTwo(RaspberryPi):
     def __init__(self) -> None:
         super().__init__()
         del self.path_queue
@@ -55,12 +55,23 @@ class TaskOne(RaspberryPi):
     def set_actions(self) -> None:
         """Sets the actions for the RPi"""
         action_list = [
-            "T50|0|140",
-            "M0|0|0",
+            "front",
             "SNAP2_C",
+            "front",
+            "FIN",
         ]
         for action in action_list:
-            self.command_queue.put(action)
+            if action.startswith("SNAP"):
+                self.command_queue.put(action)
+                continue
+            elif action == "FIN":
+                self.command_queue.put(Category.FIN.value)
+                continue
+            elif manual_commands[action] is tuple:
+                self.command_queue.put(manual_commands[action][0])
+                self.command_queue.put(manual_commands[action][1])
+                continue
+            self.command_queue.put(manual_commands[action])
         
 
     def rpi_action(self) -> None:

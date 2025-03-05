@@ -239,11 +239,11 @@ class TaskOne(RaspberryPi):
                 self.rpi_action_queue.put(PiAction(cat=Category.OBSTACLE, value=message["value"]))
                 logger.debug(f"PiAction obstacles appended to queue: {message}")
 
-            elif message["cat"] == Category.MANUAL.value:
-                command = manual_commands.get(message["value"])
-                if command is None:
-                    logger.error("Invalid manual command!")
-                self.stm_link.send_cmd(**command)
+            # elif message["cat"] == Category.MANUAL.value:
+            #     command = manual_commands.get(message["value"])
+            #     if command is None:
+            #         logger.error("Invalid manual command!")
+            #     self.stm_link.send_cmd(**command)
                 
             ## Command: Start Moving ##
             elif message["cat"] == "control":

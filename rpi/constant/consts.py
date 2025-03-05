@@ -1,4 +1,6 @@
+from ctypes import Union
 from enum import Enum
+from typing import Any
 
 
 SYMBOL_MAP = {
@@ -51,7 +53,7 @@ class Category(Enum):
     STITCH = 'stitch'
     FIN = 'FIN'
 
-manual_commands = {
+manual_commands: dict[str, tuple[Any, ...]] = {
     "front": ("T", 50, 0, 10),
     "frontuntil": ("W", 50, 0, 30),
     "back": ("t", 50, 0, 10),
@@ -62,7 +64,9 @@ manual_commands = {
     "right60": ("T", 50, 25, 60),
     "right120": ("T", 50, 25, 120),
     "bright": ("t", 30, 20, 90),
-    "bleft": ("t", 30, -20, 90)
+    "bleft": ("t", 30, -20, 90),
 }
+manual_commands["left_arc"] = (manual_commands["left"], manual_commands["right120"])
+manual_commands["right_arc"] = (manual_commands["right"], manual_commands["left120"])
 
 stm32_prefixes = ("T", "t", "w", "W", "D", "d","P")
