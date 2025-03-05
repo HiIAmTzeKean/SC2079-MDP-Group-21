@@ -75,7 +75,6 @@ class TaskOne(RaspberryPi):
 
             elif action.cat == Category.SNAP.value:
                 while True:
-                    # wait for all STM instructions to finish
                     if self.outstanding_stm_instructions.get() == 0:
                         break
                 self.recognize_image(obstacle_id_with_signal=action.value)
@@ -84,7 +83,6 @@ class TaskOne(RaspberryPi):
             elif action.cat == Category.STITCH.value:
                 self.request_stitch()
 
-    # TODO
     def command_follower(self) -> None:
         """
         [Child Process]
@@ -103,7 +101,7 @@ class TaskOne(RaspberryPi):
                 # t|100|100|100
                 parts = strings.split("|")
                 self.outstanding_stm_instructions.set(self.outstanding_stm_instructions.get()+1)
-                self.stm_link.send_cmd(parts[0][0], int(parts[0][1:]), int(parts[1]), int(parts[2]))
+                self.stm_link.send_cmd(parts[0][0], int(parts[0][1:]), float(parts[1]), float(parts[2]))
                 logger.debug(f"Sending to STM32: {command}")
                 self.movement_lock.release()
                 
@@ -245,11 +243,11 @@ class TaskOne(RaspberryPi):
                 self.rpi_action_queue.put(PiAction(cat=Category.OBSTACLE, value=message["value"]))
                 logger.debug(f"PiAction obstacles appended to queue: {message}")
 
-            elif message["cat"] == Category.MANUAL.value:
-                command = manual_commands.get(message["value"])
-                if command is None:
-                    logger.error("Invalid manual command!")
-                self.stm_link.send_cmd(**command)
+            # elif message["cat"] == Category.MANUAL.value:
+            #     command = manual_commands.get(message["value"])
+            #     if command is None:
+            #         logger.error("Invalid manual command!")
+            #     self.stm_link.send_cmd(**command)
                 
             ## Command: Start Moving ##
             elif message["cat"] == "control":
