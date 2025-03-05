@@ -94,7 +94,6 @@ class TaskOne(RaspberryPi):
             logger.debug(f"command for movement lock: {command}")
             if command.startswith(stm32_prefixes):
                 strings = str(command)
-                # t|100|100|100
                 parts = strings.split("|")
                 self.stm_link.send_cmd(parts[0][0], int(parts[0][1:]), float(parts[1]), float(parts[2]))
                 logger.debug(f"Sending to STM32: {command}")
@@ -259,7 +258,6 @@ class TaskOne(RaspberryPi):
                         logger.warning("The command queue is empty, please set obstacles.")
                         self.android_queue.put(AndroidMessage(Category.ERROR.value, "Command queue empty (no obstacles)"))
 
-    # TODO fix the library camera call
     def recognize_image(self, obstacle_id_with_signal: str) -> None:
         """
         RPi snaps an image and calls the API for image-rec.
@@ -282,8 +280,8 @@ class TaskOne(RaspberryPi):
             url=url,
             # auto_callibrate=False,
         )
-        self.android_queue.put(AndroidMessage(Category.IMAGE_REC.value, value=results))
         self.movement_lock.release()
+        self.android_queue.put(AndroidMessage(Category.IMAGE_REC.value, value=results))
         
 
     # TODO implement retrying flag
