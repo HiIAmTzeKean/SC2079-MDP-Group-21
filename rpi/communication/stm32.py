@@ -77,8 +77,8 @@ class STMLink(Link):
         self,
         flag: str,
         speed: int,
-        angle: int,
-        val: int,
+        angle: float,
+        val: float,
     ) -> None:
         cmd = flag
         if flag in stm32_prefixes:
