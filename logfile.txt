@@ -9490,3 +9490,19 @@
 1740979915.0666897 :: DEBUG :: MainProcess :: send_cmd stm: T50|0|50
 
 1740979915.0717134 :: DEBUG :: MainProcess :: recv stm: rT50|0|50
+1741262171.4917812 :: INFO :: MainProcess :: started package
+1741262174.5302098 :: INFO :: MainProcess :: Connected to STM32
+1741262174.6191604 :: INFO :: MainProcess :: starting the start function
+1741262174.6258416 :: INFO :: MainProcess :: Connected to STM32
+1741262175.6431053 :: WARNING :: MainProcess :: API Timeout
+1741262175.6676004 :: INFO :: MainProcess :: Child Processes started
+1741262175.7096114 :: DEBUG :: Process-3 :: command dequeued: ('T', 50, 0, 10)
+1741262175.7111213 :: DEBUG :: Process-3 :: command for movement lock: ('T', 50, 0, 10)
+1741262231.704811 :: INFO :: MainProcess :: started package
+1741262233.388716 :: INFO :: MainProcess :: Connected to STM32
+1741262233.459527 :: INFO :: MainProcess :: starting the start function
+1741262233.464315 :: INFO :: MainProcess :: Connected to STM32
+1741262234.4768891 :: WARNING :: MainProcess :: API Timeout
+1741262234.4992843 :: INFO :: MainProcess :: Child Processes started
+1741262234.5331063 :: DEBUG :: Process-3 :: command dequeued: ('T', 50, 0, 10)
+1741262234.5344958 :: DEBUG :: Process-3 :: command for movement lock: ('T', 50, 0, 10)
