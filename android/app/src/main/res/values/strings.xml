@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">MDP Grp21 Controller</string>
+    <string name="app_name">MDP 21</string>
     <string name="action_settings">Settings</string>
     <!-- Strings used for fragments for navigation -->
     <string name="next">Next</string>
