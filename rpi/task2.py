@@ -46,7 +46,7 @@ class TaskTwo(RaspberryPi):
             self.proc_command_follower.start()
             self.proc_rpi_action.start()
             logger.info("Child Processes started")
-            self.proc_android_controller.join()
+            #self.proc_android_controller.join()
             self.proc_command_follower.join()
             self.proc_rpi_action.join()
         except KeyboardInterrupt:

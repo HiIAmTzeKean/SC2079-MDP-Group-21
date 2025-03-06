@@ -7,6 +7,7 @@ import cv2
 import numpy as np
 import requests
 from picamera import PiCamera
+from picamera2 import Picamera2
 
 
 logger = logging.getLogger(__name__)
@@ -178,6 +179,27 @@ def snap_using_picamera(
     
     if response.status_code != 200:
         logger.error("Error from image-rec API.")
+        raise OSError("API Error")
+
+    results = json.loads(response.content)
+    return results
+
+def snap_using_picamera2(
+    obstacle_id: str,
+    signal: str,
+    filename: str,
+    filename_send: str,
+    url: str,
+) -> str:
+    picam2 = Picamera2()
+    picam2.start()
+    time.sleep(3) # can set the timing
+
+    picam2.capture_file(filename)
+
+    response = requests.post(url, files={"file": (filename_send, open(filename, "rb"))})
+
+    if response.status_code != 200:
         raise OSError("API Error")
 
     results = json.loads(response.content)
