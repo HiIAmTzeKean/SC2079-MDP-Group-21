@@ -194,7 +194,6 @@ public class CanvasView extends View {
             else {
                 // Draw target text if avail
                 canvas.drawText(gridObstacle.getTarget().getTargetStr(), textX, textY, targetPaint);
-
             }
 
             // Draw facing indicator
