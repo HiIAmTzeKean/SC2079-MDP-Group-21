@@ -6,6 +6,17 @@
     android:layout_height="match_parent"
     tools:context=".InitActivity">
 
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:srcCompat="@drawable/the_dream_team" />
+    </FrameLayout>
+
     <ProgressBar
         android:id="@+id/progress_loader"
         style="?android:attr/progressBarStyle"
