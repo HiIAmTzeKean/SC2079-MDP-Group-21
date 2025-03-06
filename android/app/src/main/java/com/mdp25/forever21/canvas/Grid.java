@@ -69,15 +69,21 @@ public class Grid {
     /**
      * Gets the obstacle at a given approximate position.
      */
-    public Optional<GridObstacle> findObstacleWithApproxPos(int x, int y) {
-        //TODO search the neighbour as well
-        for (GridObstacle gridObstacle : obstacleList) {
-            if (gridObstacle.getPosition().getXInt() == x &&
-                    gridObstacle.getPosition().getYInt() == y) {
-                return Optional.of(gridObstacle);
+    public Optional<GridObstacle> findObstacleWithApproxPos(int touchX, int touchY, int SELECTION_RADIUS) {
+        Optional<GridObstacle> nearestObstacle = Optional.empty();
+        double minDistance = SELECTION_RADIUS; // Set threshold distance
+
+        for (GridObstacle obstacle : getObstacleList()) {
+            int obsX = obstacle.getPosition().getXInt();
+            int obsY = obstacle.getPosition().getYInt();
+            double distance = Math.sqrt(Math.pow(touchX - obsX, 2) + Math.pow(touchY - obsY, 2));
+
+            if (distance < minDistance) {
+                minDistance = distance;
+                nearestObstacle = Optional.of(obstacle);
             }
         }
-        return Optional.empty();
+        return nearestObstacle;
     }
 
     /**
