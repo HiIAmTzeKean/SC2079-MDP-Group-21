@@ -25,8 +25,8 @@
     <string name="initialize_robot">Initialize Robot</string>
     <string name="x_coordinate">X</string>
     <string name="y_coordinate">Y</string>
-    <string name="robot_status">ROBOT STATUS</string>
-    <string name="robot_status_waiting">waiting...</string>
+    <string name="robot_status">[STATUS]</string>
+    <string name="robot_status_waiting">WAITING</string>
     <string name="send_data">Send Data</string>
 
 
