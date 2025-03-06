@@ -18,7 +18,7 @@ import com.mdp25.forever21.bluetooth.BluetoothMessageReceiver;
 public class InitActivity extends AppCompatActivity {
     private final String TAG = "InitActivity";
     private static boolean entered = false;
-    private final long DELAY_TIME_MS = 1000;
+    private final long DELAY_TIME_MS = 2000;
     private final Class<?> NEXT_ACTIVITY = BluetoothActivity.class;
 
     @Override
