@@ -3,8 +3,9 @@ package com.mdp25.forever21.canvas;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.content.Context;
 
-import androidx.core.graphics.drawable.IconCompat;
+
 
 import com.mdp25.forever21.MyApplication;
 
@@ -24,9 +25,14 @@ public class CanvasTouchController implements View.OnTouchListener {
     private final Grid grid;
     private final MyApplication myApp;
     private Optional<GridObstacle> selectedObstacle = Optional.empty();
+    private final int SELECTION_RADIUS;
     public CanvasTouchController(MyApplication myApp) {
         this.myApp = myApp;
         this.grid = myApp.grid();
+        this.SELECTION_RADIUS = convertDpToPx(myApp.getApplicationContext(), 2); // 2dp
+    }
+    private static int convertDpToPx(Context context, float dp) {
+        return (int) (dp * context.getResources().getDisplayMetrics().density);
     }
 
     @Override
@@ -41,8 +47,8 @@ public class CanvasTouchController implements View.OnTouchListener {
                 // finalX and finalY to be used in lambda functions (it's just liddat)
                 int finalX = x;
                 int finalY = y;
-                if (grid.isInsideGrid(finalX, finalY) && grid.hasObstacle(finalX, finalY)) {
-                    selectedObstacle = grid.findObstacleWithPos(finalX, finalY);
+                if (grid.isInsideGrid(finalX, finalY)) {
+                    selectedObstacle = grid.findObstacleWithApproxPos(finalX, finalY, SELECTION_RADIUS);
                     Log.d(TAG, "Selected obstacle at (" + finalX + ", " + finalY + ")");
                 }
                 break;
