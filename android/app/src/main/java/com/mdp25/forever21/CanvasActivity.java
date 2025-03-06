@@ -106,30 +106,30 @@ public class CanvasActivity extends AppCompatActivity {
         });
 
         // Bind movement buttons
-        findViewById(R.id.btnRobotForward).setOnClickListener(view -> {
-            if (myApp.btConnection() != null)
-                myApp.btConnection().sendMessage("f");
-            myApp.robot().moveForward();
-            robotView.invalidate();
-        });
-        findViewById(R.id.btnRobotBackward).setOnClickListener(view -> {
-            if (myApp.btConnection() != null)
-                myApp.btConnection().sendMessage("r");
-            myApp.robot().moveBackward();
-            robotView.invalidate();
-        });
-        findViewById(R.id.btnRobotRight).setOnClickListener(view -> {
-            if (myApp.btConnection() != null)
-                myApp.btConnection().sendMessage("tr");
-            myApp.robot().turnRight();
-            robotView.invalidate();
-        });
-        findViewById(R.id.btnRobotLeft).setOnClickListener(view -> {
-            if (myApp.btConnection() != null)
-                myApp.btConnection().sendMessage("tl");
-            myApp.robot().turnLeft();
-            robotView.invalidate();
-        });
+//        findViewById(R.id.btnRobotForward).setOnClickListener(view -> {
+//            if (myApp.btConnection() != null)
+//                myApp.btConnection().sendMessage("f");
+//            myApp.robot().moveForward();
+//            robotView.invalidate();
+//        });
+//        findViewById(R.id.btnRobotBackward).setOnClickListener(view -> {
+//            if (myApp.btConnection() != null)
+//                myApp.btConnection().sendMessage("r");
+//            myApp.robot().moveBackward();
+//            robotView.invalidate();
+//        });
+//        findViewById(R.id.btnRobotRight).setOnClickListener(view -> {
+//            if (myApp.btConnection() != null)
+//                myApp.btConnection().sendMessage("tr");
+//            myApp.robot().turnRight();
+//            robotView.invalidate();
+//        });
+//        findViewById(R.id.btnRobotLeft).setOnClickListener(view -> {
+//            if (myApp.btConnection() != null)
+//                myApp.btConnection().sendMessage("tl");
+//            myApp.robot().turnLeft();
+//            robotView.invalidate();
+//        });
     }
 
     private void startRobot() {
@@ -163,7 +163,7 @@ public class CanvasActivity extends AppCompatActivity {
             public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
                 try {
                     int inputVal = Integer.parseInt(dest.toString() + source.toString());
-                    if (inputVal >= 0 && inputVal <= 19) return null;
+                    if (inputVal >= 1 && inputVal <= 3) return null;
                 } catch (NumberFormatException e) {
                     return "";
                 }
@@ -246,8 +246,8 @@ public class CanvasActivity extends AppCompatActivity {
             receivedMessages.append("\n" + m.rawMsg());
         } else if (btMsg instanceof BluetoothMessage.RobotStatusMessage m) {
             // show on ui
-            robotStatusDynamic.setText(m.status());
-            receivedMessages.append("\n[status] " + m.rawMsg()); // just print on ui for now
+            robotStatusDynamic.setText(m.status().toUpperCase());
+            receivedMessages.append("\n[status] " + m.rawMsg()+ "\n"); // just print on ui for now
         } else if (btMsg instanceof BluetoothMessage.TargetFoundMessage m) {
             // update obstacle's target, then invalidate ui
             myApp.grid().updateObstacleTarget(m.obstacleId(), m.targetId());
@@ -260,5 +260,6 @@ public class CanvasActivity extends AppCompatActivity {
             robotView.invalidate();
             receivedMessages.append("\n[location] " + m.rawMsg() + "\n"); // just print on ui for now
         }
+        scrollReceivedMessages.post(() -> scrollReceivedMessages.fullScroll(View.FOCUS_DOWN));
     }
 }
