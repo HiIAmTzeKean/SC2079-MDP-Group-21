@@ -8,9 +8,9 @@
 
     <FrameLayout
         android:id="@+id/canvasContainer"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/guideline4"
+        app:layout_constraintBottom_toTopOf="@+id/halfScreen"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHeight_percent="0.5"
         app:layout_constraintStart_toStartOf="parent"
@@ -35,202 +35,198 @@
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/guideline4">
+        app:layout_constraintTop_toBottomOf="@id/halfScreen"
+        app:layout_constraintVertical_bias="0.0">
 
-
-        <ImageButton
-            android:id="@+id/btnRobotBackward"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:adjustViewBounds="true"
-            android:background="@null"
-            android:contentDescription="@string/move_backward"
-            android:padding="8dp"
-            android:scaleType="fitCenter"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/btnRobotRight"
-            app:srcCompat="@drawable/btn_backward_selector" />
-
-        <ImageButton
-            android:id="@+id/btnRobotForward"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:adjustViewBounds="true"
-            android:background="@null"
-            android:contentDescription="@string/move_forward"
-            android:padding="8dp"
-            android:scaleType="fitCenter"
-            app:layout_constraintBottom_toTopOf="@+id/btnRobotRight"
-            app:layout_constraintEnd_toStartOf="@+id/btnRobotRight"
-            app:srcCompat="@drawable/btn_forward_selector" />
-
-        <ImageButton
-            android:id="@+id/btnRobotLeft"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:adjustViewBounds="true"
-            android:background="@null"
-            android:contentDescription="@string/move_left"
-            android:padding="8dp"
-            android:scaleType="fitCenter"
-            app:layout_constraintBottom_toTopOf="@+id/btnRobotBackward"
-            app:layout_constraintEnd_toStartOf="@+id/btnRobotBackward"
-            app:srcCompat="@drawable/btn_left_selector" />
-
-        <ImageButton
-            android:id="@+id/btnRobotRight"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:adjustViewBounds="true"
-            android:background="@null"
-            android:contentDescription="@string/move_right"
-            android:padding="8dp"
-            android:scaleType="fitCenter"
-            app:layout_constraintBottom_toTopOf="@+id/btnRobotBackward"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:srcCompat="@drawable/btn_right_selector" />
-
-
-        <Button
-            android:id="@+id/btnRobotStart"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:text="@string/start_robot"
-            app:cornerRadius="@dimen/cornerRadius"
-            android:textSize="20sp"
-            app:layout_constraintBottom_toTopOf="@+id/btnRobotBackward"
-            app:layout_constraintEnd_toStartOf="@+id/btnRobotRight"
-            app:layout_constraintStart_toEndOf="@+id/btnRobotLeft"
-            app:layout_constraintTop_toBottomOf="@+id/btnRobotForward" />
-
-        <FrameLayout
-            android:layout_width="298dp"
-            android:layout_height="269dp"
-            android:background="@drawable/chat_input_background"
-            android:padding="8dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/btnRobotLeft">
-
-            <EditText
-                android:id="@+id/chatInputBox"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/chat_input_background"
-                android:hint="@string/input_prompt"
-                android:inputType="text"
-                android:paddingStart="12dp"
-                android:paddingEnd="50dp"
-                android:textSize="16sp" />
-
-            <Button
-                android:id="@+id/btnSend"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom|end"
-                android:layout_marginEnd="8dp"
-                android:layout_marginBottom="8dp"
-                android:padding="8dp"
-                app:cornerRadius="@dimen/cornerRadius"
-                android:text="@string/send_input" />
-
-        </FrameLayout>
-
-        <EditText
-            android:id="@+id/inputY"
-            android:layout_width="73dp"
-            android:layout_height="48dp"
-            android:hint="@string/y_coordinate"
-            android:inputType="number"
-            android:textSize="18sp"
-            app:layout_constraintEnd_toStartOf="@+id/btnInitializeRobot"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <EditText
-            android:id="@+id/inputX"
-            android:layout_width="73dp"
-            android:layout_height="48dp"
-            android:hint="@string/x_coordinate"
-            android:inputType="number"
-            android:textSize="18sp"
-            app:layout_constraintEnd_toStartOf="@+id/inputY"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <Spinner
-            android:id="@+id/spinnerRobotFacing"
-            android:layout_width="146dp"
-            android:layout_height="48dp"
-            app:layout_constraintEnd_toStartOf="@+id/inputX"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <Button
-            android:id="@+id/btnInitializeRobot"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:cornerRadius="@dimen/cornerRadius"
-            android:text="@string/initialize_robot"
-            app:layout_constraintEnd_toStartOf="@+id/btnSendData"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <ScrollView
-            android:id="@+id/ReceiveMsgScrollView"
-            android:layout_width="290dp"
-            android:layout_height="137dp"
-            android:layout_marginEnd="9dp"
-            android:background="#EEEEEE"
-            android:fillViewport="true"
-            android:padding="8dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/inputY">
-
-            <TextView
-                android:id="@+id/ReceiveMsgTextView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/static_received_messages"
-                android:textColor="#000000"
-                android:textSize="16sp" />
-        </ScrollView>
 
         <LinearLayout
-            android:layout_width="295dp"
-            android:layout_height="137dp"
-            android:orientation="vertical"
-            app:layout_constraintEnd_toStartOf="@+id/ReceiveMsgScrollView"
-            app:layout_constraintTop_toBottomOf="@+id/inputY">
+            android:id="@+id/statusLayout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
             <TextView
                 android:id="@+id/robotStatusStatic"
-                android:layout_width="match_parent"
-                android:layout_height="68dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
                 android:gravity="center"
                 android:text="@string/robot_status"
-                android:textColor="#000000"
+                android:textColor="@color/tertiary"
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/robotStatusDynamic"
-                android:layout_width="match_parent"
-                android:layout_height="67dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="@string/robot_status_waiting" />
+                android:text="@string/robot_status_waiting"
+                android:textSize="20sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/purpleButtonsLayout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/xyLayout">
+
+            <Button
+                android:id="@+id/btnInitializeRobot"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="20dp"
+                android:text="@string/initialize_robot"
+                app:cornerRadius="@dimen/cornerRadius" />
+
+            <Button
+                android:id="@+id/btnSendData"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/send_data"
+                app:cornerRadius="@dimen/cornerRadius" />
+
         </LinearLayout>
 
         <Button
-            android:id="@+id/btnSendData"
-            android:layout_width="152dp"
-            android:layout_height="48dp"
-            android:text="@string/send_data"
+            android:id="@+id/btnRobotStart"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="50dp"
+            android:backgroundTint="@color/secondary"
+            android:text="@string/start_robot"
             app:cornerRadius="@dimen/cornerRadius"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/purpleButtonsLayout" />
+
+        <LinearLayout
+            android:id="@+id/xyLayout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="1dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginEnd="1dp"
+            android:gravity="center"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/statusLayout">
+
+            <EditText
+                android:id="@+id/inputX"
+                android:layout_width="45dp"
+                android:layout_height="wrap_content"
+                android:hint="@string/x_coordinate"
+                android:inputType="number"
+                android:textSize="18sp"
+                android:visibility="visible" />
+
+            <EditText
+                android:id="@+id/inputY"
+                android:layout_width="45dp"
+                android:layout_height="wrap_content"
+                android:hint="@string/y_coordinate"
+                android:inputType="number"
+                android:textSize="18sp"
+                android:visibility="visible" />
+
+            <Spinner
+                android:id="@+id/spinnerRobotFacing"
+                android:layout_width="120dp"
+                android:layout_height="match_parent" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/messagesLayout"
+            android:layout_width="0dp"
+            android:layout_height="100dp"
+            android:layout_marginStart="1dp"
+            android:layout_marginEnd="1dp"
+            android:gravity="center"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btnRobotStart"
+            app:layout_constraintVertical_bias="0.82">
+
+            <ScrollView
+                android:id="@+id/ReceiveMsgScrollView"
+                android:layout_width="176dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="30dp"
+                android:layout_marginEnd="30dp"
+                android:background="@drawable/shape"
+                android:backgroundTint="@color/bg_grey"
+                android:fadeScrollbars="false"
+                android:visibility="visible">
+
+                <TextView
+                    android:id="@+id/ReceiveMsgTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="20dp"
+                    android:textAlignment="viewStart"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:text="received text" />
+            </ScrollView>
+
+            <FrameLayout
+                android:id="@+id/frameLayout"
+                android:layout_width="300dp"
+                android:layout_height="match_parent"
+                android:background="@drawable/chat_input_background"
+                android:padding="8dp"
+                android:visibility="visible">
+
+                <EditText
+                    android:id="@+id/chatInputBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/chat_input_background"
+                    android:hint="@string/input_prompt"
+                    android:inputType="text"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="50dp"
+                    android:textSize="16sp" />
+
+                <Button
+                    android:id="@+id/btnSend"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom|end"
+                    android:layout_marginEnd="0dp"
+                    android:layout_marginBottom="0dp"
+                    android:padding="8dp"
+                    android:text="@string/send_input"
+                    app:cornerRadius="@dimen/cornerRadius" />
+
+            </FrameLayout>
+        </LinearLayout>
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline4"
+        android:id="@+id/halfScreen"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
