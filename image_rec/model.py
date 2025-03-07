@@ -99,7 +99,7 @@ def find_largest_or_central_bbox(bboxes, signal):
         return "NA", 0.0
 
     # Exclude 'end' class
-    valid_bboxes = [bbox for bbox in bboxes if bbox["label"] != "end" and bbox["confidence"] > 0.3]
+    valid_bboxes = [bbox for bbox in bboxes if bbox["label"] != "10" and bbox["confidence"] > 0.3]
 
     if not valid_bboxes:
         return "NA", 0.0
@@ -228,8 +228,8 @@ def predict_image_t2(model, image_path, output_dir, signal):
     # Select the largest bounding box
     selected_label, selected_area = find_largest_or_central_bbox(bboxes, signal)
 
-    # If no valid detection or class is 'end', default to "left" (39)
-    if selected_label == "end" or selected_label == "NA":
+    # If no valid detection, default to "left" (39)
+    if selected_label != "38" or selected_label == "39":
         image_id = 39
     else:
         image_id = id_map.get(selected_label, 39)  # Default to left if key is missing
