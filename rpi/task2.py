@@ -41,7 +41,8 @@ class TaskTwo(RaspberryPi):
             self.proc_recv_stm32.start()
             self.proc_command_follower.start()
             self.proc_rpi_action.start()
-
+            
+            self.first_obstacle = True
             self.set_actions()
             
             logger.info("Child Processes started")
@@ -57,8 +58,10 @@ class TaskTwo(RaspberryPi):
         action_list = [
             "frontuntil",
             "SNAP2_C",
+            "back",
             "frontuntil",
-            "front",
+            "SNAP2_C",
+            
             "FIN",
         ]
         for action in action_list:
@@ -85,19 +88,29 @@ class TaskTwo(RaspberryPi):
             if action.cat == Category.SNAP.value:
                 self.ready_snap.wait()
                 results = self.recognize_image(obstacle_id_with_signal=action.value)
-                self.outstanding_stm_instructions.set(1)
-                if results["image_id"] == "38": #right
-                    self.stm_link.send_cmd("T", 50, 25, 45)
-                    self.stm_link.send_cmd("T", 50, -25, 45)
-                    self.stm_link.send_cmd("t", 50, 0, 10)
-                    self.stm_link.send_cmd("T", 50, -25, 45)
-                    self.stm_link.send_cmd("T", 50, 25, 45)
+                
+                if self.first_obstacle:
+                    self.outstanding_stm_instructions.set(5)
+                    if results["image_id"] == "38": #right
+                        self.stm_link.send_cmd("T", 20, 25, 45)
+                        self.stm_link.send_cmd("T", 20, -25, 45)
+                        self.stm_link.send_cmd("t", 20, 0, 10)
+                        self.stm_link.send_cmd("T", 20, -25, 45)
+                        self.stm_link.send_cmd("T", 20, 25, 45)
+                    else:
+                        self.stm_link.send_cmd("T", 20, -25, 45)
+                        self.stm_link.send_cmd("T", 20, 25, 45)
+                        self.stm_link.send_cmd("t", 20, 0, 10)
+                        self.stm_link.send_cmd("T", 20, 25, 45)
+                        self.stm_link.send_cmd("T", 20, -25, 45)
                 else:
-                    self.stm_link.send_cmd("T", 50, -25, 45)
-                    self.stm_link.send_cmd("T", 50, 25, 45)
-                    self.stm_link.send_cmd("t", 50, 0, 10)
-                    self.stm_link.send_cmd("T", 50, 25, 45)
-                    self.stm_link.send_cmd("T", 50, -25, 45)
+                    # obstacle 2
+                    self.outstanding_stm_instructions.set(2)
+                    if results["image_id"] == "38":
+                        self.stm_link.send_cmd("T", 20, 25, 90)
+                    else:
+                        self.stm_link.send_cmd("T", 20, -25, 90)
+                        
                 self.ready_snap.clear()
                 self.unpause.set()
             elif action.cat == Category.STITCH.value:
