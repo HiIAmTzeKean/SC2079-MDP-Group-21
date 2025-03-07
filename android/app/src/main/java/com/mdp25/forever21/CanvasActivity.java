@@ -21,11 +21,8 @@ import android.widget.EditText;
 import com.mdp25.forever21.bluetooth.BluetoothMessage;
 import com.mdp25.forever21.bluetooth.BluetoothMessageParser;
 import com.mdp25.forever21.bluetooth.BluetoothMessageReceiver;
-import com.mdp25.forever21.canvas.CanvasGestureController;
 import com.mdp25.forever21.canvas.CanvasTouchController;
 import com.mdp25.forever21.canvas.CanvasView;
-import com.mdp25.forever21.canvas.Grid;
-import com.mdp25.forever21.canvas.Robot;
 import com.mdp25.forever21.canvas.RobotView;
 
 public class CanvasActivity extends AppCompatActivity {
@@ -48,7 +45,6 @@ public class CanvasActivity extends AppCompatActivity {
     private CanvasView canvasView;
     private RobotView robotView;
     private CanvasTouchController canvasTouchController;
-    private CanvasGestureController canvasGestureController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,8 +53,10 @@ public class CanvasActivity extends AppCompatActivity {
 
         myApp = (MyApplication) getApplication();
 
+        // reset robot pos and dir
+        myApp.robot().updatePosition(1,1).updateFacing(Facing.NORTH);
+
         canvasTouchController = new CanvasTouchController(myApp);
-        canvasGestureController = new CanvasGestureController();
 
         canvasView = findViewById(R.id.canvasView);
         canvasView.setGrid(myApp.grid());
@@ -243,7 +241,7 @@ public class CanvasActivity extends AppCompatActivity {
     private void onMsgReceived(BluetoothMessage btMsg) {
         if (btMsg instanceof BluetoothMessage.PlainStringMessage m) {
             // show on ui
-            receivedMessages.append("\n" + m.rawMsg());
+            receivedMessages.append("\n" + m.rawMsg() + "\n");
         } else if (btMsg instanceof BluetoothMessage.RobotStatusMessage m) {
             // show on ui
             robotStatusDynamic.setText(m.status().toUpperCase());
@@ -255,8 +253,7 @@ public class CanvasActivity extends AppCompatActivity {
             receivedMessages.append("\n[image-rec] " + m.rawMsg() + "\n"); // just print on ui for now
         } else if (btMsg instanceof BluetoothMessage.RobotPositionMessage m) {
             // update robot's pos, then invalidate ui
-            myApp.robot().updatePosition(m.x(), m.y());
-            myApp.robot().updateFacing(Facing.getFacingFromCode(m.direction()));
+            myApp.robot().updatePosition(m.x(), m.y()).updateFacing(Facing.getFacingFromCode(m.direction()));
             robotView.invalidate();
             receivedMessages.append("\n[location] " + m.rawMsg() + "\n"); // just print on ui for now
         }

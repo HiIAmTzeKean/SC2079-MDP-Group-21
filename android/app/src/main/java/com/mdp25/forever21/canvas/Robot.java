@@ -28,19 +28,20 @@ public class Robot {
         return new Robot(x, y, facing);
     }
 
-    public void updatePosition(int x, int y) {
+    public Robot updatePosition(int x, int y) {
         position.setX(x);
         position.setY(y);
+        return this;
     }
 
     public Position getPosition() {
         return this.position;
     }
 
-    public void updateFacing(Facing facing) {
-        if (facing.equals(Facing.SKIP))
-            return; // exit early
-        this.facing = facing;
+    public Robot updateFacing(Facing facing) {
+        if (!facing.equals(Facing.SKIP))
+            this.facing = facing;
+        return this;
     }
 
     public Facing getFacing() {
