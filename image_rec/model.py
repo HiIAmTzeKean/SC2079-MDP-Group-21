@@ -228,8 +228,8 @@ def predict_image_t2(model, image_path, output_dir, signal):
     # Select the largest bounding box
     selected_label, selected_area = find_largest_or_central_bbox(bboxes, signal)
 
-    # If no valid detection or class is 'end', default to "left" (39)
-    if selected_label == "end" or selected_label == "NA":
+    # If no valid detection, default to "left" (39)
+    if selected_label != "38" or selected_label == "39":
         image_id = 39
     else:
         image_id = id_map.get(selected_label, 39)  # Default to left if key is missing
