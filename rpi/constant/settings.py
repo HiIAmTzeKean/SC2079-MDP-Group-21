@@ -6,6 +6,7 @@ BAUD_RATE = 115200
 API_IP = "192.168.21.25"  # IP address of laptop
 API_PORT = 5000
 URL = f"http://{API_IP}:{API_PORT}"
+API_TIMEOUT = 90
 
 # ROBOT SETTINGS
 OUTDOOR_BIG_TURN = False
