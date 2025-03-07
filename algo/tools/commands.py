@@ -81,21 +81,25 @@ class CommandGenerator:
 
         # TODO tune & add forward/reverse straight line distances to make end in middle of the cell
         elif motion == Motion.FORWARD_LEFT_TURN:
-            return [f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{-46}{self.SEP}{90}",
-                    # f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{0}{self.SEP}{7}"
-                    ]
+            return [
+                f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{-46}{self.SEP}{90}",
+                f"{self.BACKWARD_DIST_TARGET}{100}{self.SEP}{0}{self.SEP}{4}",
+            ]
         elif motion == Motion.FORWARD_RIGHT_TURN:
-            return [f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{45}{self.SEP}{90}",
-                    # f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{0}{self.SEP}{8}"
-                    ]
+            return [
+                f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{45}{self.SEP}{90}",
+                f"{self.BACKWARD_DIST_TARGET}{100}{self.SEP}{0}{self.SEP}{4}",
+            ]
         elif motion == Motion.REVERSE_LEFT_TURN:
-            return [f"{self.BACKWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{-37.5}{self.SEP}{90}",
-                    # f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{0}{self.SEP}{8}"
-                    ]
+            return [
+                f"{self.FORWARD_DIST_TARGET}{100}{self.SEP}{0}{self.SEP}{4}",
+                f"{self.BACKWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{-37.5}{self.SEP}{90}",
+            ]
         elif motion == Motion.REVERSE_RIGHT_TURN:
-            return [f"{self.BACKWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{40}{self.SEP}{90}",
-                    # f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{0}{self.SEP}{7}"
-                    ]
+            return [
+                f"{self.FORWARD_DIST_TARGET}{100}{self.SEP}{0}{self.SEP}{4}",
+                f"{self.BACKWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{40}{self.SEP}{90}",
+            ]
         # TODO tune & add forward/reverse straight line distances to make end in middle of the cell
         elif motion == Motion.FORWARD_OFFSET_LEFT:
             # break it down into 2 steps
@@ -200,27 +204,4 @@ class CommandGenerator:
 
         # add the final command
         commands.append(f"{self.FIN}")
-
-        modified_commands = []
-        for cmd in commands:
-            if cmd.startswith(('T', 't')):
-                parts = cmd.split('|')
-                if len(parts) >= 2:
-                    y = parts[1]
-                    if y != '0':
-                        if cmd.startswith('T'):
-                            modified_commands.append(cmd)
-                            modified_commands.append('t100|0|4')
-                        elif cmd.startswith('t'):
-                            modified_commands.append('T100|0|4')
-                            modified_commands.append(cmd)
-                        else:
-                            modified_commands.append(cmd)
-                    else:
-                        modified_commands.append(cmd)
-                else:
-                    modified_commands.append(cmd)
-            else:
-                modified_commands.append(cmd)
-
-        return modified_commands
+        return commands
