@@ -4,7 +4,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.content.Context;
-
+import android.widget.Toast;
 
 
 import com.mdp25.forever21.MyApplication;
@@ -35,6 +35,7 @@ public class CanvasTouchController implements View.OnTouchListener {
         this.grid = myApp.grid();
         this.SELECTION_RADIUS = convertDpToPx(myApp.getApplicationContext(), 2); // 2dp
     }
+
     private static int convertDpToPx(Context context, float dp) {
         return (int) (dp * context.getResources().getDisplayMetrics().density);
     }
@@ -53,9 +54,11 @@ public class CanvasTouchController implements View.OnTouchListener {
                 Log.d(TAG, "Touched down at (" + downX + ", " + downY + ")");
                 if (grid.isInsideGrid(downX, downY)) {
                     selectedObstacle = grid.findObstacleWithApproxPos(downX, downY, SELECTION_RADIUS);
-                    selectedObstacle.ifPresent(obst ->
-                            Log.d(TAG, "Selected obstacle at " + obst.getPosition())
-                    );
+                    selectedObstacle.ifPresent(obst -> {
+                        Log.d(TAG, "Selected obstacle at " + obst.getPosition());
+                        obst.setSelected(true);
+                        canvasView.invalidate();
+                    });
                 }
                 break;
 
@@ -65,6 +68,7 @@ public class CanvasTouchController implements View.OnTouchListener {
                 Log.d(TAG, "Touched up at (" + upX + ", " + upY + ")");
                 if (selectedObstacle.isPresent()) {
                     GridObstacle obstacle = selectedObstacle.get();
+                    obstacle.setSelected(false);
                     int oldX = obstacle.getPosition().getXInt();
                     int oldY = obstacle.getPosition().getYInt();
                     Log.d(TAG, downX + " " + downY + " " + upX + " " + upY);
@@ -84,14 +88,14 @@ public class CanvasTouchController implements View.OnTouchListener {
 //                            myApp.btConnection().sendMessage("OBST_REMOVE," + obstacle.getId() + "," + oldX + "," + oldY);
                         Log.d(TAG, "Removed obstacle at (" + oldX + ", " + oldY + ")");
                         canvasView.invalidate(); // Refresh canvas
-                    }
-                    else if (!grid.hasObstacle(upX, upY)) { // if finger lifted on empty cell
+                    } else if (!grid.hasObstacle(upX, upY)) { // if finger lifted on empty cell
                         // Move obstacle only if lifted on an empty cell
                         obstacle.updatePosition(upX, upY);
                         // some fake log to show moving of obstacles
 //                        if (myApp.btConnection() != null)
 //                            myApp.btConnection().sendMessage("OBST_MOVE,"  + obstacle.getId() + "," + oldX + "," + oldY + "," + finalX + "," + finalY);
                         Log.d(TAG, "Moved obstacle from (" + oldX + ", " + oldY + ") to (" + upX + ", " + upY + ")");
+                        Toast.makeText(myApp, "Moved obst to (" + upX + ", " + upY + ")", Toast.LENGTH_SHORT).show();
                         canvasView.invalidate(); // Refresh canvas
                     }
                 } else {
@@ -103,6 +107,7 @@ public class CanvasTouchController implements View.OnTouchListener {
 //                    if (myApp.btConnection() != null)
 //                        myApp.btConnection().sendMessage("OBST_ADD," + obstacle.getId() + "," + finalX + "," + finalY);
                         Log.d(TAG, "Added new obstacle at (" + upX + ", " + upY + ")");
+                        Toast.makeText(myApp, "Added obst at (" + upX + ", " + upY + ")", Toast.LENGTH_SHORT).show();
                         canvasView.invalidate(); // Refresh canvas
                     }
                 }

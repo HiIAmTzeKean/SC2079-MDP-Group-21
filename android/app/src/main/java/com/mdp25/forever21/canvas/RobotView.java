@@ -29,10 +29,10 @@ public class RobotView extends View {
 
     private void init() {
         // Load the robot PNG from resources
-        robotFacingNorth = BitmapFactory.decodeResource(getResources(), R.drawable.car_face_up);
-        robotFacingEast = BitmapFactory.decodeResource(getResources(), R.drawable.car_face_right);
-        robotFacingSouth = BitmapFactory.decodeResource(getResources(), R.drawable.car_face_down);
-        robotFacingWest = BitmapFactory.decodeResource(getResources(), R.drawable.car_face_left);
+        robotFacingNorth = BitmapFactory.decodeResource(getResources(), R.drawable.annie_face_up);
+        robotFacingEast = BitmapFactory.decodeResource(getResources(), R.drawable.annie_face_right);
+        robotFacingSouth = BitmapFactory.decodeResource(getResources(), R.drawable.annie_face_down);
+        robotFacingWest = BitmapFactory.decodeResource(getResources(), R.drawable.annie_face_left);
     }
 
     @Override

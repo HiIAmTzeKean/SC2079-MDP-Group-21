@@ -17,6 +17,7 @@ public class CanvasView extends View {
     private int offsetX, offsetY; // To center the grid
     private final Paint gridPaint = new Paint();
     private final Paint textPaint = new Paint();
+    private final Paint obstacleSelectedPaint = new Paint();
     private final Paint obstaclePaint = new Paint();
     private final Paint idPaint = new Paint();
     private final Paint facingPaint = new Paint();
@@ -49,6 +50,8 @@ public class CanvasView extends View {
         // Obstacle styling
         obstaclePaint.setColor(Color.BLACK);
         obstaclePaint.setStyle(Paint.Style.FILL);
+        obstacleSelectedPaint.setColor(Color.GRAY);
+        obstacleSelectedPaint.setStyle(Paint.Style.FILL);
 
         // ID text styling (obstacle IDs)
         idPaint.setColor(Color.WHITE);
@@ -181,7 +184,8 @@ public class CanvasView extends View {
             int right = left + cellSize;
             int bottom = top + cellSize;
 
-            canvas.drawRect(left, top, right, bottom, obstaclePaint);
+            boolean selected = gridObstacle.isSelected();
+            canvas.drawRect(left, top, right, bottom, selected ? obstacleSelectedPaint : obstaclePaint);
 
             // Compute text position (center of cell)
             float textX = left + (cellSize / 2);

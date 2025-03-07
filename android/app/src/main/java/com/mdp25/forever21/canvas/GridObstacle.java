@@ -17,11 +17,14 @@ public class GridObstacle {
     private Target target;
     private final Position position;
 
+    private boolean selected; // to detect if the obstacle is being interacted with
+
     public GridObstacle(int x, int y, Facing facing) {
         this.id = 1;
         this.facing = facing;
         this.target = null;
         this.position = Position.of(x, y);
+        this.selected = false;
     }
 
     /**
@@ -81,6 +84,14 @@ public class GridObstacle {
         } else if (this.facing == Facing.WEST) {
             this.facing = Facing.NORTH;
         }
+    }
+
+    public boolean isSelected() {
+        return selected;
+    }
+
+    public void setSelected(boolean selected) {
+        this.selected = selected;
     }
 
     @Override
