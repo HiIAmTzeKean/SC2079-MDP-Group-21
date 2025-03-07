@@ -120,7 +120,7 @@ export const AlgorithmCore = () => {
 				scannedIDs.add(pos.s);
 			}
 		});
-		
+
 		return {
 			scanned: scannedIDs.size,
 			total: obstacles.length
@@ -147,14 +147,14 @@ export const AlgorithmCore = () => {
 			robot_y: ROBOT_INITIAL_POSITION.y,
 			num_runs: numberOfAlgoRuns,
 		};
-		
+
 		try {
 			const algoOutput: AlgoOutput = await fetch.post("/simulator_path", algoInput);
 
 			// Check if all obstacles were scanned
 			const scanResult = checkAllObstaclesScanned(algoOutput.data.path, test.obstacles);
 			const allObstaclesScanned = scanResult.scanned === scanResult.total;
-			
+
 			return {
 				testName: testEnum,
 				runtime: algoOutput.data.runtime,
@@ -178,17 +178,17 @@ export const AlgorithmCore = () => {
 	// Run Algorithm on all test cases
 	const handleTestAll = async () => {
 		if (isAlgorithmLoading || isTestingAll) return;
-		
+
 		setIsTestingAll(true);
 		setShowTestResults(true);
 		setTestAllResults([]);
-		
+
 		const results: TestResult[] = [];
 		let completedTests = 0;
 		const totalTests = AlgoTestEnumsList.length;
-		
+
 		toast.success("Starting to test all algorithm test cases...");
-		
+
 		// Iterate through all test cases
 		for (const testEnum of AlgoTestEnumsList) {
 			// Skip the Custom test as it might not have consistent obstacles
@@ -196,11 +196,11 @@ export const AlgorithmCore = () => {
 				completedTests++;
 				continue;
 			}
-			
+
 			// Show loading toast for current test case
-			toast.loading(`Testing ${testEnum} (${completedTests + 1}/${totalTests})...`, 
+			toast.loading(`Testing ${testEnum} (${completedTests + 1}/${totalTests})...`,
 				{ id: `test-${testEnum}` });
-			
+
 			// Run algorithm for the current test case	
 			const result = await runAlgorithmForTest(testEnum);
 			if (result) {
@@ -215,7 +215,7 @@ export const AlgorithmCore = () => {
 			} else {
 				toast.error(`Failed ${testEnum}`, { id: `test-${testEnum}` });
 			}
-			
+
 			completedTests++;
 		}
 
@@ -325,26 +325,23 @@ export const AlgorithmCore = () => {
 		setAlgoCost(null);
 	};
 
-	// TODO: FOR DEBUGGING, remove when done. to directly send commands to STM
+	// TODO: FOR DEBUGGING, remove when done. to display /path response output on grid
 	const [commandsInput, setCommandsInput] = useState<string>("");
 	const [commandsOutput, setCommandsOutput] = useState<string>("");
-	const convertToSTMCommands = () => {
+	const convertToGrid = () => {
 		if (commandsInput === "") {
 			setCommandsOutput("");
 			return;
 		}
 
-		const commandsList: string[] = JSON.parse(commandsInput);
-		let STMCommands = "";
-		STMCommands += "stm_link = STMLink()\nstm_link.connect()\n";
-		for (const cmd of commandsList) {
-			if (cmd === "FIN" || cmd.startsWith("SNAP")) continue;
+		const algoOutput: AlgoOutput = JSON.parse(commandsInput.replaceAll("'", "\"").replaceAll("None", "null"));
+		setRobotPositions(algoOutput.data.path);
+		setRobotCommands(algoOutput.data.commands);
+		setRobotMotions(algoOutput.data.motions);
+		setCurrentStep(0);
 
-			const flag = cmd[0];
-			const [speed, angle, val] = cmd.slice(1).split("|");
-			STMCommands += `stm_link.send_cmd("${flag}",${speed},${angle},${val})\nstm_link.recv()\n`;
-		}
-		setCommandsOutput(STMCommands);
+		setAlgoRuntime(algoOutput.data.runtime);
+		setAlgoCost(algoOutput.data.distance);
 	};
 
 	// TODO: REFACTOR!!! cleanup this magic spaghetti
@@ -415,6 +412,10 @@ export const AlgorithmCore = () => {
 					result.push(`${mergedCommands[cmdPtr]} ${mergedCommands[cmdPtr + 1]} (${motion}), ${mergedCommands[cmdPtr + 2]} (${nextMotion})`);
 					cmdPtr += 2 // skip over extra OFFSET command & CAPTURE commands
 				}
+				else if (motion.includes("TURN")) {
+					result.push(`${mergedCommands[cmdPtr]} ${mergedCommands[cmdPtr + 1]} (${motion}), ${mergedCommands[cmdPtr + 2]} (${nextMotion})`);
+					cmdPtr += 2 // skip over extra tuning command & CAPTURE commands
+				}
 				else {
 					result.push(`${mergedCommands[cmdPtr]} (${motion}), ${mergedCommands[cmdPtr + 1]} (${nextMotion})`);
 					cmdPtr += 1 // skip over CAPTURE commands
@@ -428,6 +429,14 @@ export const AlgorithmCore = () => {
 				// OFFSET comes in 2 commands
 				result.push(`${mergedCommands[cmdPtr]} ${mergedCommands[cmdPtr + 1]} (${motion})`);
 				cmdPtr += 1; // skip over extra OFFSET command
+				prevMotion = motion;
+				continue;
+			}
+
+			if (motion.includes("TURN")) {
+				cmdPtr += 1;
+				result.push(`${mergedCommands[cmdPtr]} ${mergedCommands[cmdPtr + 1]} (${motion})`);
+				cmdPtr += 1 // skip over extra tuning command
 				prevMotion = motion;
 				continue;
 			}
@@ -537,7 +546,7 @@ export const AlgorithmCore = () => {
 					<label>times</label>
 				</div>
 				{/* Test All button */}
-				<Button 
+				<Button
 					onClick={isTestingAll || isAlgorithmLoading ? undefined : handleTestAll}
 				>
 					<span>Test All Cases</span>
@@ -549,7 +558,7 @@ export const AlgorithmCore = () => {
 				</Button>
 				{/* Toggle button to show/hide test results */}
 				{testAllResults.length > 0 && (
-					<Button 
+					<Button
 						onClick={() => setShowTestResults(!showTestResults)}
 					>
 						<span>{showTestResults ? 'Hide Results' : 'Show Results'}</span>
@@ -703,14 +712,14 @@ export const AlgorithmCore = () => {
 
 			<div className="flex justify-between gap-8">
 				<div className="flex flex-col gap-2">
-					<span>Input list of command strings (in RPI format):</span>
+					<span>Input /path response:</span>
 					<textarea
 						className="w-[400px] h-[200px]"
 						value={commandsInput}
 						onChange={(e) => setCommandsInput(e.target.value)}
 					/>
-					<Button onClick={() => convertToSTMCommands()}>
-						Convert to STM commands
+					<Button onClick={() => convertToGrid()}>
+						Display Path
 					</Button>
 					<pre>{commandsOutput}</pre>
 				</div>
