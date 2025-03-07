@@ -50,7 +50,7 @@ class CommandGenerator:
     # unit distance
     UNIT_DIST: float = 10
 
-    def __init__(self, straight_speed: int = 30, turn_speed: int = 10) -> None:
+    def __init__(self, straight_speed: int = 40, turn_speed: int = 20) -> None:
         """
         A class to generate commands for the robot to follow
 
@@ -81,11 +81,11 @@ class CommandGenerator:
 
         # TODO tune & add forward/reverse straight line distances to make end in middle of the cell
         elif motion == Motion.FORWARD_LEFT_TURN:
-            return [f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{-40}{self.SEP}{90}",
+            return [f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{-46}{self.SEP}{90}",
                     # f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{0}{self.SEP}{7}"
                     ]
         elif motion == Motion.FORWARD_RIGHT_TURN:
-            return [f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{50}{self.SEP}{91}",
+            return [f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{45}{self.SEP}{90}",
                     # f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{0}{self.SEP}{8}"
                     ]
         elif motion == Motion.REVERSE_LEFT_TURN:
@@ -200,4 +200,27 @@ class CommandGenerator:
 
         # add the final command
         commands.append(f"{self.FIN}")
-        return commands
+
+        modified_commands = []
+        for cmd in commands:
+            if cmd.startswith(('T', 't')):
+                parts = cmd.split('|')
+                if len(parts) >= 2:
+                    y = parts[1]
+                    if y != '0':
+                        if cmd.startswith('T'):
+                            modified_commands.append(cmd)
+                            modified_commands.append('t100|0|4')
+                        elif cmd.startswith('t'):
+                            modified_commands.append('T100|0|4')
+                            modified_commands.append(cmd)
+                        else:
+                            modified_commands.append(cmd)
+                    else:
+                        modified_commands.append(cmd)
+                else:
+                    modified_commands.append(cmd)
+            else:
+                modified_commands.append(cmd)
+
+        return modified_commands
