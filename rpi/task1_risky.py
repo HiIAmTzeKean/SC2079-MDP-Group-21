@@ -11,7 +11,7 @@ from .communication.android import AndroidMessage
 from .communication.camera import snap_using_libcamera, snap_using_picamera2
 from .communication.pi_action import PiAction
 from .constant.consts import Category, manual_commands, stm32_prefixes
-from .constant.settings import URL
+from .constant.settings import URL, API_TIMEOUT
 
 
 logger = logging.getLogger(__name__)
@@ -242,12 +242,6 @@ class TaskOne(RaspberryPi):
                 self.rpi_action_queue.put(PiAction(cat=Category.OBSTACLE, value=message["value"]))
                 logger.debug(f"PiAction obstacles appended to queue: {message}")
 
-            # elif message["cat"] == Category.MANUAL.value:
-            #     command = manual_commands.get(message["value"])
-            #     if command is None:
-            #         logger.error("Invalid manual command!")
-            #     self.stm_link.send_cmd(**command)
-                
             ## Command: Start Moving ##
             elif message["cat"] == "control":
                 if message["value"] == "start":
@@ -306,7 +300,7 @@ class TaskOne(RaspberryPi):
             "retrying": retrying,
         }
         logger.debug(f"{body}")
-        response = requests.post(url=f"{URL}/path", json=body, timeout=15.0)
+        response = requests.post(url=f"{URL}/path", json=body, timeout=API_TIMEOUT)
 
         if response.status_code != 200:
             logger.error("Error when requesting path from Algo API.")
@@ -343,7 +337,7 @@ class TaskOne(RaspberryPi):
 
         if the API is down, an error message is sent to the Android
         """
-        response = requests.get(url=f"{URL}/stitch", timeout=2.0)
+        response = requests.get(url=f"{URL}/stitch", timeout=API_TIMEOUT)
 
         # TODO should retry if the response fails
         if response.status_code != 200:
