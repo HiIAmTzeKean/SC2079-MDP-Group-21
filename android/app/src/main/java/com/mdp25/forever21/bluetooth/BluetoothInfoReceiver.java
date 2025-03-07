@@ -22,6 +22,7 @@ public class BluetoothInfoReceiver extends BroadcastReceiver {
             new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED), // bt on/off
             new IntentFilter(BluetoothDevice.ACTION_FOUND), //discovered a device
             new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED), // paired/unpaired
+            new IntentFilter(BluetoothConnection.ACTION_CONNECTED), // connected/disconnected
     };
 
     public BluetoothInfoReceiver(BiConsumer<Intent, String> consumer) {
@@ -73,6 +74,20 @@ public class BluetoothInfoReceiver extends BroadcastReceiver {
             }
         }
 
+        // does not fit into switch statement as it is not a "constant expression"
+        if (action.equals(BluetoothConnection.ACTION_CONNECTED)) {
+            boolean connected = intent.getBooleanExtra(BluetoothConnection.EXTRA_CONNECTED, false);
+            BluetoothDevice device = intent.getParcelableExtra(BluetoothConnection.EXTRA_DEVICE, BluetoothDevice.class);
+            if (device != null) {
+                if (connected) {
+                    Toast.makeText(context, "Connected to " + device.getName(), Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(context, "Disconnected from " + device.getName(), Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                Log.e(TAG, "Connected device is null?");
+            }
+        }
 
         consumer.accept(intent, action);
     }

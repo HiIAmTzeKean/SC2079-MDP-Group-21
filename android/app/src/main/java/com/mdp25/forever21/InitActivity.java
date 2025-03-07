@@ -18,7 +18,7 @@ import com.mdp25.forever21.bluetooth.BluetoothMessageReceiver;
 public class InitActivity extends AppCompatActivity {
     private final String TAG = "InitActivity";
     private static boolean entered = false;
-    private final long DELAY_TIME_MS = 1000;
+    private final long DELAY_TIME_MS = 2000;
     private final Class<?> NEXT_ACTIVITY = BluetoothActivity.class;
 
     @Override
@@ -36,6 +36,7 @@ public class InitActivity extends AppCompatActivity {
         Handler handler = new Handler(Looper.getMainLooper());
         handler.postDelayed(() -> {
             startActivity(new Intent(this, NEXT_ACTIVITY));
+            finish(); // to remove from stack
         }, DELAY_TIME_MS);
     }
 }

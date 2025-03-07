@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Shadow Effect -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#BDBDBD" /> <!-- Shadow Color -->
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+
+    <!-- Foreground (Actual Input Box) -->
+    <item android:top="3dp" android:left="3dp"> <!-- Offset to create depth -->
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFF"/> <!-- Input Box Color -->
+            <corners android:radius="8dp" />
+            <stroke android:width="2dp" android:color="#CCCCCC" />
+        </shape>
+    </item>
+</layer-list>
