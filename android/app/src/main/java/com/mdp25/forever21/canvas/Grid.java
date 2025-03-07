@@ -123,4 +123,11 @@ public class Grid {
     public boolean isInsideGrid(int x, int y) {
         return x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE;
     }
+
+    /**
+     * Clear all obstacles
+     */
+    public void clear() {
+        obstacleList.clear();
+    }
 }
