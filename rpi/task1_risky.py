@@ -4,12 +4,11 @@ import queue
 import time
 from multiprocessing import Process
 from typing import Any, Optional
-
 import requests
 
 from .base_rpi import RaspberryPi
 from .communication.android import AndroidMessage
-from .communication.camera import snap_using_libcamera, snap_using_picamera
+from .communication.camera import snap_using_libcamera, snap_using_picamera2
 from .communication.pi_action import PiAction
 from .constant.consts import Category, manual_commands, stm32_prefixes
 from .constant.settings import URL
@@ -31,7 +30,7 @@ class TaskOne(RaspberryPi):
             self.android_queue.put(AndroidMessage(cat="info", value="You are connected to the RPi!"))
             self.stm_link.connect()
             self.check_api()
-
+            
             # Define child processes
             self.proc_recv_android = Process(target=self.recv_android)
             self.proc_recv_stm32 = Process(target=self.recv_stm)
@@ -277,7 +276,8 @@ class TaskOne(RaspberryPi):
 
         filename = f"/home/rpi21/cam/{int(time.time())}_{obstacle_id}_{signal}.jpg"
         filename_send = f"{int(time.time())}_{obstacle_id}_{signal}.jpg"
-        results = snap_using_picamera(
+
+        results = snap_using_picamera2(
             obstacle_id=obstacle_id,
             signal=signal,
             filename=filename,
@@ -306,7 +306,7 @@ class TaskOne(RaspberryPi):
             "retrying": retrying,
         }
         logger.debug(f"{body}")
-        response = requests.post(url=f"{URL}/path", json=body, timeout=1.0)
+        response = requests.post(url=f"{URL}/path", json=body, timeout=15.0)
 
         if response.status_code != 200:
             logger.error("Error when requesting path from Algo API.")
