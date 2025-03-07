@@ -26,6 +26,10 @@ public class CanvasTouchController implements View.OnTouchListener {
     private final MyApplication myApp;
     private Optional<GridObstacle> selectedObstacle = Optional.empty();
     private final int SELECTION_RADIUS;
+
+    // to track x and y touched down on
+    private int downX = 0, downY = 0;
+
     public CanvasTouchController(MyApplication myApp) {
         this.myApp = myApp;
         this.grid = myApp.grid();
@@ -44,22 +48,35 @@ public class CanvasTouchController implements View.OnTouchListener {
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                // finalX and finalY to be used in lambda functions (it's just liddat)
-                int finalX = x;
-                int finalY = y;
-                if (grid.isInsideGrid(finalX, finalY)) {
-                    selectedObstacle = grid.findObstacleWithApproxPos(finalX, finalY, SELECTION_RADIUS);
-                    Log.d(TAG, "Selected obstacle at (" + finalX + ", " + finalY + ")");
+                downX = x;
+                downY = y;
+                Log.d(TAG, "Touched down at (" + downX + ", " + downY + ")");
+                if (grid.isInsideGrid(downX, downY)) {
+                    selectedObstacle = grid.findObstacleWithApproxPos(downX, downY, SELECTION_RADIUS);
+                    selectedObstacle.ifPresent(obst ->
+                            Log.d(TAG, "Selected obstacle at " + obst.getPosition())
+                    );
                 }
                 break;
 
             case MotionEvent.ACTION_UP:
-                finalX = x;
-                finalY = y;
-                selectedObstacle.ifPresent(obstacle -> {
+                final int upX = x; //for readability
+                final int upY = y; //for readability
+                Log.d(TAG, "Touched up at (" + upX + ", " + upY + ")");
+                if (selectedObstacle.isPresent()) {
+                    GridObstacle obstacle = selectedObstacle.get();
                     int oldX = obstacle.getPosition().getXInt();
                     int oldY = obstacle.getPosition().getYInt();
-                    if (!grid.isInsideGrid(finalX, finalY)) {
+                    Log.d(TAG, downX + " " + downY + " " + upX + " " + upY);
+                    if (downX == upX && downY == upY) { // if the finger is lifted on the same cell
+                        // Rotate obstacle clockwise if lifted on the same cell
+                        obstacle.rotateClockwise();
+                        // some fake log to show rotating of obstacles
+//                        if (myApp.btConnection() != null)
+//                            myApp.btConnection().sendMessage("OBST_ROT," + obstacle.getId() + "," + finalX + "," + finalY);
+                        Log.d(TAG, "Rotated obstacle clockwise at " + obstacle.getPosition());
+                        canvasView.invalidate(); // Refresh canvas
+                    } else if (!grid.isInsideGrid(upX, upY)) { // if finger lifted outside of grid
                         // Remove if lifted outside the grid
                         grid.removeObstacle(oldX, oldY);
                         // some fake log to show removing of obstacles
@@ -68,34 +85,26 @@ public class CanvasTouchController implements View.OnTouchListener {
                         Log.d(TAG, "Removed obstacle at (" + oldX + ", " + oldY + ")");
                         canvasView.invalidate(); // Refresh canvas
                     }
-                    else if (!grid.hasObstacle(finalX, finalY)) {
+                    else if (!grid.hasObstacle(upX, upY)) { // if finger lifted on empty cell
                         // Move obstacle only if lifted on an empty cell
-                        obstacle.updatePosition(finalX, finalY);
+                        obstacle.updatePosition(upX, upY);
                         // some fake log to show moving of obstacles
 //                        if (myApp.btConnection() != null)
 //                            myApp.btConnection().sendMessage("OBST_MOVE,"  + obstacle.getId() + "," + oldX + "," + oldY + "," + finalX + "," + finalY);
-                        Log.d(TAG, "Moved obstacle from (" + oldX + ", " + oldY + ") to (" + finalX + ", " + finalY + ")");
+                        Log.d(TAG, "Moved obstacle from (" + oldX + ", " + oldY + ") to (" + upX + ", " + upY + ")");
                         canvasView.invalidate(); // Refresh canvas
                     }
-                    else if (grid.hasObstacle(finalX, finalY) && oldX == finalX && oldY == finalY) {
-                        // Rotate obstacle clockwise if lifted on the same cell
-                        obstacle.rotateClockwise();
-                        // some fake log to show rotating of obstacles
-//                        if (myApp.btConnection() != null)
-//                            myApp.btConnection().sendMessage("OBST_ROT," + obstacle.getId() + "," + finalX + "," + finalY);
-                        Log.d(TAG, "Rotated obstacle clockwise at (" + finalX + ", " + finalY + ")");
-                        canvasView.invalidate(); // Refresh canvas
-                    }
-                });
-                // If no obstacle was selected, add a new one
-                if (grid.isInsideGrid(finalX, finalY) && !grid.hasObstacle(finalX, finalY) && selectedObstacle.isEmpty()) {
-                    GridObstacle obstacle = GridObstacle.of(finalX, finalY);
-                    grid.addObstacle(obstacle);
-                    // some fake log to show adding of obstacles
+                } else {
+                    // If no obstacle was selected, add a new one
+                    if (grid.isInsideGrid(upX, upY) && !grid.hasObstacle(upX, upY)) {
+                        GridObstacle obstacle = GridObstacle.of(upX, upY);
+                        grid.addObstacle(obstacle);
+                        // some fake log to show adding of obstacles
 //                    if (myApp.btConnection() != null)
 //                        myApp.btConnection().sendMessage("OBST_ADD," + obstacle.getId() + "," + finalX + "," + finalY);
-                    Log.d(TAG, "Added new obstacle at (" + finalX + ", " + finalY + ")");
-                    canvasView.invalidate(); // Refresh canvas
+                        Log.d(TAG, "Added new obstacle at (" + upX + ", " + upY + ")");
+                        canvasView.invalidate(); // Refresh canvas
+                    }
                 }
                 selectedObstacle = Optional.empty(); // Clear selection
                 break;
