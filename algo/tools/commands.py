@@ -50,7 +50,7 @@ class CommandGenerator:
     # unit distance
     UNIT_DIST: float = 10
 
-    def __init__(self, straight_speed: int = 30, turn_speed: int = 10) -> None:
+    def __init__(self, straight_speed: int = 40, turn_speed: int = 20) -> None:
         """
         A class to generate commands for the robot to follow
 
@@ -81,21 +81,25 @@ class CommandGenerator:
 
         # TODO tune & add forward/reverse straight line distances to make end in middle of the cell
         elif motion == Motion.FORWARD_LEFT_TURN:
-            return [f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{-40}{self.SEP}{90}",
-                    # f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{0}{self.SEP}{7}"
-                    ]
+            return [
+                f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{-46}{self.SEP}{90}",
+                f"{self.BACKWARD_DIST_TARGET}{100}{self.SEP}{0}{self.SEP}{4}",
+            ]
         elif motion == Motion.FORWARD_RIGHT_TURN:
-            return [f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{50}{self.SEP}{91}",
-                    # f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{0}{self.SEP}{8}"
-                    ]
+            return [
+                f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{45}{self.SEP}{90}",
+                f"{self.BACKWARD_DIST_TARGET}{100}{self.SEP}{0}{self.SEP}{4}",
+            ]
         elif motion == Motion.REVERSE_LEFT_TURN:
-            return [f"{self.BACKWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{-37.5}{self.SEP}{90}",
-                    # f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{0}{self.SEP}{8}"
-                    ]
+            return [
+                f"{self.FORWARD_DIST_TARGET}{100}{self.SEP}{0}{self.SEP}{4}",
+                f"{self.BACKWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{-37.5}{self.SEP}{90}",
+            ]
         elif motion == Motion.REVERSE_RIGHT_TURN:
-            return [f"{self.BACKWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{40}{self.SEP}{90}",
-                    # f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{0}{self.SEP}{7}"
-                    ]
+            return [
+                f"{self.FORWARD_DIST_TARGET}{100}{self.SEP}{0}{self.SEP}{4}",
+                f"{self.BACKWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{40}{self.SEP}{90}",
+            ]
         # TODO tune & add forward/reverse straight line distances to make end in middle of the cell
         elif motion == Motion.FORWARD_OFFSET_LEFT:
             # break it down into 2 steps

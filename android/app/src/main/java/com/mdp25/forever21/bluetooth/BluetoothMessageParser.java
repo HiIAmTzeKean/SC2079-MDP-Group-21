@@ -59,7 +59,7 @@ public interface BluetoothMessageParser extends Function<String, BluetoothMessag
         // start from params index 1, since 0 is command
         for (int i = 0; i < expectedSize; ++i) {
             try {
-                ret[i] = Integer.parseInt(params[i + 1]);
+                ret[i] = Integer.parseInt(params[i + 1].trim());
             } catch (NumberFormatException e) {
                 ret[i] = 0; //put a safe non-crash value
                 Log.e(TAG, "Error in parsing " + params[i + 1]);

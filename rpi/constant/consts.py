@@ -54,17 +54,17 @@ class Category(Enum):
     FIN = 'FIN'
 
 manual_commands: dict[str, tuple[Any, ...]] = {
-    "front": ("T", 50, 0, 10),
-    "frontuntil": ("W", 50, 0, 30),
-    "back": ("t", 50, 0, 10),
-    "left": ("T", 50, -25, 90),
-    "left60": ("T", 50, -25, 60),
-    "left120": ("T", 50, -25, 120),
-    "right": ("T", 50, 25, 90),
-    "right60": ("T", 50, 25, 60),
-    "right120": ("T", 50, 25, 120),
-    "bright": ("t", 30, 20, 90),
-    "bleft": ("t", 30, -20, 90),
+    "front": "T50|0|10",
+    "frontuntil": "W50|0|30",
+    "back": "t50|0|10",
+    "left": "T50|-25|90",
+    "left60": "T50|-25|60",
+    "left120": "T50|-25|120",
+    "right": "T50|25|90",
+    "right60": "T50|25|60",
+    "right120": "T50|25|120",
+    "bright": "t30|20|90",
+    "bleft": "t30|-20|90",
 }
 manual_commands["left_arc"] = (manual_commands["left"], manual_commands["right120"])
 manual_commands["right_arc"] = (manual_commands["right"], manual_commands["left120"])

@@ -6,83 +6,48 @@
     android:layout_height="match_parent"
     tools:context=".CanvasActivity">
 
-    <com.mdp25.forever21.canvas.CanvasView
-        android:id="@+id/canvasView"
-        android:layout_width="match_parent"
+    <FrameLayout
+        android:id="@+id/canvasContainer"
+        android:layout_width="0dp"
         android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/halfScreen"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHeight_percent="0.5"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/bottomLayout"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.mdp25.forever21.canvas.CanvasView
+            android:id="@+id/canvasView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <com.mdp25.forever21.canvas.RobotView
+            android:id="@+id/robotView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </FrameLayout>
+
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/bottomLayout"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/canvasView"
-        tools:layout_editor_absoluteX="118dp">
-
-
-        <ImageButton
-            android:id="@+id/btnRobotBackward"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:adjustViewBounds="true"
-            android:background="@null"
-            android:contentDescription="@string/move_backward"
-            android:padding="8dp"
-            android:scaleType="fitCenter"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/btnRobotRight"
-            app:srcCompat="@drawable/btn_backward_selector" />
-
-        <ImageButton
-            android:id="@+id/btnRobotForward"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:adjustViewBounds="true"
-            android:background="@null"
-            android:contentDescription="@string/move_forward"
-            android:padding="8dp"
-            android:scaleType="fitCenter"
-            app:layout_constraintBottom_toTopOf="@+id/btnRobotRight"
-            app:layout_constraintEnd_toStartOf="@+id/btnRobotRight"
-            app:srcCompat="@drawable/btn_forward_selector" />
-
-        <ImageButton
-            android:id="@+id/btnRobotLeft"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:adjustViewBounds="true"
-            android:background="@null"
-            android:contentDescription="@string/move_left"
-            android:padding="8dp"
-            android:scaleType="fitCenter"
-            app:layout_constraintBottom_toTopOf="@+id/btnRobotBackward"
-            app:layout_constraintEnd_toStartOf="@+id/btnRobotBackward"
-            app:srcCompat="@drawable/btn_left_selector" />
-
-        <ImageButton
-            android:id="@+id/btnRobotRight"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:adjustViewBounds="true"
-            android:background="@null"
-            android:contentDescription="@string/move_right"
-            android:padding="8dp"
-            android:scaleType="fitCenter"
-            app:layout_constraintBottom_toTopOf="@+id/btnRobotBackward"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:srcCompat="@drawable/btn_right_selector" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/halfScreen"
+        app:layout_constraintVertical_bias="0.0">
 
 
         <LinearLayout
-            android:id="@+id/linearLayout2"
-            android:layout_width="wrap_content"
+            android:id="@+id/statusLayout"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
@@ -91,63 +56,181 @@
                 android:id="@+id/robotStatusStatic"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
-                android:text="@string/robot_status_static"
-                android:textColor="@color/black"
-                android:textSize="24sp"
+                android:layout_marginEnd="10dp"
+                android:gravity="center"
+                android:text="@string/robot_status"
+                android:textColor="@color/tertiary"
+                android:textSize="20sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/robotStatusDynamic"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
-                android:text="@string/robot_status_dynamic"
-                android:textColor="@color/black"
-                android:textSize="24sp" />
+                android:gravity="center"
+                android:text="@string/robot_status_waiting"
+                android:textSize="20sp" />
+
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/linearLayout"
-            android:layout_width="wrap_content"
+            android:id="@+id/purpleButtonsLayout"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            app:layout_constraintBottom_toTopOf="@+id/linearLayout2"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.51"
+            app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.51">
+            app:layout_constraintTop_toBottomOf="@+id/xyLayout">
 
-            <TextView
-                android:id="@+id/receivedMessagesStatic"
+            <Button
+                android:id="@+id/btnInitializeRobot"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="@string/received_messages_title"
-                android:textColor="@color/black"
-                android:textSize="24sp"
-                android:textStyle="bold" />
+                android:layout_marginEnd="20dp"
+                android:text="@string/initialize_robot"
+                app:cornerRadius="@dimen/cornerRadius" />
+
+            <Button
+                android:id="@+id/btnSendData"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/send_data"
+                app:cornerRadius="@dimen/cornerRadius" />
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnRobotStart"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="50dp"
+            android:backgroundTint="@color/secondary"
+            android:text="@string/start_robot"
+            app:cornerRadius="@dimen/cornerRadius"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/purpleButtonsLayout" />
+
+        <LinearLayout
+            android:id="@+id/xyLayout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="1dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginEnd="1dp"
+            android:gravity="center"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/statusLayout">
+
+            <EditText
+                android:id="@+id/inputX"
+                android:layout_width="45dp"
+                android:layout_height="wrap_content"
+                android:hint="@string/x_coordinate"
+                android:inputType="number"
+                android:textSize="18sp"
+                android:visibility="visible" />
+
+            <EditText
+                android:id="@+id/inputY"
+                android:layout_width="45dp"
+                android:layout_height="wrap_content"
+                android:hint="@string/y_coordinate"
+                android:inputType="number"
+                android:textSize="18sp"
+                android:visibility="visible" />
+
+            <Spinner
+                android:id="@+id/spinnerRobotFacing"
+                android:layout_width="120dp"
+                android:layout_height="match_parent" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/messagesLayout"
+            android:layout_width="0dp"
+            android:layout_height="100dp"
+            android:layout_marginStart="1dp"
+            android:layout_marginEnd="1dp"
+            android:gravity="center"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btnRobotStart"
+            app:layout_constraintVertical_bias="0.82">
 
             <ScrollView
-                android:id="@+id/scrollReceivedMessages"
-                android:layout_width="224dp"
-                android:layout_height="43dp">
+                android:id="@+id/ReceiveMsgScrollView"
+                android:layout_width="176dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="30dp"
+                android:layout_marginEnd="30dp"
+                android:background="@drawable/shape"
+                android:backgroundTint="@color/bg_grey"
+                android:fadeScrollbars="false"
+                android:visibility="visible">
 
                 <TextView
-                    android:id="@+id/receivedMessagesDynamic"
+                    android:id="@+id/ReceiveMsgTextView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="#EFEFEF"
-                    android:padding="10dp"
-                    android:textColor="#000000"
-                    android:textSize="16sp" />
+                    android:layout_margin="20dp"
+                    android:textAlignment="viewStart"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:text="received text" />
             </ScrollView>
 
+            <FrameLayout
+                android:id="@+id/frameLayout"
+                android:layout_width="300dp"
+                android:layout_height="match_parent"
+                android:background="@drawable/chat_input_background"
+                android:padding="8dp"
+                android:visibility="visible">
+
+                <EditText
+                    android:id="@+id/chatInputBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/chat_input_background"
+                    android:hint="@string/input_prompt"
+                    android:inputType="text"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="50dp"
+                    android:textSize="16sp" />
+
+                <Button
+                    android:id="@+id/btnSend"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom|end"
+                    android:layout_marginEnd="0dp"
+                    android:layout_marginBottom="0dp"
+                    android:padding="8dp"
+                    android:text="@string/send_input"
+                    app:cornerRadius="@dimen/cornerRadius" />
+
+            </FrameLayout>
         </LinearLayout>
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/halfScreen"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.5" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

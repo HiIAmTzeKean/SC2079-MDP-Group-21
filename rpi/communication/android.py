@@ -66,7 +66,7 @@ class AndroidMessage:
         """
         if isinstance(self._value, dict):
             # return values in the dictionary as string
-            return f"{self._cat};{','.join([str(v) for v in self._value.values()])}"
+            return f"{self._cat};{';'.join([str(v) for v in self._value.values()])}"
         return f"{self._cat};{self._value}"
 
 

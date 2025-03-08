@@ -1,21 +1,42 @@
 <resources>
-    <string name="app_name">MDP Grp21 Controller</string>
+    <string name="app_name">MDP 21</string>
     <string name="action_settings">Settings</string>
     <!-- Strings used for fragments for navigation -->
-    <string name="first_fragment_label">First Fragment</string>
-    <string name="second_fragment_label">Second Fragment</string>
     <string name="next">Next</string>
     <string name="previous">Previous</string>
 
-    <!-- Strings used for buttons in canvas_activity.xml -->
+    <!-- Strings used for buttons in activity_bluetooth.xml -->
+    <string name="scan">Scan Devices</string>
+    <string name="discoverable">Discoverable</string>
+    <string name="canvas">To Canvas</string>
+    <string name="connected">Connected</string>
+
+
+    <!-- Strings used for buttons in activity_canvas.xml -->
     <string name="move_backward">Move Backward</string>
     <string name="move_forward">Move Forward</string>
     <string name="move_right">Move Right</string>
     <string name="move_left">Move Left</string>
+    <string name="start_robot">Start</string>
+    <string name="input_prompt">Type a message...</string>
+    <string name="send_input">Send</string>
 
-    <string name="robot_status_static">ROBOT STATUS</string>
-    <string name="received_messages_title">Received Messages:</string>
-    <string name="robot_status_dynamic">Awaiting Orders</string>
+    <string name="static_received_messages">Received Messages:</string>
+    <string name="initialize_robot">Initialize Robot</string>
+    <string name="x_coordinate">X</string>
+    <string name="y_coordinate">Y</string>
+    <string name="robot_status">[STATUS]</string>
+    <string name="robot_status_waiting">WAITING</string>
+    <string name="send_data">Send Data</string>
+
+
+    <string-array name="robot_facing_options">
+        <item>NORTH</item>
+        <item>EAST</item>
+        <item>SOUTH</item>
+        <item>WEST</item>
+    </string-array>
+
 
     <string name="lorem_ipsum">
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam in scelerisque sem. Mauris
