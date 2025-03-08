@@ -243,7 +243,7 @@ def predict_image_t2(model, image_path, output_dir, signal):
     return image_id
 
 
-def resize_image(image_path):
+def resize_image(image_path, output_dir):
     """
     Resize the image at the given path to 640x640 pixels and overwrite the original image.
     Args:
@@ -254,28 +254,31 @@ def resize_image(image_path):
         img = Image.open(image_path)
         # Resize the image to 640x640 pixels
         resized_img = img.resize((640, 640), Image.LANCZOS)
-        resized_img.save(image_path)
-        
+        output_path = output_dir / image_path.name.replace("processed", "resized")
+        resized_img.save(output_path)
+
     except Exception as e:
         print(f"Error resizing image {image_path}: {e}")
 
-def resize_all_images(output_dir):
+
+def resize_all_images(output_dir, fullsize_dir):
     """
     Resize all images in the given directory before stitching.
     Args:
         output_dir (Path): Directory containing images.
     """
-    for img_path in output_dir.iterdir():
+    for img_path in fullsize_dir.iterdir():
         if img_path.is_file() and img_path.suffix.lower() in ('.png', '.jpg', '.jpeg'):
-            resize_image(img_path)
+            resize_image(img_path, output_dir)
 
-def stitch_image(output_dir):
+
+def stitch_image(output_dir, fullsize_dir):
     output_filename = "concatenated.jpg"
     output_path = output_dir / output_filename
 
     try:
         # Resize all images before proceeding
-        resize_all_images(output_dir)
+        resize_all_images(output_dir, fullsize_dir)
 
         # Get all image files
         image_files = [
