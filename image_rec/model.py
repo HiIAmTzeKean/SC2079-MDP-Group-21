@@ -250,8 +250,11 @@ def resize_image(image_path, output_dir):
     try:
         # Open the image
         img = Image.open(image_path)
-        # Resize the image to 640x640 pixels
-        resized_img = img.resize((640, 640), Image.LANCZOS)
+        # Original image size is 640x480 (picamera1) or 3280x2464 (picamera2)
+        # Resize the image while maintaining aspect ratio
+        ratio = 0.1952 # scale 3280x2464 to 640x480
+        resized_img = img.resize([int(ratio * s)
+                                 for s in img.size], Image.LANCZOS)
         output_path = output_dir / image_path.name.replace("processed", "resized")
         resized_img.save(output_path)
 
