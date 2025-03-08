@@ -16,41 +16,39 @@ MODEL_CONFIG = {"conf": 0.3, "path": Path(__file__).parent / "bestv2.pt"}
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-# id_map = {
-#     "end": 10,
-#     "one": 11,
-#     "two": 12,
-#     "three": 13,
-#     "four": 14,
-#     "five": 15,
-#     "six": 16,
-#     "seven": 17,
-#     "eight": 18,
-#     "nine": 19,
-#     "a": 20,
-#     "b": 21,
-#     "c": 22,
-#     "d": 23,
-#     "e": 24,
-#     "f": 25,
-#     "g": 26,
-#     "h": 27,
-#     "s": 28,
-#     "t": 29,
-#     "u": 30,
-#     "v": 31,
-#     "w": 32,
-#     "x": 33,
-#     "y": 34,
-#     "z": 35,
-#     "up": 36,
-#     "down": 37,
-#     "right": 38,
-#     "left": 39,
-#     "dot": 40
-# }
-
 id_map = {
+    "end": 10,
+    "one": 11,
+    "two": 12,
+    "three": 13,
+    "four": 14,
+    "five": 15,
+    "six": 16,
+    "seven": 17,
+    "eight": 18,
+    "nine": 19,
+    "a": 20,
+    "b": 21,
+    "c": 22,
+    "d": 23,
+    "e": 24,
+    "f": 25,
+    "g": 26,
+    "h": 27,
+    "s": 28,
+    "t": 29,
+    "u": 30,
+    "v": 31,
+    "w": 32,
+    "x": 33,
+    "y": 34,
+    "z": 35,
+    "up": 36,
+    "down": 37,
+    "right": 38,
+    "left": 39,
+    "dot": 40,
+    # Id Map 2
     "10": 10, # Bullseye 
     "11": 11, # 1 
     "12": 12, # 2
@@ -99,7 +97,7 @@ def find_largest_or_central_bbox(bboxes, signal):
         return "NA", 0.0
 
     # Exclude 'end' class
-    valid_bboxes = [bbox for bbox in bboxes if bbox["label"] != "10" and bbox["confidence"] > 0.3]
+    valid_bboxes = [bbox for bbox in bboxes if bbox["label"] != "10" or bbox["label"] != "end" and bbox["confidence"] > 0.3]
 
     if not valid_bboxes:
         return "NA", 0.0
@@ -151,7 +149,8 @@ def predict_image(model, image_path, output_dir, signal):
 
     os.makedirs(output_dir, exist_ok=True)
     labeled_img_path.rename(output_file_path)
-# Extract bounding boxes
+
+    # Extract bounding boxes
     bboxes = []
     if results[0].boxes:  # If there are any detected objects
         for result in results:
@@ -189,6 +188,9 @@ def predict_image_t2(model, image_path, output_dir, signal):
         "end": 10,
         "right": 38,
         "left": 39,
+        "38":38,
+        "39":39,
+        "10":10
     }
 
     # Perform inference
@@ -201,7 +203,7 @@ def predict_image_t2(model, image_path, output_dir, signal):
     )
 
     # Save YOLO-labeled image
-    labeled_img_path = Path(results[0].save_dir) / image_path.name
+    labeled_img_path = Path(results[0].save_dir) / image_path.name 
     output_file_path = output_dir / img_name
 
     os.makedirs(output_dir, exist_ok=True)
@@ -222,14 +224,16 @@ def predict_image_t2(model, image_path, output_dir, signal):
                 confidence = box.conf.tolist()[0]
 
                 # Only consider 'left' and 'right' with confidence > 0.3
-                if label in ["left", "right"] and confidence > 0.3:
+                if label in ["38","39","left", "right"] and confidence > 0.3:
                     bboxes.append({"label": label, "xywh": xywh, "bbox_area": bbox_area, "confidence": confidence})
 
     # Select the largest bounding box
     selected_label, selected_area = find_largest_or_central_bbox(bboxes, signal)
 
     # If no valid detection, default to "left" (39)
-    if selected_label != "38" or selected_label == "39":
+
+    if selected_label != "38" or selected_label != "39" or selected_label != "left" or selected_label != "right":
+
         image_id = 39
     else:
         image_id = id_map.get(selected_label, 39)  # Default to left if key is missing
@@ -239,30 +243,64 @@ def predict_image_t2(model, image_path, output_dir, signal):
     return image_id
 
 
-def stitch_image(output_dir):
-    output_filename = f"concatenated.jpg"
+def resize_image(image_path, output_dir):
+    """
+    Resize the image at the given path to 640x640 pixels and overwrite the original image.
+    Args:
+        image_path (str or Path): Path to the image file.
+    """
+    try:
+        # Open the image
+        img = Image.open(image_path)
+        # Original image size is 640x480 (picamera1) or 3280x2464 (picamera2)
+        # Resize the image while maintaining aspect ratio
+        ratio = 0.1952 # scale 3280x2464 to 640x480
+        resized_img = img.resize([int(ratio * s)
+                                 for s in img.size], Image.LANCZOS)
+        output_path = output_dir / image_path.name.replace("processed", "resized")
+        resized_img.save(output_path)
+
+    except Exception as e:
+        print(f"Error resizing image {image_path}: {e}")
+
+
+def resize_all_images(output_dir, fullsize_dir):
+    """
+    Resize all images in the given directory before stitching.
+    Args:
+        output_dir (Path): Directory containing images.
+    """
+    for img_path in fullsize_dir.iterdir():
+        if img_path.is_file() and img_path.suffix.lower() in ('.png', '.jpg', '.jpeg'):
+            resize_image(img_path, output_dir)
+
+
+def stitch_image(output_dir, fullsize_dir):
+    output_filename = "concatenated.jpg"
     output_path = output_dir / output_filename
 
     try:
+        # Resize all images before proceeding
+        resize_all_images(output_dir, fullsize_dir)
+
         # Get all image files
         image_files = [
-            path.name for path in list(output_dir.iterdir())
+            path for path in output_dir.iterdir()
             if path.is_file()
-            and path.name.lower().endswith(('.png', '.jpg', '.jpeg'))
-            and path.name.lower() != output_filename  # Do not include stitched image
+            and path.suffix.lower() in ('.png', '.jpg', '.jpeg')
+            and path.name.lower() != output_filename  # Exclude stitched image
         ]
         if not image_files:
             print(f"No image files found in '{output_dir}'.")
             return
 
         images = []
-        for file in image_files:
-            img_path = output_dir / file
+        for img_path in image_files:
             try:
                 img = Image.open(img_path)
                 images.append(img)
             except Exception as e:
-                print(f"Skipping image {file} due to error: {e}")
+                print(f"Skipping image {img_path.name} due to error: {e}")
                 continue  # Skip faulty images instead of returning
 
         if not images:  # Check if any images were successfully loaded
