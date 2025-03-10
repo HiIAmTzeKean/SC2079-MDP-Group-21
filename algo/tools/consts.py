@@ -19,7 +19,7 @@ SAFE_COST: int = 1000
 # The higher the value, the less likely the robot takes pictures from a position that is not directly in front of image.
 SCREENSHOT_COST: int = 100
 # the cost for when the robot is too close or too far from the obstacle
-DISTANCE_COST: int = 50
+DISTANCE_COST: int = 1000
 
 # Cost of turning the robot.
 # The higher the value, the less likely the robot is to turn.
@@ -28,11 +28,11 @@ TURN_FACTOR: int = 5
 # Cost of half-turning the robot.
 # The higher the value, the less likely the robot is to make half-turns.
 # weighted by 2 since it makes 2 half-turns in an offset motion
-HALF_TURN_FACTOR: int = 4 * 2
+HALF_TURN_FACTOR: int = 4 * 2000000000000000000000000000
 
 # Cost of reversing the robot.
 # The higher the value, the less likely the robot is to reverse.
-REVERSE_FACTOR: int = 5
+REVERSE_FACTOR: int = 0
 
 """
 No. of units the robot turns. This must be tuned based on real robot movement.
@@ -46,7 +46,7 @@ X ←----┐  .  .
 0: long axis, 1: short axis
 """
 # TODO: tune to 10cm interval
-TURN_DISPLACEMENT: tuple[int, int] = [3, 2]
+TURN_DISPLACEMENT: tuple[int, int] = [2, 1]
 
 # offset due to position of robot's center / how many cells more the robot occupies from its center cell
 OFFSET: int = 1
