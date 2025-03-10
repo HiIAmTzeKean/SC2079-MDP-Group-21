@@ -61,11 +61,14 @@ class TaskTwo(RaspberryPi):
             "back",
             "frontuntil",
             "SNAP2_C",
-            
             "FIN",
         ]
         for action in action_list:
             if action.startswith("SNAP"):
+                self.command_queue.put(action)
+                continue
+            elif manual_commands.get(action) is None:
+                # specify custom
                 self.command_queue.put(action)
                 continue
             elif action == "FIN":
