@@ -1,6 +1,5 @@
-from ctypes import Union
 from enum import Enum
-from typing import Any
+from typing import Any, Union
 
 
 SYMBOL_MAP = {
@@ -53,20 +52,20 @@ class Category(Enum):
     STITCH = 'stitch'
     FIN = 'FIN'
 
-manual_commands: dict[str, tuple[Any, ...]] = {
+manual_commands: dict[str, Union[tuple[Any, ...], str]] = {
     "front": "T50|0|10",
     "frontuntil": "W50|0|30",
+    "front_ir": "L50|0|10",
     "back": "t50|0|10",
     "left": "T50|-25|90",
-    "left60": "T50|-25|60",
-    "left120": "T50|-25|120",
     "right": "T50|25|90",
-    "right60": "T50|25|60",
-    "right120": "T50|25|120",
-    "bright": "t30|20|90",
-    "bleft": "t30|-20|90",
+    "half_right": "T20|25|45",
+    "half_left": "T20|-25|45",
+    "slight_back": "t20|0|1",
 }
-manual_commands["left_arc"] = (manual_commands["left"], manual_commands["right120"])
-manual_commands["right_arc"] = (manual_commands["right"], manual_commands["left120"])
+
+                        
+manual_commands["left_arc"] = (manual_commands["half_left"], manual_commands["half_right"], manual_commands["slight_back"],  manual_commands["half_right"], manual_commands["half_left"])
+manual_commands["right_arc"] = (manual_commands["half_right"], manual_commands["half_left"], manual_commands["slight_back"], manual_commands["half_left"], manual_commands["half_right"])
 
 stm32_prefixes = ("T", "t", "w", "W", "D", "d","P")

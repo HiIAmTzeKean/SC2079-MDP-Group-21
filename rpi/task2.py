@@ -61,6 +61,7 @@ class TaskTwo(RaspberryPi):
             "back",
             "frontuntil",
             "SNAP2_C",
+            "front_ir",
             "FIN",
         ]
         for action in action_list:
@@ -93,26 +94,22 @@ class TaskTwo(RaspberryPi):
                 results = self.recognize_image(obstacle_id_with_signal=action.value)
                 
                 if self.first_obstacle:
-                    self.outstanding_stm_instructions.set(5)
+                    self.first_obstacle = False
                     if results["image_id"] == "38": #right
-                        self.stm_link.send_cmd("T", 20, 25, 45)
-                        self.stm_link.send_cmd("T", 20, -25, 45)
-                        self.stm_link.send_cmd("t", 20, 0, 10)
-                        self.stm_link.send_cmd("T", 20, -25, 45)
-                        self.stm_link.send_cmd("T", 20, 25, 45)
+                        self.outstanding_stm_instructions.set(len(manual_commands["right_arc"]))
+                        for i in manual_commands["right_arc"]:
+                            self.stm_link.send_cmd_raw(i)
                     else:
-                        self.stm_link.send_cmd("T", 20, -25, 45)
-                        self.stm_link.send_cmd("T", 20, 25, 45)
-                        self.stm_link.send_cmd("t", 20, 0, 10)
-                        self.stm_link.send_cmd("T", 20, 25, 45)
-                        self.stm_link.send_cmd("T", 20, -25, 45)
+                        self.outstanding_stm_instructions.set(len(manual_commands["left_arc"]))
+                        for i in manual_commands["left_arc"]:
+                            self.stm_link.send_cmd_raw(i)
                 else:
                     # obstacle 2
                     self.outstanding_stm_instructions.set(2)
                     if results["image_id"] == "38":
-                        self.stm_link.send_cmd("T", 20, 25, 90)
+                        self.stm_link.send_cmd_raw(manual_commands["right"])
                     else:
-                        self.stm_link.send_cmd("T", 20, -25, 90)
+                        self.stm_link.send_cmd_raw(manual_commands["left"])
                         
                 self.ready_snap.clear()
                 self.unpause.set()
