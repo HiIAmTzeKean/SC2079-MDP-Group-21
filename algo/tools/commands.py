@@ -50,7 +50,7 @@ class CommandGenerator:
     # unit distance
     UNIT_DIST: float = 10
 
-    def __init__(self, straight_speed: int = 40, turn_speed: int = 20) -> None:
+    def __init__(self, straight_speed: int = 40, turn_speed: int = 30) -> None:
         """
         A class to generate commands for the robot to follow
 
@@ -77,28 +77,62 @@ class CommandGenerator:
         if motion == Motion.FORWARD:
             return [f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{0}{self.SEP}{dist}"]
         elif motion == Motion.REVERSE:
-            return [f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{0}{self.SEP}{dist}"]
+            # return [f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{0}{self.SEP}{dist}"]
+        
+            # Servo tends to drift left when reversing so we force it to the right every 20cm intervals
+            realign_cmds = [
+               f"{self.FORWARD_DIST_TARGET}{25}{self.SEP}{30}{self.SEP}{0.1}",
+            ]
+            cmds = []
+            # Re-align servo every 20cm
+            for _ in range(dist // 20):
+                cmds.append(
+                    f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{0}{self.SEP}{20}")
+                cmds.extend(realign_cmds)
+
+            remaining_dist = dist % 20
+            if remaining_dist > 0:
+                cmds.append(
+                    f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{0}{self.SEP}{remaining_dist}")
+                # Re-align servo only for distances >= 5cm
+                if remaining_dist >= 5:
+                    cmds.extend(realign_cmds)
+            return cmds
 
         # TODO tune & add forward/reverse straight line distances to make end in middle of the cell
+        # 3 point turn
         elif motion == Motion.FORWARD_LEFT_TURN:
             return [
-                f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{-46}{self.SEP}{90}",
-                f"{self.BACKWARD_DIST_TARGET}{100}{self.SEP}{0}{self.SEP}{4}",
+                f"{self.FORWARD_DIST_TARGET}{30}{self.SEP}{-50}{self.SEP}{46}",
+                f"{self.BACKWARD_DIST_TARGET}{25}{self.SEP}{0}{self.SEP}{18}",
+                f"{self.FORWARD_DIST_TARGET}{30}{self.SEP}{-50}{self.SEP}{45.5}",
+                f"{self.FORWARD_DIST_TARGET}{25}{self.SEP}{10}{self.SEP}{0.1}", # turn right on the spot to re-align servo after left turn
+                f"{self.BACKWARD_DIST_TARGET}{25}{self.SEP}{0}{self.SEP}{3}"
+
             ]
         elif motion == Motion.FORWARD_RIGHT_TURN:
             return [
-                f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{45}{self.SEP}{90}",
-                f"{self.BACKWARD_DIST_TARGET}{100}{self.SEP}{0}{self.SEP}{4}",
+                f"{self.FORWARD_DIST_TARGET}{30}{self.SEP}{50}{self.SEP}{46}",
+                f"{self.BACKWARD_DIST_TARGET}{25}{self.SEP}{0}{self.SEP}{16}",
+                f"{self.FORWARD_DIST_TARGET}{30}{self.SEP}{50}{self.SEP}{45.7}",
+                f"{self.BACKWARD_DIST_TARGET}{25}{self.SEP}{0}{self.SEP}{4}",
+
             ]
         elif motion == Motion.REVERSE_LEFT_TURN:
-            return [
-                f"{self.FORWARD_DIST_TARGET}{100}{self.SEP}{0}{self.SEP}{4}",
-                f"{self.BACKWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{-37.5}{self.SEP}{90}",
+            return [  
+                f"{self.FORWARD_DIST_TARGET}{25}{self.SEP}{0}{self.SEP}{5}",
+                f"{self.BACKWARD_DIST_TARGET}{30}{self.SEP}{-50}{self.SEP}{46}",
+                f"{self.FORWARD_DIST_TARGET}{25}{self.SEP}{0}{self.SEP}{14}",
+                f"{self.BACKWARD_DIST_TARGET}{30}{self.SEP}{-50}{self.SEP}{46}",
+                f"{self.FORWARD_DIST_TARGET}{25}{self.SEP}{10}{self.SEP}{0.1}" # turn right on the spot to re-align servo after left turn
+                
             ]
         elif motion == Motion.REVERSE_RIGHT_TURN:
             return [
-                f"{self.FORWARD_DIST_TARGET}{100}{self.SEP}{0}{self.SEP}{4}",
-                f"{self.BACKWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{40}{self.SEP}{90}",
+                f"{self.FORWARD_DIST_TARGET}{25}{self.SEP}{0}{self.SEP}{5}",
+                f"{self.BACKWARD_DIST_TARGET}{30}{self.SEP}{48}{self.SEP}{46}",
+                f"{self.FORWARD_DIST_TARGET}{25}{self.SEP}{0}{self.SEP}{13}",
+                f"{self.BACKWARD_DIST_TARGET}{30}{self.SEP}{48}{self.SEP}{46}"
             ]
         # TODO tune & add forward/reverse straight line distances to make end in middle of the cell
         elif motion == Motion.FORWARD_OFFSET_LEFT:
