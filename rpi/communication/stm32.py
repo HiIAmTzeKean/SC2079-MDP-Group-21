@@ -72,6 +72,10 @@ class STMLink(Link):
         message = str(self.serial_link.read_all(), "utf-8")
         logger.debug(f"wait recv stm: {message}")
         return message
+    
+    def send_cmd_raw(self, cmd: str) -> None:
+        parts = cmd.split("|")
+        self.send_cmd(parts[0][0], int(parts[0][1:]), float(parts[1]), float(parts[2]))
 
     def send_cmd(
         self,
