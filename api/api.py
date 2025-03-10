@@ -18,7 +18,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from algo.algorithms.algo import MazeSolver  # nopep8
 from algo.tools.commands import CommandGenerator  # nopep8
-from image_rec.model import load_model, predict_image, stitch_image  # nopep8
+from image_rec.model import load_model,load_model2, predict_image, stitch_image  # nopep8
 
 app = Flask(__name__)
 
@@ -30,7 +30,8 @@ logger = setup_logger()
 CORS(app)
 
 # load model for image recognition
-model = load_model()
+model = load_model() #Default model
+modelv2 = load_model2() #Backup model 
 
 # poll wi-fi SSID to check that RPI can connect to API server
 # TODO remove if this causes any performance issues or bugs
@@ -253,7 +254,7 @@ class ImagePredict(Resource):
             output_dir = Path("image_rec_files/output/fullsize")
             os.makedirs(output_dir, exist_ok=True)
 
-            image_id = predict_image(model, file_path, output_dir,signal)
+            image_id = predict_image(model, modelv2, file_path, output_dir, signal)
             return marshal(
                 {
                     "obstacle_id": obstacle_id,
