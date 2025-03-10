@@ -9,7 +9,7 @@ import requests
 
 from .base_rpi import RaspberryPi
 from .communication.android import AndroidMessage
-from .communication.camera import snap_using_libcamera, snap_using_picamera
+from .communication.camera import snap_using_libcamera, snap_using_picamera2
 from .communication.pi_action import PiAction
 from .constant.consts import Category, manual_commands, stm32_prefixes
 from .constant.settings import URL
@@ -166,9 +166,9 @@ class TaskOne(RaspberryPi):
         """
         while True:
             try:
-                # blocks for 0.5 seconds to check if there are any messages
+                # blocks for 0.05 seconds to check if there are any messages
                 # in the queue
-                message = self.android_queue.get(timeout=0.5)
+                message = self.android_queue.get(timeout=0.05)
                 self.android_link.send(message)
             except queue.Empty:
                 continue
@@ -205,7 +205,6 @@ class TaskOne(RaspberryPi):
                     )
                     logger.debug(f"stm finish {message}")
                     logger.info("Releasing movement lock.")
-                    # input("press enter to continue")
                     self.movement_lock.release()
                 elif message.startswith("r"):
                     logger.debug(f"stm ack {message}")
@@ -272,7 +271,7 @@ class TaskOne(RaspberryPi):
 
         filename = f"/home/rpi21/cam/{int(time.time())}_{obstacle_id}_{signal}.jpg"
         filename_send = f"{int(time.time())}_{obstacle_id}_{signal}.jpg"
-        results = snap_using_picamera(
+        results = snap_using_picamera2(
             obstacle_id=obstacle_id,
             signal=signal,
             filename=filename,
@@ -301,7 +300,7 @@ class TaskOne(RaspberryPi):
             "retrying": retrying,
         }
         logger.debug(f"{body}")
-        response = requests.post(url=f"{URL}/path", json=body, timeout=10.0)
+        response = requests.post(url=f"{URL}/path", json=body, timeout=API_TIMEOUT)
 
         if response.status_code != 200:
             logger.error("Error when requesting path from Algo API.")
@@ -338,7 +337,7 @@ class TaskOne(RaspberryPi):
 
         if the API is down, an error message is sent to the Android
         """
-        response = requests.get(url=f"{URL}/stitch", timeout=2.0)
+        response = requests.get(url=f"{URL}/stitch", timeout=API_TIMEOUT)
 
         # TODO should retry if the response fails
         if response.status_code != 200:

@@ -40,10 +40,20 @@ public class Target {
             "stp", // "Stop" //40
     };
 
-    public static String get(int targetId) {
-        if (targetId >= 10 && targetId <= 40) {
-            return map[targetId];
-        }
-        return "";
+    private final String targetStr;
+
+    public Target(String targetStr) {
+        this.targetStr = targetStr;
+    }
+
+    /**
+     * Note no error checking done but its aight
+     */
+    public static Target of(int targetId) {
+        return new Target(map[targetId]);
+    }
+
+    public String getTargetStr() {
+        return targetStr;
     }
 }

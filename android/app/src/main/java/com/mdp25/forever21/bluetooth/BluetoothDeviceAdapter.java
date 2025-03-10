@@ -3,6 +3,7 @@ package com.mdp25.forever21.bluetooth;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -49,10 +50,10 @@ public class BluetoothDeviceAdapter extends RecyclerView.Adapter<BluetoothDevice
 
         // Set different background for paired devices
         if (device.isPaired()) {
-            holder.itemView.setBackgroundColor(ContextCompat.getColor(context, R.color.paired_device_bg));
+            //holder.itemView.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(context, R.color.paired_device_bg)));
             holder.pairedStatus.setVisibility(View.VISIBLE);
         } else {
-            holder.itemView.setBackgroundColor(ContextCompat.getColor(context, android.R.color.transparent));
+            //holder.itemView.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(context, android.R.color.transparent)));
             holder.pairedStatus.setVisibility(View.GONE);
         }
 

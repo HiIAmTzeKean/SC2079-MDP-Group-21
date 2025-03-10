@@ -250,7 +250,7 @@ class ImagePredict(Resource):
 
             # Call the predict_image function
             # Store processed image with bounding box into output folder
-            output_dir = Path("image_rec_files/output")
+            output_dir = Path("image_rec_files/output/fullsize")
             os.makedirs(output_dir, exist_ok=True)
 
             image_id = predict_image(model, file_path, output_dir,signal)
@@ -280,7 +280,10 @@ class Stitch(Resource):
             output_dir = Path("image_rec_files/output")
             os.makedirs(output_dir, exist_ok=True)
 
-            img = stitch_image(output_dir)
+            fullsize_dir = Path("image_rec_files/output/fullsize")
+            os.makedirs(fullsize_dir, exist_ok=True)
+
+            img = stitch_image(output_dir, fullsize_dir)
             img.show()
             return marshal(
                 {

@@ -7,6 +7,7 @@ import cv2
 import numpy as np
 import requests
 from picamera import PiCamera
+from picamera2 import Picamera2
 
 
 logger = logging.getLogger(__name__)
@@ -156,8 +157,6 @@ def snap_using_libcamera(
         #     self.logger.info("Recapturing with higher shutter speed...")
         #     speed += 1
 
-
-
 def snap_using_picamera(
     obstacle_id: str,
     signal: str,
@@ -181,4 +180,27 @@ def snap_using_picamera(
         raise OSError("API Error")
 
     results = json.loads(response.content)
+    logger.debug(results)
+    return results
+
+def snap_using_picamera2(
+    obstacle_id: str,
+    signal: str,
+    filename: str,
+    filename_send: str,
+    url: str,
+) -> str:
+    picam2 = Picamera2()
+    config = picam2.create_still_configuration()
+    picam2.configure(config)
+    picam2.start()
+    picam2.capture_file(filename)
+    picam2.close()
+    response = requests.post(url, files={"file": (filename_send, open(filename, "rb"))})
+
+    if response.status_code != 200:
+        raise OSError("API Error")
+
+    results = json.loads(response.content)
+    logger.debug(results)
     return results
