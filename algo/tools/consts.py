@@ -19,7 +19,7 @@ SAFE_COST: int = 1000
 # The higher the value, the less likely the robot takes pictures from a position that is not directly in front of image.
 SCREENSHOT_COST: int = 100
 # the cost for when the robot is too close or too far from the obstacle
-DISTANCE_COST: int = 50
+DISTANCE_COST: int = 1000
 
 # Cost of turning the robot.
 # The higher the value, the less likely the robot is to turn.
