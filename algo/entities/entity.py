@@ -99,6 +99,8 @@ class Obstacle(CellState):
                 (self.x + 1, self.y + MIN_CLEARANCE + OBSTACLE_SIZE + OFFSET),
                 # robot camera is positioned just nice from obstacle
                 (self.x, self.y + MIN_CLEARANCE + 1 + OBSTACLE_SIZE + OFFSET),
+                (self.x - 1, self.y + MIN_CLEARANCE + 1 + OBSTACLE_SIZE + OFFSET),
+                (self.x + 1, self.y + MIN_CLEARANCE + 1 + OBSTACLE_SIZE + OFFSET),
                 # robot camera is close to obstacle
                 (self.x, self.y + MIN_CLEARANCE + OBSTACLE_SIZE + OFFSET),
             ]
@@ -106,6 +108,8 @@ class Obstacle(CellState):
                 SCREENSHOT_COST + DISTANCE_COST,        # robot camera is left of obstacle
                 SCREENSHOT_COST + DISTANCE_COST,        # robot camera is right of obstacle
                 0,                      # robot camera is positioned just nice
+                SCREENSHOT_COST,
+                SCREENSHOT_COST,
                 DISTANCE_COST,          # robot camera is close to obstacle
             ]
 
@@ -122,12 +126,16 @@ class Obstacle(CellState):
                 (self.x + 1, self.y - MIN_CLEARANCE - OBSTACLE_SIZE - OFFSET),
                 (self.x - 1, self.y - MIN_CLEARANCE - OBSTACLE_SIZE - OFFSET),
                 (self.x, self.y - MIN_CLEARANCE - 1 - OBSTACLE_SIZE - OFFSET),
+                (self.x + 1, self.y - MIN_CLEARANCE - 1 - OBSTACLE_SIZE - OFFSET),
+                (self.x - 1, self.y - MIN_CLEARANCE - 1 - OBSTACLE_SIZE - OFFSET),
                 (self.x, self.y - MIN_CLEARANCE - OBSTACLE_SIZE - OFFSET),
             ]
             costs = [
                 SCREENSHOT_COST + DISTANCE_COST,
                 SCREENSHOT_COST + DISTANCE_COST,
                 0,
+                SCREENSHOT_COST,
+                SCREENSHOT_COST,
                 DISTANCE_COST,
             ]
 
@@ -144,12 +152,16 @@ class Obstacle(CellState):
                 (self.x + MIN_CLEARANCE + OBSTACLE_SIZE + OFFSET, self.y + 1),
                 (self.x + MIN_CLEARANCE + OBSTACLE_SIZE + OFFSET, self.y - 1),
                 (self.x + MIN_CLEARANCE + 1 + OBSTACLE_SIZE + OFFSET, self.y),
+                (self.x + MIN_CLEARANCE + 1 + OBSTACLE_SIZE + OFFSET, self.y + 1),
+                (self.x + MIN_CLEARANCE + 1 + OBSTACLE_SIZE + OFFSET, self.y - 1),
                 (self.x + MIN_CLEARANCE + OBSTACLE_SIZE + OFFSET, self.y),
             ]
             costs = [
                 SCREENSHOT_COST + DISTANCE_COST,
                 SCREENSHOT_COST + DISTANCE_COST,
                 0,
+                SCREENSHOT_COST,
+                SCREENSHOT_COST,
                 DISTANCE_COST,
             ]
 
@@ -166,12 +178,16 @@ class Obstacle(CellState):
                 (self.x - MIN_CLEARANCE - OBSTACLE_SIZE - OFFSET, self.y + 1),
                 (self.x - MIN_CLEARANCE - OBSTACLE_SIZE - OFFSET, self.y - 1),
                 (self.x - MIN_CLEARANCE - 1 - OBSTACLE_SIZE - OFFSET, self.y),
+                (self.x - MIN_CLEARANCE - 1 - OBSTACLE_SIZE - OFFSET, self.y + 1),
+                (self.x - MIN_CLEARANCE - 1 - OBSTACLE_SIZE - OFFSET, self.y - 1),
                 (self.x - MIN_CLEARANCE - OBSTACLE_SIZE - OFFSET, self.y),
             ]
             costs = [
                 SCREENSHOT_COST + DISTANCE_COST,
                 SCREENSHOT_COST + DISTANCE_COST,
                 0,
+                SCREENSHOT_COST,
+                SCREENSHOT_COST,
                 DISTANCE_COST,
             ]
 
