@@ -11,8 +11,9 @@ from ultralytics import YOLO
 from pathlib import Path
 from datetime import datetime
 
+# confidence threshold for the YOLO model during inderence and file path to weights.
 MODEL_CONFIG = {"conf": 0.3, "path": Path(__file__).parent / "bestv3.pt"}
-# confidence threshold for the YOLO model during inderence.
+MODEL_CONFIG_V2 = {"conf": 0.3, "path": Path(__file__).parent / "best.pt"}
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -87,9 +88,10 @@ def load_model():
     model.to(device)
     return model
 
-def get_random_string(length):
-    result = ''.join(random.choice(string.ascii_letters) for i in range(length))
-    return result
+def load_model2(): 
+    model = YOLO(MODEL_CONFIG_V2["path"])
+    model.to(device)
+    return model
 
 # Filter and select the best bounding box based on selection mode
 def find_largest_or_central_bbox(bboxes, signal):
@@ -123,17 +125,20 @@ def find_largest_or_central_bbox(bboxes, signal):
 
     return chosen_bbox["label"], chosen_bbox["bbox_area"]
     
-# Heuristics 
-# 1. Ignore the bullseyes 
-# 2. Filter by bounding box size ( take the symbol with the largest bounding box size)
+# Heuristics for predict_imgage 
+# 1. Ignore the bullseyes & 
+#   1.1 ( size of bounding box < 30% Total Area ) area justification ? 
+# 2. Sort by bounding box size ( take the symbol with the largest bounding box size)
 # 3. Filter by Signal from algorithm, If car is on the left singal is Left. If car is on the right, signal on the right. (used to break a tie)
+# 4. In the case that model did not detect any object in the image. Revert to model1 to try again before returning output.
+
 
 # Predict and Annotate image .
-def predict_image(model, image_path, output_dir, signal):
+def predict_image(model,model_v2, image_path, output_dir, signal):
     """Predict and annotate image."""
     formatted_time = datetime.now().strftime('%d-%m_%H-%M-%S.%f')[:-3]
     img_name = f"processed_{formatted_time}.jpg"
-
+    
     # Perform inference
     results = model.predict(
         source=image_path,
@@ -142,13 +147,6 @@ def predict_image(model, image_path, output_dir, signal):
         imgsz=640,
         device=device
     )
-
-    # Save YOLO-labeled image
-    labeled_img_path = Path(results[0].save_dir) / image_path.name
-    output_file_path = output_dir / img_name
-
-    os.makedirs(output_dir, exist_ok=True)
-    labeled_img_path.rename(output_file_path)
 
     # Extract bounding boxes
     bboxes = []
@@ -162,11 +160,34 @@ def predict_image(model, image_path, output_dir, signal):
                 confidence = box.conf.tolist()[0]  # Extract confidence
                 bboxes.append({"label": label, "xywh": xywh, "bbox_area": bbox_area, "confidence": confidence})
     else:
-        # No Objects Deteced Null Check, set confidence to 0
-        bboxes.append({"label": "NA", "xywh": [0, 0, 0, 0], "bbox_area": 0.0, "confidence": 0.0})
+        # No detections from model, fallback to best.pt
+        print("No output from bestv2.pt, falling back to best.pt")
+        results = model_v2.predict(
+            source=image_path,
+            save=True,
+            conf= MODEL_CONFIG_V2["conf"],
+            imgsz=640,
+            device=device
+        )
 
-    selected_label, selected_area = find_largest_or_central_bbox(bboxes,signal)
+        if results[0].boxes:
+            for result in results:
+                for box in result.boxes:
+                    cls_index = int(box.cls.tolist()[0])
+                    label = result.names[cls_index]
+                    xywh = box.xywh.tolist()[0]
+                    bbox_area = xywh[2] * xywh[3]
+                    confidence = box.conf.tolist()[0]
+                    bboxes.append({"label": label, "xywh": xywh, "bbox_area": bbox_area, "confidence": confidence})
     
+    # Save YOLO-labeled image
+    labeled_img_path = Path(results[0].save_dir) / image_path.name
+    output_file_path = output_dir / img_name
+
+    os.makedirs(output_dir, exist_ok=True)
+    labeled_img_path.rename(output_file_path)
+    
+    selected_label, selected_area = find_largest_or_central_bbox(bboxes,signal)
     image_id = id_map.get(selected_label, "NA")
 
     if selected_label != "NA":
@@ -177,7 +198,7 @@ def predict_image(model, image_path, output_dir, signal):
     return image_id
 
 ## Task 2
-def predict_image_t2(model, image_path, output_dir, signal):
+def predict_image_t2(model, modelv2, image_path, output_dir, signal):
     """Predict and annotate image, identifying only 'left' or 'right'.
        Defaults to 'left' (39) if no valid detection is found.
     """
