@@ -4,6 +4,7 @@ import math
 import numpy as np
 from python_tsp.heuristics import solve_tsp_local_search
 from python_tsp.exact import solve_tsp_dynamic_programming
+from python_tsp.heuristics import solve_tsp_lin_kernighan
 from algo.entities.entity import CellState, Obstacle, Grid
 from algo.entities.robot import Robot
 from algo.tools.consts import (
@@ -151,8 +152,9 @@ class MazeSolver:
 
                 # find Hamiltonian path with least cost for the selected combination of view states
                 # TODO: experiment with different solvers
-                permutation, distance = solve_tsp_local_search(
-                    cost_matrix)
+                permutation, distance = solve_tsp_lin_kernighan(cost_matrix)
+                # permutation, distance = solve_tsp_local_search(
+                #    cost_matrix)
                 # permutation, distance = solve_tsp_dynamic_programming(
                 #     cost_matrix)
 
