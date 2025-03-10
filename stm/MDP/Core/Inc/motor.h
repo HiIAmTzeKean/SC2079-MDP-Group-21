@@ -8,7 +8,7 @@
 
 //PWM Parameters
 #define MOTOR_PWM_PERIOD 7200
-#define MOTOR_PWM_MAX 7000 //safe value! Raise for more power due to outside terrain
+#define MOTOR_PWM_MAX 6000 //safe value! Raise for more power due to outside terrain
 #define MOTOR_PWM_MIN 375 //minimum speed
 #define MOTOR_PWM_ACCEL 20 //maximum change in PWM value allowed (smooth transitioning)
 //#define MOTOR_PWM_DECCEL 100 //maximum negative change in PWM value allowed (smooth transitioning)

@@ -471,8 +471,10 @@ int main(void)
 		//else angleDiff = 0;
 		if (cmd->angleToSteer < 0) angleDiff = -angleDiff;
 		estAngle += angleDiff;
-
 		distDiffOld = distDiff;
+
+		uint8_t shouldEndIR = 0;
+
 		switch (cmd->distType) {
 			case TARGET:
 				if (rBack != 0) {
@@ -488,15 +490,18 @@ int main(void)
 				break;
 			case STOP_L:
 			case STOP_R:
-				uint8_t i = cmd->distType == STOP_L ? 0 : 1;
+			case STOP_L_LESS:
+			case STOP_R_LESS:
+				uint8_t i = (cmd->distType == STOP_L || cmd->distType == STOP_L_LESS) ? 0 : 1;
 				float irVal = sensors.irDist[i];
 				float cmdVal = cmd->val;
-				if (cmdVal < 0) {
-					cmdVal = -cmdVal;
-					distDiff = irVal > cmdVal ? DIST_DIFF_DEFAULT : 0;
-				} else {
-					distDiff = irVal < cmdVal ? DIST_DIFF_DEFAULT : 0;
-				}
+				if (cmdVal < 0) cmdVal = -cmdVal;
+
+				if(cmd->distType == STOP_L || cmd->distType == STOP_R)
+					shouldEndIR = irVal > cmdVal ? 1 : 0;
+				else
+					shouldEndIR = irVal < cmdVal ? 1 : 0;
+				distDiff = DIST_DIFF_DEFAULT;
 				break;
 			default:
 				distDiff = DIST_DIFF_DEFAULT;
@@ -515,6 +520,8 @@ int main(void)
 				case STOP_AWAY:
 				case STOP_L:
 				case STOP_R:
+				case STOP_L_LESS:
+				case STOP_R_LESS:
 					cmd->val = next->val;
 					break;
 			}
@@ -569,7 +576,7 @@ int main(void)
 
 		shouldEnd |= ticksES >= TICKS_ES_MAX	//minimum error threshold ticks met.
 					|| distDiff < 0.9; 		//prevent overshoot.
-
+		shouldEnd |= shouldEndIR;
 		if (shouldEnd) {
 			//target achieved; move to next command.
 			ticksES = 0;

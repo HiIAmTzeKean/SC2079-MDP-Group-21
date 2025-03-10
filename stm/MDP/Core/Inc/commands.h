@@ -20,6 +20,8 @@ enum _cmdDistType {
 	STOP_AWAY,		//stop when roughly this distance away from front.
 	STOP_L,			//stop when left IR sensor is more than threshold.
 	STOP_R,			//stop when right IR sensor is more than threshold.
+	STOP_L_LESS,
+	STOP_R_LESS
 };
 
 typedef enum _cmdOpType CmdOpType;

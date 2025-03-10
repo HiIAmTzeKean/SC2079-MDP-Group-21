@@ -75,12 +75,12 @@ void commands_process(UART_HandleTypeDef *uart, uint8_t *buf, uint8_t size) {
 			next->distType = STOP_R;
 			break;
 		case CMD_BACKWARD_DIST_L:
-			next->dir = -1;
-			next->distType = STOP_L;
+			next->dir = 1;
+			next->distType = STOP_L_LESS;
 			break;
 		case CMD_BACKWARD_DIST_R:
-			next->dir = -1;
-			next->distType = STOP_R;
+			next->dir = 1;
+			next->distType = STOP_R_LESS;
 			break;
 		case CMD_TURN_IN_PLACE:
 		    next->opType = TURN_IN_PLACE;
