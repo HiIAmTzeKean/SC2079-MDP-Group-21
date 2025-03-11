@@ -50,7 +50,7 @@ class CommandGenerator:
     # unit distance
     UNIT_DIST: float = 10
 
-    def __init__(self, straight_speed: int = 40, turn_speed: int = 30) -> None:
+    def __init__(self, straight_speed: int = 60, turn_speed: int = 30) -> None:
         """
         A class to generate commands for the robot to follow
 
@@ -103,66 +103,55 @@ class CommandGenerator:
         # 3 point turn
         elif motion == Motion.FORWARD_LEFT_TURN:
             return [
-                f"{self.FORWARD_DIST_TARGET}{30}{self.SEP}{-50}{self.SEP}{46}",
-                f"{self.BACKWARD_DIST_TARGET}{25}{self.SEP}{0}{self.SEP}{18}",
-                f"{self.FORWARD_DIST_TARGET}{30}{self.SEP}{-50}{self.SEP}{45.5}",
-                f"{self.FORWARD_DIST_TARGET}{25}{self.SEP}{10}{self.SEP}{0.1}", # turn right on the spot to re-align servo after left turn
-                f"{self.BACKWARD_DIST_TARGET}{25}{self.SEP}{0}{self.SEP}{3}"
-
+                f"{"T"}{30}{"|"}{-60.5}{"|"}{91.5}",
+                f"{"T"}{25}{"|"}{10}{"|"}{0.1}",
+                f"{"t"}{100}{"|"}{0}{"|"}{5.5}"
             ]
         elif motion == Motion.FORWARD_RIGHT_TURN:
             return [
-                f"{self.FORWARD_DIST_TARGET}{30}{self.SEP}{50}{self.SEP}{46}",
-                f"{self.BACKWARD_DIST_TARGET}{25}{self.SEP}{0}{self.SEP}{16}",
-                f"{self.FORWARD_DIST_TARGET}{30}{self.SEP}{50}{self.SEP}{45.7}",
-                f"{self.BACKWARD_DIST_TARGET}{25}{self.SEP}{0}{self.SEP}{4}",
-
+                f"{"T"}{30}{"|"}{58}{"|"}{91.5}",
+                f"{"T"}{100}{"|"}{0}{"|"}{5}"
             ]
         elif motion == Motion.REVERSE_LEFT_TURN:
             return [  
-                f"{self.FORWARD_DIST_TARGET}{25}{self.SEP}{0}{self.SEP}{5}",
-                f"{self.BACKWARD_DIST_TARGET}{30}{self.SEP}{-50}{self.SEP}{46}",
-                f"{self.FORWARD_DIST_TARGET}{25}{self.SEP}{0}{self.SEP}{14}",
-                f"{self.BACKWARD_DIST_TARGET}{30}{self.SEP}{-50}{self.SEP}{46}",
-                f"{self.FORWARD_DIST_TARGET}{25}{self.SEP}{10}{self.SEP}{0.1}" # turn right on the spot to re-align servo after left turn
-                
+                f"{"T"}{100}{"|"}{0}{"|"}{4}",
+                f"{"t"}{30}{"|"}{-58}{"|"}{91.5}",
+                f"{"T"}{25}{"|"}{10}{"|"}{0.1}"
             ]
         elif motion == Motion.REVERSE_RIGHT_TURN:
             return [
-                f"{self.FORWARD_DIST_TARGET}{25}{self.SEP}{0}{self.SEP}{5}",
-                f"{self.BACKWARD_DIST_TARGET}{30}{self.SEP}{48}{self.SEP}{46}",
-                f"{self.FORWARD_DIST_TARGET}{25}{self.SEP}{0}{self.SEP}{13}",
-                f"{self.BACKWARD_DIST_TARGET}{30}{self.SEP}{48}{self.SEP}{46}"
+                f"{"T"}{100}{"|"}{0}{"|"}{6.5}",
+                f"{"t"}{30}{"|"}{45}{"|"}{91.5}"
             ]
         # TODO tune & add forward/reverse straight line distances to make end in middle of the cell
         elif motion == Motion.FORWARD_OFFSET_LEFT:
-            # break it down into 2 steps
-            # FORWARD_LEFT_HALF_TURN
-            cmd1 = f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{-40}{self.SEP}{40}"
-            # FORWARD_RIGHT_HALF_TURN
-            cmd2 = f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{40}{self.SEP}{55}"
+            return [
+                f"{"T"}{20}{"|"}{-95}{"|"}{45}",
+                f"{"T"}{20}{"|"}{95}{"|"}{44.5}",
+                f"{"T"}{100}{"|"}{0}{"|"}{2}"
+            ]
         elif motion == Motion.FORWARD_OFFSET_RIGHT:
-            # break it down into 2 steps
-            # FORWARD_RIGHT_HALF_TURN
-            cmd1 = f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{40}{self.SEP}{40}"
-            # FORWARD_LEFT_HALF_TURN
-            cmd2 = f"{self.FORWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{-40}{self.SEP}{55}"
+            return [
+                f"{"T"}{20}{"|"}{97}{"|"}{44.5}",
+                f"{"T"}{20}{"|"}{-97}{"|"}{46}",
+                f"{"T"}{25}{"|"}{10}{"|"}{0.1}",
+                f"{"T"}{100}{"|"}{0}{"|"}{2}"
+            ]
         elif motion == Motion.REVERSE_OFFSET_LEFT:
-            # break it down into 2 steps
-            # REVERSE_LEFT_HALF_TURN
-            cmd1 = f"{self.BACKWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{-35}{self.SEP}{45}"
-            # REVERSE_RIGHT_HALF_TURN
-            cmd2 = f"{self.BACKWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{35}{self.SEP}{45}"
+            return [
+                f"{"t"}{20}{"|"}{-100}{"|"}{45}",
+                f"{"t"}{20}{"|"}{100}{"|"}{44.5}",
+                f"{"T"}{100}{"|"}{0}{"|"}{2}"
+            ]
         elif motion == Motion.REVERSE_OFFSET_RIGHT:
-            # break it down into 2 steps
-            # REVERSE_RIGHT_HALF_TURN
-            cmd1 = f"{self.BACKWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{35}{self.SEP}{45}"
-            # REVERSE_LEFT_HALF_TURN
-            cmd2 = f"{self.BACKWARD_DIST_TARGET}{self.turn_speed}{self.SEP}{-35}{self.SEP}{45}"
+            return [
+                f"{"t"}{20}{"|"}{97}{"|"}{45}",
+                f"{"t"}{20}{"|"}{-97}{"|"}{46}",
+                f"{"T"}{25}{"|"}{10}{"|"}{0.1}"
+            ]
         else:
             raise ValueError(
                 f"Invalid motion {motion}. This should never happen.")
-        return [cmd1, cmd2]
 
     def _generate_away_command(self, view_state, obstacle: Obstacle) -> list[str]:
         """
