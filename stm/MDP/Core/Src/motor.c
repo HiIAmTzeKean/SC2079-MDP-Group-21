@@ -185,7 +185,6 @@ void motor_pwmCorrection(float wDiff, float rBack, float distDiff, float braking
 	float offset = pid_adjust(&pidMatch, wDiff, 1) * pwmValAccel / pwmValTarget;
 	float offsetMax = pwmValTarget * MOTOR_PWM_OFFSET_MAX_PERCENT;
 	if (offset > offsetMax) offset = offset < 0 ? -offsetMax : offsetMax;
-	offset = 0;
 	lPwmVal = pwmValAccel * lScale - offset;
 	rPwmVal = pwmValAccel * rScale + offset;
 

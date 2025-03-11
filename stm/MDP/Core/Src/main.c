@@ -466,6 +466,8 @@ int main(void)
 		else wTarget = 0;
 		wDiff = (wGyro - wTarget); //gyro is flipped when going backwards.
 
+		if (cmd->angleToSteer != 0) wDiff = 0;
+
 		float angleDiff = wGyro * MS_FRAME;
 		//if(!((angleDiff < GYRO_HPF_FREQ + 0.03) && (angleDiff > GYRO_HPF_FREQ - 0.03)));
 		//else angleDiff = 0;
