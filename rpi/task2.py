@@ -23,7 +23,7 @@ class TaskTwo(RaspberryPi):
         del self.path_queue
         del self.android_queue
         del self.android_link
-        
+        self.first_obstacle = True
         self.ready_snap = self.manager.Event()
         """Event to indicate that ready to snap"""
 
@@ -42,7 +42,7 @@ class TaskTwo(RaspberryPi):
             self.proc_command_follower.start()
             self.proc_rpi_action.start()
             
-            self.first_obstacle = True
+            
             self.set_actions()
             
             logger.info("Child Processes started")
@@ -60,7 +60,7 @@ class TaskTwo(RaspberryPi):
             "SNAP2_C",
             "back",
             "frontuntil",
-            "SNAP2_C",
+            "SNAP3_C",
             "front_ir",
             "FIN",
         ]
@@ -108,8 +108,10 @@ class TaskTwo(RaspberryPi):
                     self.outstanding_stm_instructions.set(2)
                     if results["image_id"] == "38":
                         self.stm_link.send_cmd_raw(manual_commands["right"])
+                        self.stm_link.send_cmd_raw(manual_commands["front_L_ir"])
                     else:
                         self.stm_link.send_cmd_raw(manual_commands["left"])
+                        self.stm_link.send_cmd_raw(manual_commands["front_R_ir"])
                         
                 self.ready_snap.clear()
                 self.unpause.set()
@@ -167,7 +169,8 @@ class TaskTwo(RaspberryPi):
                         self.ready_snap.set()
                         self.unpause.clear()
                     self.outstanding_stm_instructions.set(outstanding_stm_instructions - 1)
-                    
+                    logger.debug(f"stm finish {message}")
+                    logger.info("Releasing movement lock.")
                 elif message.startswith("r"):
                     logger.debug(f"stm ack {message}")
                 else:
