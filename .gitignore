@@ -192,4 +192,5 @@ cython_debug/
 
 # API image files
 api/image_rec_files/output/*.jpg
+api/image_rec_files/output/fullsize/*.jpg
 api/image_rec_files/uploads/*.jpg

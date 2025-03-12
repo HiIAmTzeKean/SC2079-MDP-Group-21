@@ -242,19 +242,23 @@ class ImagePredict(Resource):
 
             # RPI sends image file in format eg. "1739516818_1_C.jpg"
             _, obstacle_id, signal = file.filename.strip(".jpg").split("_")
+            logger.debug(
+                f"Received image: '{filename}', obstacle_id: {obstacle_id}, signal: {signal}")
 
             # Store image sent from RPI into uploads folder
             upload_dir = Path("image_rec_files/uploads")
             upload_dir.mkdir(parents=True, exist_ok=True)
             file_path = upload_dir / filename
             file.save(file_path)
+            logger.debug(f"Saved raw image into folder: '{upload_dir}'")
 
             # Call the predict_image function
             # Store processed image with bounding box into output folder
             output_dir = Path("image_rec_files/output/fullsize")
             os.makedirs(output_dir, exist_ok=True)
 
-            image_id = predict_image(model, modelv2, file_path, output_dir, signal)
+            image_id = predict_image(
+                logger, model, modelv2, file_path, output_dir, signal)
             return marshal(
                 {
                     "obstacle_id": obstacle_id,
@@ -284,7 +288,7 @@ class Stitch(Resource):
             fullsize_dir = Path("image_rec_files/output/fullsize")
             os.makedirs(fullsize_dir, exist_ok=True)
 
-            img = stitch_image(output_dir, fullsize_dir)
+            img = stitch_image(logger, output_dir, fullsize_dir)
             img.show()
             return marshal(
                 {
