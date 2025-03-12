@@ -31,3 +31,13 @@ export const Obstacles5_BriefingSlides: AlgoTestDataInterface = {
   ],
 };
 
+export const Obstacles5_A: AlgoTestDataInterface = {
+  obstacles: [
+    { id: 1, x: 1, y: 7, d: Direction.SOUTH },
+    { id: 2, x: 3, y: 18, d: Direction.SOUTH },
+    { id: 3, x: 10, y: 8, d: Direction.WEST },
+    { id: 4, x: 15, y: 15, d: Direction.SOUTH },
+    { id: 5, x: 19, y: 3, d: Direction.WEST },
+  ],
+};
+
