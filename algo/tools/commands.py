@@ -75,25 +75,25 @@ class CommandGenerator:
             dist = self.UNIT_DIST
 
         if motion == Motion.FORWARD:
-            return [f"{self.FORWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{0}{self.SEP}{dist}"]
+            return [f"{"T"}{self.straight_speed}{"|"}{0}{"|"}{dist}"]
         elif motion == Motion.REVERSE:
             # return [f"{self.BACKWARD_DIST_TARGET}{self.straight_speed}{self.SEP}{0}{self.SEP}{dist}"]
         
             # Servo tends to drift left when reversing so we force it to the right every 20cm intervals
             realign_cmds = [
-               f"{self.FORWARD_DIST_TARGET}{25}{self.SEP}{30}{self.SEP}{0.1}",
+               f"{"T"}{25}{"|"}{30}{"|"}{0.1}",
             ]
             cmds = []
             # Re-align servo every 20cm
             for _ in range(dist // 20):
                 cmds.append(
-                    f"{self.BACKWARD_DIST_TARGET}{35}{self.SEP}{0}{self.SEP}{20}")
+                    f"{"t"}{35}{"|"}{0}{"|"}{20}")
                 cmds.extend(realign_cmds)
 
             remaining_dist = dist % 20
             if remaining_dist > 0:
                 cmds.append(
-                    f"{self.BACKWARD_DIST_TARGET}{35}{self.SEP}{0}{self.SEP}{remaining_dist}")
+                    f"{"t"}{35}{"|"}{0}{"|"}{remaining_dist}")
                 # Re-align servo only for distances >= 5cm
                 if remaining_dist >= 5:
                     cmds.extend(realign_cmds)
@@ -109,7 +109,6 @@ class CommandGenerator:
                 # turn right on the spot to re-align servo after left turn
                 f"{"T"}{25}{"|"}{10}{"|"}{0.1}",
                 f"{"t"}{25}{"|"}{0}{"|"}{3}"
-
             ]
         elif motion == Motion.FORWARD_RIGHT_TURN:
             return [
@@ -117,7 +116,6 @@ class CommandGenerator:
                 f"{"t"}{25}{"|"}{0}{"|"}{16}",
                 f"{"T"}{30}{"|"}{50}{"|"}{45.7}",
                 f"{"t"}{25}{"|"}{0}{"|"}{4}",
-
             ]
         elif motion == Motion.REVERSE_LEFT_TURN:
             return [
@@ -127,7 +125,6 @@ class CommandGenerator:
                 f"{"t"}{30}{"|"}{-50}{"|"}{46}",
                 # turn right on the spot to re-align servo after left turn
                 f"{"T"}{25}{"|"}{10}{"|"}{0.1}"
-
             ]
         elif motion == Motion.REVERSE_RIGHT_TURN:
             return [
