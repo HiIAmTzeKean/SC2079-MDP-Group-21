@@ -103,24 +103,27 @@ def find_largest_or_central_bbox(bboxes, signal):
     if not valid_bboxes:
         return "NA", 0.0
 
+    # If there is only one bounding box, return it
+    if len(valid_bboxes) == 1:
+        return valid_bboxes[0]["label"], valid_bboxes[0]["bbox_area"]
+
     # Find the largest bounding box area
     max_area = max(bbox["bbox_area"] for bbox in valid_bboxes)
-    largest_bboxes = [bbox for bbox in valid_bboxes if bbox["bbox_area"] == max_area]
-
-    # If there is only one largest bounding box, return it
-    if len(largest_bboxes) == 1:
-        return largest_bboxes[0]["label"], largest_bboxes[0]["bbox_area"]
+    threshold = 0.3  # bbox is of similar size if it is within 30% range of largest bbox area
+    # Get all bounding boxes with similar size to the largest bbox
+    largest_bboxes = [
+        bbox for bbox in valid_bboxes if bbox["bbox_area"] >= (1-threshold) * max_area]
 
     # Tie-breaking logic using signal
-    if signal == 'L':  
+    if signal == 'L':
         # Pick the rightmost object (higher x-coordinate)
         chosen_bbox = max(largest_bboxes, key=lambda x: x["xywh"][0])
-    elif signal == 'R':  
+    elif signal == 'R':
         # Pick the leftmost object (lower x-coordinate)
         chosen_bbox = min(largest_bboxes, key=lambda x: x["xywh"][0])
     else:
-        # Default: Pick the first bbox in the list
-        chosen_bbox = largest_bboxes[0]
+        # Default: Pick the largest bbox in the list
+        chosen_bbox = max(largest_bboxes, key=lambda x: x["bbox_area"])
 
     return chosen_bbox["label"], chosen_bbox["bbox_area"]
     
