@@ -99,7 +99,7 @@ def find_largest_or_central_bbox(bboxes, signal):
         return "NA", 0.0
 
     # Exclude 'end' class
-    valid_bboxes = [bbox for bbox in bboxes if bbox["label"] != "10" or bbox["label"] != "end" and bbox["confidence"] > 0.3]
+    valid_bboxes = [bbox for bbox in bboxes if bbox["label"] not in ["10", "end"] and bbox["confidence"] > 0.3]
 
     if not valid_bboxes:
         return "NA", 0.0
@@ -133,12 +133,20 @@ def find_largest_or_central_bbox(bboxes, signal):
 # 4. In the case that model did not detect any object in the image. Revert to model1 to try again before returning output.
 
 
-# Predict and Annotate image .
+# Predict and Annotate image 
 def predict_image(model,model_v2, image_path, output_dir, signal):
     """Predict and annotate image."""
     formatted_time = datetime.now().strftime('%d-%m_%H-%M-%S.%f')[:-3]
     img_name = f"processed_{formatted_time}.jpg"
+        
+    # Open the image to determine its original size
+    with Image.open(image_path) as img:
+        original_width, original_height = img.size
+        total_image_area = original_width * original_height
+    min_bbox_area_threshold = 0.1 * total_image_area  # Adjust this value as needed ( 0.2 = 20% of the total image)
     
+    bboxes = []
+
     # Perform inference
     results = model.predict(
         source=image_path,
@@ -148,24 +156,37 @@ def predict_image(model,model_v2, image_path, output_dir, signal):
         device=device
     )
 
-    # Extract bounding boxes
-    bboxes = []
-    if results[0].boxes:  # If there are any detected objects
+    # Process results from primary model if any boxes exist
+    if results[0].boxes:
         for result in results:
             for box in result.boxes:
                 cls_index = int(box.cls.tolist()[0])
                 label = result.names[cls_index]
-                xywh = box.xywh.tolist()[0]
-                bbox_area = xywh[2] * xywh[3]
-                confidence = box.conf.tolist()[0]  # Extract confidence
-                bboxes.append({"label": label, "xywh": xywh, "bbox_area": bbox_area, "confidence": confidence})
-    else:
-        # No detections from model, fallback to best.pt
-        print("No output from bestv2.pt, falling back to best.pt")
+                xywh = box.xywh.tolist()[0]  # [x_center, y_center, width, height]
+
+                # Scale bounding box coordinates back to the original image size
+                scale_x = original_width / 640  # Assuming the model resizes to 640x640
+                scale_y = original_height / 640
+                xywh[0] *= scale_x  
+                xywh[1] *= scale_y  
+                xywh[2] *= scale_x  
+                xywh[3] *= scale_y  
+
+                # Calculate bounding box area
+                bbox_area = xywh[2] * xywh[3]  
+                confidence = box.conf.tolist()[0]
+
+                # Only add bbox if it is above the area threshold
+                if bbox_area >= min_bbox_area_threshold:
+                    bboxes.append({"label": label, "xywh": xywh, "bbox_area": bbox_area, "confidence": confidence})
+
+    # If no valid bounding boxes from primary model (due to small objects), fallback to model_v2
+    if not bboxes:
+        print("No valid bounding boxes from primary model due to area threshold. Falling back to best.pt")
         results = model_v2.predict(
             source=image_path,
             save=True,
-            conf= MODEL_CONFIG_V2["conf"],
+            conf=MODEL_CONFIG_V2["conf"],
             imgsz=640,
             device=device
         )
@@ -176,9 +197,12 @@ def predict_image(model,model_v2, image_path, output_dir, signal):
                     cls_index = int(box.cls.tolist()[0])
                     label = result.names[cls_index]
                     xywh = box.xywh.tolist()[0]
+                    # No need to scale here if you assume same dimensions; add scaling if needed
                     bbox_area = xywh[2] * xywh[3]
                     confidence = box.conf.tolist()[0]
                     bboxes.append({"label": label, "xywh": xywh, "bbox_area": bbox_area, "confidence": confidence})
+        else:
+            print("Fallback model did not detect any objects.")
     
     # Save YOLO-labeled image
     labeled_img_path = Path(results[0].save_dir) / image_path.name
