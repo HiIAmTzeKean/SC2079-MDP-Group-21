@@ -18,37 +18,6 @@ MODEL_CONFIG_V2 = {"conf": 0.3, "path": Path(__file__).parent / "best_JH.pt"}
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 id_map = {
-    "end": 10,
-    "one": 11,
-    "two": 12,
-    "three": 13,
-    "four": 14,
-    "five": 15,
-    "six": 16,
-    "seven": 17,
-    "eight": 18,
-    "nine": 19,
-    "a": 20,
-    "b": 21,
-    "c": 22,
-    "d": 23,
-    "e": 24,
-    "f": 25,
-    "g": 26,
-    "h": 27,
-    "s": 28,
-    "t": 29,
-    "u": 30,
-    "v": 31,
-    "w": 32,
-    "x": 33,
-    "y": 34,
-    "z": 35,
-    "up": 36,
-    "down": 37,
-    "right": 38,
-    "left": 39,
-    "dot": 40,
     # Id Map 2
     "10": 10, # Bullseye 
     "11": 11, # 1 
@@ -99,41 +68,41 @@ def find_largest_or_central_bbox(bboxes, signal):
         return "NA", 0.0
 
     # Exclude 'end' class
-    valid_bboxes = [bbox for bbox in bboxes if bbox["label"] != "10" and bbox["label"] != "end" and bbox["confidence"] > 0.3]
+    valid_bboxes = [bbox for bbox in bboxes if bbox["label"] != "10"  and bbox["confidence"] > 0.3]
     if not valid_bboxes:
         return "NA", 0.0
 
+    # If there is only one bounding box, return it
+    if len(valid_bboxes) == 1:
+        return valid_bboxes[0]["label"], valid_bboxes[0]["bbox_area"]
+
     # Find the largest bounding box area
     max_area = max(bbox["bbox_area"] for bbox in valid_bboxes)
-    largest_bboxes = [bbox for bbox in valid_bboxes if bbox["bbox_area"] == max_area]
-
-    # If there is only one largest bounding box, return it
-    if len(largest_bboxes) == 1:
-        return largest_bboxes[0]["label"], largest_bboxes[0]["bbox_area"]
+    threshold = 0.3  # bbox is of similar size if it is within 30% range of largest bbox area
+    # Get all bounding boxes with similar size to the largest bbox
+    largest_bboxes = [
+        bbox for bbox in valid_bboxes if bbox["bbox_area"] >= (1-threshold) * max_area]
 
     # Tie-breaking logic using signal
-    if signal == 'L':  
+    if signal == 'L':
         # Pick the rightmost object (higher x-coordinate)
         chosen_bbox = max(largest_bboxes, key=lambda x: x["xywh"][0])
-    elif signal == 'R':  
+    elif signal == 'R':
         # Pick the leftmost object (lower x-coordinate)
         chosen_bbox = min(largest_bboxes, key=lambda x: x["xywh"][0])
     else:
-        # Default: Pick the first bbox in the list
-        chosen_bbox = largest_bboxes[0]
+        # Default: Pick the largest bbox in the list
+        chosen_bbox = max(largest_bboxes, key=lambda x: x["bbox_area"])
 
     return chosen_bbox["label"], chosen_bbox["bbox_area"]
     
 # Heuristics for predict_imgage 
-# 1. Ignore the bullseyes & 
-#   1.1 ( size of bounding box < 30% Total Area ) area justification ? 
+# 1. Ignore the bullseyes 
 # 2. Sort by bounding box size ( take the symbol with the largest bounding box size)
 # 3. Filter by Signal from algorithm, If car is on the left singal is Left. If car is on the right, signal on the right. (used to break a tie)
-# 4. In the case that model did not detect any object in the image. Revert to model1 to try again before returning output.
-
 
 # Predict and Annotate image 
-def predict_image(model,model_v2, image_path, output_dir, signal):
+def predict_image(logger, model, model_v2, image_path, output_dir, signal):
     """Predict and annotate image."""
     formatted_time = datetime.now().strftime('%d-%m_%H-%M-%S.%f')[:-3]
     img_name = f"processed_{formatted_time}.jpg"
@@ -141,12 +110,12 @@ def predict_image(model,model_v2, image_path, output_dir, signal):
     # Perform inference
     results = model.predict(
         source=image_path,
-        save=True,
         conf=MODEL_CONFIG["conf"],
         imgsz=640,
-        device=device
+        device=device,
+        verbose=False
     )
-
+    logger.debug(f"predict speed (ms): {results[0].speed}")
 
     bboxes = []
     if results[0].boxes:  # If there are any detected objects
@@ -158,46 +127,49 @@ def predict_image(model,model_v2, image_path, output_dir, signal):
                 bbox_area = xywh[2] * xywh[3]
                 confidence = box.conf.tolist()[0]  # Extract confidence
                 bboxes.append({"label": label, "xywh": xywh, "bbox_area": bbox_area, "confidence": confidence})
-    else:
-        # No detections from model, fallback to best.pt
-        print("No output from bestv2.pt, falling back to best.pt")
-        results = model_v2.predict(
-            source=image_path,
-            save=True,
-            conf=MODEL_CONFIG_V2["conf"],
-            imgsz=640,
-            device=device
-        )
+    # LOGIC FOR FALLBACK MODEL 
+    # else:
+    #     # No detections from model, fallback to best.pt
+    #     logger.debug("No output from bestv2.pt, falling back to best.pt")
+    #     results = model_v2.predict(
+    #         source=image_path,
+    #         save=True,
+    #         conf=MODEL_CONFIG_V2["conf"],
+    #         imgsz=640,
+    #         device=device
+    #     )
 
-        if results[0].boxes:
-            for result in results:
-                for box in result.boxes:
-                    cls_index = int(box.cls.tolist()[0])
-                    label = result.names[cls_index]
-                    xywh = box.xywh.tolist()[0]
-                    bbox_area = xywh[2] * xywh[3]
-                    confidence = box.conf.tolist()[0]
-                    bboxes.append({"label": label, "xywh": xywh, "bbox_area": bbox_area, "confidence": confidence})
+    #     if results[0].boxes:
+    #         for result in results:
+    #             for box in result.boxes:
+    #                 cls_index = int(box.cls.tolist()[0])
+    #                 label = result.names[cls_index]
+    #                 xywh = box.xywh.tolist()[0]
+    #                 bbox_area = xywh[2] * xywh[3]
+    #                 confidence = box.conf.tolist()[0]
+    #                 bboxes.append({"label": label, "xywh": xywh, "bbox_area": bbox_area, "confidence": confidence})
    
-    # Save YOLO-labeled image
-    labeled_img_path = Path(results[0].save_dir) / image_path.name
-    output_file_path = output_dir / img_name
+    logger.debug(f"Bounding boxes: '{bboxes}")
 
+    # Save YOLO-labeled image
     os.makedirs(output_dir, exist_ok=True)
-    labeled_img_path.rename(output_file_path)
+    output_file_path = output_dir / img_name
+    results[0].save(output_file_path)
+    logger.debug(f"Saved processed image: '{output_file_path}'")
     
     selected_label, selected_area = find_largest_or_central_bbox(bboxes,signal)
     image_id = id_map.get(selected_label, "NA")
 
     if selected_label != "NA":
-        print(f"Image '{image_path.name}': Detected '{selected_label}' with bbox area {selected_area:.2f} (ID: {image_id})")
+        logger.debug(
+            f"Image '{image_path.name}': Detected '{selected_label}' with bbox area {selected_area:.2f} (ID: {image_id})")
     else:
-        print(f"Image '{image_path.name}': No objects detected.")
+        logger.debug(f"Image '{image_path.name}': No objects detected.")
 
     return image_id
 
 ## Task 2
-def predict_image_t2(model, modelv2, image_path, output_dir, signal):
+def predict_image_t2(logger, model, modelv2, image_path, output_dir, signal):
     """Predict and annotate image, identifying only 'left' or 'right'.
        Defaults to 'left' (39) if no valid detection is found.
     """
@@ -205,9 +177,6 @@ def predict_image_t2(model, modelv2, image_path, output_dir, signal):
     img_name = f"processed_{formatted_time}.jpg"
 
     id_map = {
-        "end": 10,
-        "right": 38,
-        "left": 39,
         "38":38,
         "39":39,
         "10":10
@@ -219,18 +188,10 @@ def predict_image_t2(model, modelv2, image_path, output_dir, signal):
         save=True,
         conf=MODEL_CONFIG["conf"],
         imgsz=640,
-        device=device
+        device=device,
+        verbose=True
     )
-
-    # Save YOLO-labeled image
-    labeled_img_path = Path(results[0].save_dir) / image_path.name 
-    output_file_path = output_dir / img_name
-
-    os.makedirs(output_dir, exist_ok=True)
-    if labeled_img_path.exists():
-        labeled_img_path.rename(output_file_path)
-    else:
-        print(f"Warning: Labeled image not found at {labeled_img_path}")
+    logger.debug(f"predict speed (ms): {results[0].speed}")
 
     # Extract bounding boxes
     bboxes = []
@@ -247,23 +208,31 @@ def predict_image_t2(model, modelv2, image_path, output_dir, signal):
                 if label in ["38","39","left", "right"] and confidence > 0.3:
                     bboxes.append({"label": label, "xywh": xywh, "bbox_area": bbox_area, "confidence": confidence})
 
+    logger.debug(f"Bounding boxes: '{bboxes}")
+
+    # Save YOLO-labeled image
+    os.makedirs(output_dir, exist_ok=True)
+    output_file_path = output_dir / img_name
+    results[0].save(output_file_path)
+    logger.debug(f"Saved processed image: '{output_file_path}'")
+
     # Select the largest bounding box
     selected_label, selected_area = find_largest_or_central_bbox(bboxes, signal)
 
     # If no valid detection, default to "left" (39)
 
     if selected_label != "38" or selected_label != "39" or selected_label != "left" or selected_label != "right":
-
         image_id = 39
     else:
         image_id = id_map.get(selected_label, 39)  # Default to left if key is missing
 
-    print(f"Image '{image_path.name}': Detected '{selected_label}' with bbox area {selected_area:.2f} (ID: {image_id})")
+    logger.debug(
+        f"Image '{image_path.name}': Detected '{selected_label}' with bbox area {selected_area:.2f} (ID: {image_id})")
 
     return image_id
 
 
-def resize_image(image_path, output_dir):
+def resize_image(logger, image_path, output_dir):
     """
     Resize the image at the given path to 640x640 pixels and overwrite the original image.
     Args:
@@ -281,10 +250,10 @@ def resize_image(image_path, output_dir):
         resized_img.save(output_path)
 
     except Exception as e:
-        print(f"Error resizing image {image_path}: {e}")
+        logger.debug(f"Error resizing image '{image_path}: {e}'")
 
 
-def resize_all_images(output_dir, fullsize_dir):
+def resize_all_images(logger, output_dir, fullsize_dir):
     """
     Resize all images in the given directory before stitching.
     Args:
@@ -292,16 +261,18 @@ def resize_all_images(output_dir, fullsize_dir):
     """
     for img_path in fullsize_dir.iterdir():
         if img_path.is_file() and img_path.suffix.lower() in ('.png', '.jpg', '.jpeg'):
-            resize_image(img_path, output_dir)
+            resize_image(logger, img_path, output_dir)
 
 
-def stitch_image(output_dir, fullsize_dir):
+def stitch_image(logger, output_dir, fullsize_dir):
     output_filename = "concatenated.jpg"
     output_path = output_dir / output_filename
 
     try:
+        logger.debug(f"Resizing images in folder: '{fullsize_dir}'")
         # Resize all images before proceeding
-        resize_all_images(output_dir, fullsize_dir)
+        resize_all_images(logger, output_dir, fullsize_dir)
+        logger.debug(f"Saved resized images to folder: '{output_dir}'")
 
         # Get all image files
         image_files = [
@@ -311,7 +282,7 @@ def stitch_image(output_dir, fullsize_dir):
             and path.name.lower() != output_filename  # Exclude stitched image
         ]
         if not image_files:
-            print(f"No image files found in '{output_dir}'.")
+            logger.debug(f"No image files found in '{output_dir}'.")
             return
 
         images = []
@@ -320,11 +291,12 @@ def stitch_image(output_dir, fullsize_dir):
                 img = Image.open(img_path)
                 images.append(img)
             except Exception as e:
-                print(f"Skipping image {img_path.name} due to error: {e}")
+                logger.debug(
+                    f"Skipping image {img_path.name} due to error: {e}")
                 continue  # Skip faulty images instead of returning
 
         if not images:  # Check if any images were successfully loaded
-            print("No valid images to stitch.")
+            logger.debug("No valid images to stitch.")
             return
 
         # Get total width and max height
@@ -343,9 +315,9 @@ def stitch_image(output_dir, fullsize_dir):
 
         # Save output
         new_img.save(output_path)
-        print(f"Concatenated image saved to: {output_path}")
+        logger.debug(f"Concatenated image saved to: '{output_path}'")
 
         return new_img
 
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logger.debug(f"An error occurred: {e}")
