@@ -31,7 +31,7 @@ TURN_FACTOR: int = 5
 # Cost of half-turning the robot.
 # The higher the value, the less likely the robot is to make half-turns.
 # weighted by 2 since it makes 2 half-turns in an offset motion
-HALF_TURN_FACTOR: int = 4 * 2000000000000000000000000000
+HALF_TURN_FACTOR: int = 4 * 200
 
 # Cost of reversing the robot.
 # The higher the value, the less likely the robot is to reverse.
@@ -73,7 +73,7 @@ eg. Motion.FORWARD_OFFSET_LEFT: TWO half turns to end up diagonally in the speci
 0: long axis, 1: short axis
 """
 # TODO: tune to 10cm interval
-HALF_TURNS_DISPLACEMENT: tuple[int, int] = [4, 2]
+HALF_TURNS_DISPLACEMENT: tuple[int, int] = [3, 1]
 
 # TODO: remove when done testing
 W_COMMAND_FLAG = 0  # 0: disable w/W commands, 1: enable w/W cmoomands
