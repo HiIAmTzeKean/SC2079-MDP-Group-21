@@ -84,10 +84,10 @@ export const AlgorithmCore = () => {
 
 	// Select Tests
 	const [selectedTestEnum, setSelectedTestEnum] = useState<AlgoTestEnum>(
-		AlgoTestEnum.Custom
+		AlgoTestEnum.Misc_Custom
 	);
 	const [selectedTest, setSelectedTest] = useState<AlgoTestDataInterface>(
-		AlgoTestEnumMapper[AlgoTestEnum.Custom]
+		AlgoTestEnumMapper[AlgoTestEnum.Misc_Custom]
 	);
 
 	// state variables for Test All Results
@@ -192,7 +192,7 @@ export const AlgorithmCore = () => {
 		// Iterate through all test cases
 		for (const testEnum of AlgoTestEnumsList) {
 			// Skip the Custom test as it might not have consistent obstacles
-			if (testEnum === AlgoTestEnum.Custom) {
+			if (testEnum === AlgoTestEnum.Misc_Custom) {
 				completedTests++;
 				continue;
 			}
@@ -706,7 +706,7 @@ export const AlgorithmCore = () => {
 				robotPosition={currentRobotPosition ?? robotStartPosition}
 				robotPath={robotPositions?.slice(0, currentStep + 1)}
 				obstacles={selectedTest.obstacles}
-				canAddObstacle={selectedTestEnum === AlgoTestEnum.Custom}
+				canAddObstacle={selectedTestEnum === AlgoTestEnum.Misc_Custom}
 				setSelectedTest={setSelectedTest}
 			/>
 
