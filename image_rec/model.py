@@ -18,37 +18,6 @@ MODEL_CONFIG_V2 = {"conf": 0.3, "path": Path(__file__).parent / "best_JH.pt"}
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 id_map = {
-    "end": 10,
-    "one": 11,
-    "two": 12,
-    "three": 13,
-    "four": 14,
-    "five": 15,
-    "six": 16,
-    "seven": 17,
-    "eight": 18,
-    "nine": 19,
-    "a": 20,
-    "b": 21,
-    "c": 22,
-    "d": 23,
-    "e": 24,
-    "f": 25,
-    "g": 26,
-    "h": 27,
-    "s": 28,
-    "t": 29,
-    "u": 30,
-    "v": 31,
-    "w": 32,
-    "x": 33,
-    "y": 34,
-    "z": 35,
-    "up": 36,
-    "down": 37,
-    "right": 38,
-    "left": 39,
-    "dot": 40,
     # Id Map 2
     "10": 10, # Bullseye 
     "11": 11, # 1 
@@ -99,7 +68,7 @@ def find_largest_or_central_bbox(bboxes, signal):
         return "NA", 0.0
 
     # Exclude 'end' class
-    valid_bboxes = [bbox for bbox in bboxes if bbox["label"] != "10" and bbox["label"] != "end" and bbox["confidence"] > 0.3]
+    valid_bboxes = [bbox for bbox in bboxes if bbox["label"] != "10"  and bbox["confidence"] > 0.3]
     if not valid_bboxes:
         return "NA", 0.0
 
@@ -128,12 +97,9 @@ def find_largest_or_central_bbox(bboxes, signal):
     return chosen_bbox["label"], chosen_bbox["bbox_area"]
     
 # Heuristics for predict_imgage 
-# 1. Ignore the bullseyes & 
-#   1.1 ( size of bounding box < 30% Total Area ) area justification ? 
+# 1. Ignore the bullseyes 
 # 2. Sort by bounding box size ( take the symbol with the largest bounding box size)
 # 3. Filter by Signal from algorithm, If car is on the left singal is Left. If car is on the right, signal on the right. (used to break a tie)
-# 4. In the case that model did not detect any object in the image. Revert to model1 to try again before returning output.
-
 
 # Predict and Annotate image 
 def predict_image(model,model_v2, image_path, output_dir, signal):
@@ -150,7 +116,6 @@ def predict_image(model,model_v2, image_path, output_dir, signal):
         device=device
     )
 
-
     bboxes = []
     if results[0].boxes:  # If there are any detected objects
         for result in results:
@@ -161,26 +126,27 @@ def predict_image(model,model_v2, image_path, output_dir, signal):
                 bbox_area = xywh[2] * xywh[3]
                 confidence = box.conf.tolist()[0]  # Extract confidence
                 bboxes.append({"label": label, "xywh": xywh, "bbox_area": bbox_area, "confidence": confidence})
-    else:
-        # No detections from model, fallback to best.pt
-        print("No output from bestv2.pt, falling back to best.pt")
-        results = model_v2.predict(
-            source=image_path,
-            save=True,
-            conf=MODEL_CONFIG_V2["conf"],
-            imgsz=640,
-            device=device
-        )
+    # LOGIC FOR FALLBACK MODEL 
+    # else:
+    #     # No detections from model, fallback to best.pt
+    #     print("No output from bestv2.pt, falling back to best.pt")
+    #     results = model_v2.predict(
+    #         source=image_path,
+    #         save=True,
+    #         conf=MODEL_CONFIG_V2["conf"],
+    #         imgsz=640,
+    #         device=device
+    #     )
 
-        if results[0].boxes:
-            for result in results:
-                for box in result.boxes:
-                    cls_index = int(box.cls.tolist()[0])
-                    label = result.names[cls_index]
-                    xywh = box.xywh.tolist()[0]
-                    bbox_area = xywh[2] * xywh[3]
-                    confidence = box.conf.tolist()[0]
-                    bboxes.append({"label": label, "xywh": xywh, "bbox_area": bbox_area, "confidence": confidence})
+    #     if results[0].boxes:
+    #         for result in results:
+    #             for box in result.boxes:
+    #                 cls_index = int(box.cls.tolist()[0])
+    #                 label = result.names[cls_index]
+    #                 xywh = box.xywh.tolist()[0]
+    #                 bbox_area = xywh[2] * xywh[3]
+    #                 confidence = box.conf.tolist()[0]
+    #                 bboxes.append({"label": label, "xywh": xywh, "bbox_area": bbox_area, "confidence": confidence})
    
     # Save YOLO-labeled image
     labeled_img_path = Path(results[0].save_dir) / image_path.name
@@ -208,9 +174,6 @@ def predict_image_t2(model, modelv2, image_path, output_dir, signal):
     img_name = f"processed_{formatted_time}.jpg"
 
     id_map = {
-        "end": 10,
-        "right": 38,
-        "left": 39,
         "38":38,
         "39":39,
         "10":10
@@ -256,7 +219,6 @@ def predict_image_t2(model, modelv2, image_path, output_dir, signal):
     # If no valid detection, default to "left" (39)
 
     if selected_label != "38" or selected_label != "39" or selected_label != "left" or selected_label != "right":
-
         image_id = 39
     else:
         image_id = id_map.get(selected_label, 39)  # Default to left if key is missing
