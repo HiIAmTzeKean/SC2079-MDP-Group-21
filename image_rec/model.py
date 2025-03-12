@@ -99,7 +99,7 @@ def find_largest_or_central_bbox(bboxes, signal):
         return "NA", 0.0
 
     # Exclude 'end' class
-    valid_bboxes = [bbox for bbox in bboxes if bbox["label"] != "10" or bbox["label"] != "end" and bbox["confidence"] > 0.3]
+    valid_bboxes = [bbox for bbox in bboxes if bbox["label"] != "10" and bbox["label"] != "end" and bbox["confidence"] > 0.3]
     if not valid_bboxes:
         return "NA", 0.0
 
