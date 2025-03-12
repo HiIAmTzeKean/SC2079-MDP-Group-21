@@ -102,7 +102,7 @@ def find_largest_or_central_bbox(bboxes, signal):
 # 3. Filter by Signal from algorithm, If car is on the left singal is Left. If car is on the right, signal on the right. (used to break a tie)
 
 # Predict and Annotate image 
-def predict_image(model,model_v2, image_path, output_dir, signal):
+def predict_image(logger, model, model_v2, image_path, output_dir, signal):
     """Predict and annotate image."""
     formatted_time = datetime.now().strftime('%d-%m_%H-%M-%S.%f')[:-3]
     img_name = f"processed_{formatted_time}.jpg"
@@ -110,11 +110,12 @@ def predict_image(model,model_v2, image_path, output_dir, signal):
     # Perform inference
     results = model.predict(
         source=image_path,
-        save=True,
         conf=MODEL_CONFIG["conf"],
         imgsz=640,
-        device=device
+        device=device,
+        verbose=False
     )
+    logger.debug(f"predict speed (ms): {results[0].speed}")
 
     bboxes = []
     if results[0].boxes:  # If there are any detected objects
@@ -129,7 +130,7 @@ def predict_image(model,model_v2, image_path, output_dir, signal):
     # LOGIC FOR FALLBACK MODEL 
     # else:
     #     # No detections from model, fallback to best.pt
-    #     print("No output from bestv2.pt, falling back to best.pt")
+    #     logger.debug("No output from bestv2.pt, falling back to best.pt")
     #     results = model_v2.predict(
     #         source=image_path,
     #         save=True,
@@ -148,25 +149,27 @@ def predict_image(model,model_v2, image_path, output_dir, signal):
     #                 confidence = box.conf.tolist()[0]
     #                 bboxes.append({"label": label, "xywh": xywh, "bbox_area": bbox_area, "confidence": confidence})
    
-    # Save YOLO-labeled image
-    labeled_img_path = Path(results[0].save_dir) / image_path.name
-    output_file_path = output_dir / img_name
+    logger.debug(f"Bounding boxes: '{bboxes}")
 
+    # Save YOLO-labeled image
     os.makedirs(output_dir, exist_ok=True)
-    labeled_img_path.rename(output_file_path)
+    output_file_path = output_dir / img_name
+    results[0].save(output_file_path)
+    logger.debug(f"Saved processed image: '{output_file_path}'")
     
     selected_label, selected_area = find_largest_or_central_bbox(bboxes,signal)
     image_id = id_map.get(selected_label, "NA")
 
     if selected_label != "NA":
-        print(f"Image '{image_path.name}': Detected '{selected_label}' with bbox area {selected_area:.2f} (ID: {image_id})")
+        logger.debug(
+            f"Image '{image_path.name}': Detected '{selected_label}' with bbox area {selected_area:.2f} (ID: {image_id})")
     else:
-        print(f"Image '{image_path.name}': No objects detected.")
+        logger.debug(f"Image '{image_path.name}': No objects detected.")
 
     return image_id
 
 ## Task 2
-def predict_image_t2(model, modelv2, image_path, output_dir, signal):
+def predict_image_t2(logger, model, modelv2, image_path, output_dir, signal):
     """Predict and annotate image, identifying only 'left' or 'right'.
        Defaults to 'left' (39) if no valid detection is found.
     """
@@ -185,18 +188,10 @@ def predict_image_t2(model, modelv2, image_path, output_dir, signal):
         save=True,
         conf=MODEL_CONFIG["conf"],
         imgsz=640,
-        device=device
+        device=device,
+        verbose=True
     )
-
-    # Save YOLO-labeled image
-    labeled_img_path = Path(results[0].save_dir) / image_path.name 
-    output_file_path = output_dir / img_name
-
-    os.makedirs(output_dir, exist_ok=True)
-    if labeled_img_path.exists():
-        labeled_img_path.rename(output_file_path)
-    else:
-        print(f"Warning: Labeled image not found at {labeled_img_path}")
+    logger.debug(f"predict speed (ms): {results[0].speed}")
 
     # Extract bounding boxes
     bboxes = []
@@ -213,6 +208,14 @@ def predict_image_t2(model, modelv2, image_path, output_dir, signal):
                 if label in ["38","39","left", "right"] and confidence > 0.3:
                     bboxes.append({"label": label, "xywh": xywh, "bbox_area": bbox_area, "confidence": confidence})
 
+    logger.debug(f"Bounding boxes: '{bboxes}")
+
+    # Save YOLO-labeled image
+    os.makedirs(output_dir, exist_ok=True)
+    output_file_path = output_dir / img_name
+    results[0].save(output_file_path)
+    logger.debug(f"Saved processed image: '{output_file_path}'")
+
     # Select the largest bounding box
     selected_label, selected_area = find_largest_or_central_bbox(bboxes, signal)
 
@@ -223,12 +226,13 @@ def predict_image_t2(model, modelv2, image_path, output_dir, signal):
     else:
         image_id = id_map.get(selected_label, 39)  # Default to left if key is missing
 
-    print(f"Image '{image_path.name}': Detected '{selected_label}' with bbox area {selected_area:.2f} (ID: {image_id})")
+    logger.debug(
+        f"Image '{image_path.name}': Detected '{selected_label}' with bbox area {selected_area:.2f} (ID: {image_id})")
 
     return image_id
 
 
-def resize_image(image_path, output_dir):
+def resize_image(logger, image_path, output_dir):
     """
     Resize the image at the given path to 640x640 pixels and overwrite the original image.
     Args:
@@ -246,10 +250,10 @@ def resize_image(image_path, output_dir):
         resized_img.save(output_path)
 
     except Exception as e:
-        print(f"Error resizing image {image_path}: {e}")
+        logger.debug(f"Error resizing image '{image_path}: {e}'")
 
 
-def resize_all_images(output_dir, fullsize_dir):
+def resize_all_images(logger, output_dir, fullsize_dir):
     """
     Resize all images in the given directory before stitching.
     Args:
@@ -257,16 +261,18 @@ def resize_all_images(output_dir, fullsize_dir):
     """
     for img_path in fullsize_dir.iterdir():
         if img_path.is_file() and img_path.suffix.lower() in ('.png', '.jpg', '.jpeg'):
-            resize_image(img_path, output_dir)
+            resize_image(logger, img_path, output_dir)
 
 
-def stitch_image(output_dir, fullsize_dir):
+def stitch_image(logger, output_dir, fullsize_dir):
     output_filename = "concatenated.jpg"
     output_path = output_dir / output_filename
 
     try:
+        logger.debug(f"Resizing images in folder: '{fullsize_dir}'")
         # Resize all images before proceeding
-        resize_all_images(output_dir, fullsize_dir)
+        resize_all_images(logger, output_dir, fullsize_dir)
+        logger.debug(f"Saved resized images to folder: '{output_dir}'")
 
         # Get all image files
         image_files = [
@@ -276,7 +282,7 @@ def stitch_image(output_dir, fullsize_dir):
             and path.name.lower() != output_filename  # Exclude stitched image
         ]
         if not image_files:
-            print(f"No image files found in '{output_dir}'.")
+            logger.debug(f"No image files found in '{output_dir}'.")
             return
 
         images = []
@@ -285,11 +291,12 @@ def stitch_image(output_dir, fullsize_dir):
                 img = Image.open(img_path)
                 images.append(img)
             except Exception as e:
-                print(f"Skipping image {img_path.name} due to error: {e}")
+                logger.debug(
+                    f"Skipping image {img_path.name} due to error: {e}")
                 continue  # Skip faulty images instead of returning
 
         if not images:  # Check if any images were successfully loaded
-            print("No valid images to stitch.")
+            logger.debug("No valid images to stitch.")
             return
 
         # Get total width and max height
@@ -308,9 +315,9 @@ def stitch_image(output_dir, fullsize_dir):
 
         # Save output
         new_img.save(output_path)
-        print(f"Concatenated image saved to: {output_path}")
+        logger.debug(f"Concatenated image saved to: '{output_path}'")
 
         return new_img
 
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logger.debug(f"An error occurred: {e}")
