@@ -55,7 +55,8 @@ class Category(Enum):
 manual_commands: dict[str, Union[tuple[Any, ...], str]] = {
     "front": "T50|0|10",
     "frontuntil": "W50|0|30",
-    "front_ir": "L50|0|10",
+    "front_R_ir": "R30|0|30",
+    "front_L_ir": "L30|0|30",
     "back": "t50|0|10",
     "left": "T50|-25|90",
     "right": "T50|25|90",
@@ -68,4 +69,4 @@ manual_commands: dict[str, Union[tuple[Any, ...], str]] = {
 manual_commands["left_arc"] = (manual_commands["half_left"], manual_commands["half_right"], manual_commands["slight_back"],  manual_commands["half_right"], manual_commands["half_left"])
 manual_commands["right_arc"] = (manual_commands["half_right"], manual_commands["half_left"], manual_commands["slight_back"], manual_commands["half_left"], manual_commands["half_right"])
 
-stm32_prefixes = ("T", "t", "w", "W", "D", "d","P")
+stm32_prefixes = ("T", "t", "w", "W", "D", "d","P","L","R")

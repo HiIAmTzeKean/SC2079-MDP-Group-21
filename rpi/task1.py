@@ -12,7 +12,7 @@ from .communication.android import AndroidMessage
 from .communication.camera import snap_using_libcamera, snap_using_picamera2
 from .communication.pi_action import PiAction
 from .constant.consts import Category, manual_commands, stm32_prefixes
-from .constant.settings import URL
+from .constant.settings import URL, API_TIMEOUT
 
 
 logger = logging.getLogger(__name__)
@@ -203,7 +203,7 @@ class TaskOne(RaspberryPi):
                             },
                         )
                     )
-                    logger.debug(f"stm finish {message}")
+                    logger.info(f"stm finish {message}")
                     logger.info("Releasing movement lock.")
                     self.movement_lock.release()
                 elif message.startswith("r"):
@@ -238,12 +238,6 @@ class TaskOne(RaspberryPi):
                 self.rpi_action_queue.put(PiAction(cat=Category.OBSTACLE, value=message["value"]))
                 logger.debug(f"PiAction obstacles appended to queue: {message}")
 
-            # elif message["cat"] == Category.MANUAL.value:
-            #     command = manual_commands.get(message["value"])
-            #     if command is None:
-            #         logger.error("Invalid manual command!")
-            #     self.stm_link.send_cmd(**command)
-                
             ## Command: Start Moving ##
             elif message["cat"] == "control":
                 if message["value"] == "start":
