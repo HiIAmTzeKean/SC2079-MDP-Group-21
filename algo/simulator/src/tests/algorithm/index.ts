@@ -1,30 +1,32 @@
 import { Obstacle } from "../../schemas/entity";
-import { AlgoTestBasicMock } from "./basic_mock";
-import { AlgoTestBasicUTurn } from "./basic_u_turn";
-import { AlgoTestCorners } from "./corners";
-import { AlgoTestCustom } from "./custom";
-import { AlgoTestObstacles_5_Basic } from "./obstacles_5";
-import { AlgoTestObstacles_7_A, AlgoTestObstacles_7_B } from "./obstacles_7";
-import { AlgoTestShapes_V } from "./shapes";
 import {
-	AlgoTestCollisionCheck_A,
-	AlgoTestCollisionCheck_B,
-	AlgoTestCollisionCheck_C,
-} from "./collision_check";
-import { AlgoTestOfficialMockLayout } from "./official_mock_layout";
-import { obstacles_5_BriefingSlides } from "./5 Obstacles- From Briefing Slide";
-import { A5Task } from "./TaskA5";
-import { Past_Semester_1 } from "./Past Semester 1";
-import { Past_Semester_2 } from "./Past Semester 2";
-import { obstacles8tightspaces } from "./8 Obstacles, tight spaces";
-import { Past_Semester_3 } from "./Past Semester 3";
-import { Obstacles_8_long } from "./8 Obstacles long";
-import { FailTest } from "./Fail Test";
-
-
-
-
-
+	Basic_Mock,
+	Basic_Corners,
+	Basic_UTurn,
+	Basic_ShapeV,
+	Basic_CollisionCheckA,
+	Basic_CollisionCheckB,
+	Basic_CollisionCheckC,
+} from "./basic";
+import { Misc_Custom, Misc_TaskA5, Misc_FailTest } from "./misc";
+import {
+	Obstacles5_Basic,
+	Obstacles5_BriefingSlides,
+	Obstacles5_OfficialMockLayout
+} from "./obstacles_5";
+import {
+	Obstacles6_PastSem1
+} from "./obstacles_6";
+import {
+	Obstacles7_A,
+	Obstacles7_B,
+	Obstacles7_PastSem1,
+	Obstacles7_PastSem2
+} from "./obstacles_7";
+import {
+	Obstacles8_TightSpaces,
+	Obstacles8_Long
+} from "./obstacles_8";
 
 /** Interface for Algorithm Test Data
  * @param obstacles An array of Obstacles.
@@ -34,84 +36,84 @@ export interface AlgoTestDataInterface {
 }
 
 export enum AlgoTestEnum {
-	Custom = "Custom",
+	Misc_Custom = "Custom",
+	Misc_TaskA5 = "Task A5",
+	Misc_FailTest = "Fail Test",
+
 	Basic_Mock = "Basic Mock",
-	Basic_U_Turn = "Basic U-Turn",
-	Corners = "Corners",
-	Obstacles_7_A = "7 Obstacles (A)",
-	Obstacles_7_B = "7 Obstacles (B)",
-	Shapes_V = "V Shape",
-	Obstacles_5_Basic = "5 Obstacles (Basic)",
-	AlgoTestCollisionCheck_A = "Collision Checking (A)",
-	AlgoTestCollisionCheck_B = "Collision Checking (B)",
-	AlgoTestCollisionCheck_C = "Collision Checking (C)",
-	AlgoTestOfficialMockLayout = "Official Mock Layout",
-	obstacles_5_BriefingSlides = "5 Obstacles - From Briefing Slide",
-	A5Task = "A5Task",
-	Past_Semester_1 = "Past_Semester_1",
-	Past_Semester_2 = "Past_Semester_2",
-	obstacles8tightspaces = "8 Obstacles, tight spaces",
-	Past_Semester_3 = "Past Semester 3",
-	Obstacles_8_long = "8 Obstacles long",
-	FailTest = "Fail Test",
+	Basic_UTurn = "Basic U-Turn",
+	Basic_Corners = "Corners",
+	Basic_ShapeV = "V Shape",
+	Basic_CollisionCheckA = "Collision Checking (A)",
+	Basic_CollisionCheckB = "Collision Checking (B)",
+	Basic_CollisionCheckC = "Collision Checking (C)",
 
+	Obstacles5_Basic = "5 Obstacles (Basic)",
+	Obstacles5_BriefingSlides = "5 Obstacles (Briefing Slides)",
+	Obstacles5_OfficialMockLayout = "5 Obstacles (Official Mock Layout)",
 
+	Obstacles6_PastSem1 = "6 Obstacles (Past Semester 1)",
 
+	Obstacles7_A = "7 Obstacles (A)",
+	Obstacles7_B = "7 Obstacles (B)",
+	Obstacles7_PastSem1 = "7 Obstacles (Past Semester 1)",
+	Obstacles7_PastSem2 = "7 Obstacles (Past Semester 2)",
 
-
-
+	Obstacles8_TightSpaces = "8 Obstacles (Tight Spaces)",
+	Obstacles8_Long = "8 Obstacles (Long)",
 }
 
 export const AlgoTestEnumsList = [
-	AlgoTestEnum.Custom,
+	AlgoTestEnum.Misc_Custom,
+	AlgoTestEnum.Misc_TaskA5,
+	AlgoTestEnum.Misc_FailTest,
+
 	AlgoTestEnum.Basic_Mock,
-	AlgoTestEnum.Basic_U_Turn,
-	AlgoTestEnum.Corners,
-	AlgoTestEnum.Obstacles_7_A,
-	AlgoTestEnum.Obstacles_7_B,
-	AlgoTestEnum.Shapes_V,
-	AlgoTestEnum.Obstacles_5_Basic,
-	AlgoTestEnum.AlgoTestCollisionCheck_A,
-	AlgoTestEnum.AlgoTestCollisionCheck_B,
-	AlgoTestEnum.AlgoTestCollisionCheck_C,
-	AlgoTestEnum.AlgoTestOfficialMockLayout,
-	AlgoTestEnum.obstacles_5_BriefingSlides,
-	AlgoTestEnum.A5Task,
-	AlgoTestEnum.Past_Semester_1,
-	AlgoTestEnum.Past_Semester_2,
-	AlgoTestEnum.obstacles8tightspaces,
-	AlgoTestEnum.Past_Semester_3,
-	AlgoTestEnum.Obstacles_8_long,
-	AlgoTestEnum.FailTest,
+	AlgoTestEnum.Basic_UTurn,
+	AlgoTestEnum.Basic_Corners,
+	AlgoTestEnum.Basic_ShapeV,
+	AlgoTestEnum.Basic_CollisionCheckA,
+	AlgoTestEnum.Basic_CollisionCheckB,
+	AlgoTestEnum.Basic_CollisionCheckC,
 
+	AlgoTestEnum.Obstacles5_Basic,
+	AlgoTestEnum.Obstacles5_BriefingSlides,
+	AlgoTestEnum.Obstacles5_OfficialMockLayout,
 
+	AlgoTestEnum.Obstacles6_PastSem1,
 
+	AlgoTestEnum.Obstacles7_A,
+	AlgoTestEnum.Obstacles7_B,
+	AlgoTestEnum.Obstacles7_PastSem1,
+	AlgoTestEnum.Obstacles7_PastSem2,
 
-
+	AlgoTestEnum.Obstacles8_TightSpaces,
+	AlgoTestEnum.Obstacles8_Long,
 ];
 
 export const AlgoTestEnumMapper = {
-	[AlgoTestEnum.Custom]: AlgoTestCustom,
-	[AlgoTestEnum.Basic_Mock]: AlgoTestBasicMock,
-	[AlgoTestEnum.Basic_U_Turn]: AlgoTestBasicUTurn,
-	[AlgoTestEnum.Corners]: AlgoTestCorners,
-	[AlgoTestEnum.Obstacles_7_A]: AlgoTestObstacles_7_A,
-	[AlgoTestEnum.Obstacles_7_B]: AlgoTestObstacles_7_B,
-	[AlgoTestEnum.Shapes_V]: AlgoTestShapes_V,
-	[AlgoTestEnum.Obstacles_5_Basic]: AlgoTestObstacles_5_Basic,
-	[AlgoTestEnum.AlgoTestCollisionCheck_A]: AlgoTestCollisionCheck_A,
-	[AlgoTestEnum.AlgoTestCollisionCheck_B]: AlgoTestCollisionCheck_B,
-	[AlgoTestEnum.AlgoTestCollisionCheck_C]: AlgoTestCollisionCheck_C,
-	[AlgoTestEnum.AlgoTestOfficialMockLayout]: AlgoTestOfficialMockLayout,
-	[AlgoTestEnum.obstacles_5_BriefingSlides]: obstacles_5_BriefingSlides,
-	[AlgoTestEnum.A5Task]: A5Task,
-	[AlgoTestEnum.Past_Semester_1]: Past_Semester_1,
-	[AlgoTestEnum.Past_Semester_2]: Past_Semester_2,
-	[AlgoTestEnum.obstacles8tightspaces]: obstacles8tightspaces,
-	[AlgoTestEnum.Past_Semester_3]: Past_Semester_3,
-	[AlgoTestEnum.Obstacles_8_long]: Obstacles_8_long,
-	[AlgoTestEnum.FailTest]: FailTest,
+	[AlgoTestEnum.Misc_Custom]: Misc_Custom,
+	[AlgoTestEnum.Misc_TaskA5]: Misc_TaskA5,
+	[AlgoTestEnum.Misc_FailTest]: Misc_FailTest,
 
+	[AlgoTestEnum.Basic_Mock]: Basic_Mock,
+	[AlgoTestEnum.Basic_UTurn]: Basic_UTurn,
+	[AlgoTestEnum.Basic_Corners]: Basic_Corners,
+	[AlgoTestEnum.Basic_ShapeV]: Basic_ShapeV,
+	[AlgoTestEnum.Basic_CollisionCheckA]: Basic_CollisionCheckA,
+	[AlgoTestEnum.Basic_CollisionCheckB]: Basic_CollisionCheckB,
+	[AlgoTestEnum.Basic_CollisionCheckC]: Basic_CollisionCheckC,
 
+	[AlgoTestEnum.Obstacles5_Basic]: Obstacles5_Basic,
+	[AlgoTestEnum.Obstacles5_BriefingSlides]: Obstacles5_BriefingSlides,
+	[AlgoTestEnum.Obstacles5_OfficialMockLayout]: Obstacles5_OfficialMockLayout,
 
+	[AlgoTestEnum.Obstacles6_PastSem1]: Obstacles6_PastSem1,
+	[AlgoTestEnum.Obstacles7_A]: Obstacles7_A,
+	[AlgoTestEnum.Obstacles7_B]: Obstacles7_B,
+	[AlgoTestEnum.Obstacles7_PastSem1]: Obstacles7_PastSem1,
+	[AlgoTestEnum.Obstacles7_PastSem2]: Obstacles7_PastSem2,
+
+	[AlgoTestEnum.Obstacles8_TightSpaces]: Obstacles8_TightSpaces,
+	[AlgoTestEnum.Obstacles8_Long]: Obstacles8_Long,
 };

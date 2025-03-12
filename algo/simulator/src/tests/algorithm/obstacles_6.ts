@@ -1,8 +1,8 @@
 import { AlgoTestDataInterface } from ".";
 import { Direction } from "../../schemas/entity";
 
-export const Past_Semester_1: AlgoTestDataInterface = {
-  obstacles: [
+export const Obstacles6_PastSem1: AlgoTestDataInterface = {
+	obstacles: [
 		{ id: 1, x: 1, y: 18, d: Direction.EAST },
 		{ id: 2, x: 5, y: 14, d: Direction.NORTH },
 		{ id: 3, x: 15, y: 17, d: Direction.WEST },

@@ -38,7 +38,7 @@ export const TestSelector = (props: TestSelectorProps) => {
       </Button>
 
       {/* Manage Custom Obstacles */}
-      {selectedTestEnum === AlgoTestEnum.Custom &&
+      {selectedTestEnum === AlgoTestEnum.Misc_Custom &&
         <CustomTest
           selectedTest={selectedTest}
           setSelectedTest={setSelectedTest}
