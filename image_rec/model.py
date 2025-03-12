@@ -110,7 +110,6 @@ def predict_image(logger, model, model_v2, image_path, output_dir, signal):
     # Perform inference
     results = model.predict(
         source=image_path,
-        save=True,
         conf=MODEL_CONFIG["conf"],
         imgsz=640,
         device=device,
@@ -151,12 +150,11 @@ def predict_image(logger, model, model_v2, image_path, output_dir, signal):
     #                 bboxes.append({"label": label, "xywh": xywh, "bbox_area": bbox_area, "confidence": confidence})
    
     logger.debug(f"Bounding boxes: '{bboxes}")
-    # Save YOLO-labeled image
-    labeled_img_path = Path(results[0].save_dir) / image_path.name
-    output_file_path = output_dir / img_name
 
+    # Save YOLO-labeled image
     os.makedirs(output_dir, exist_ok=True)
-    labeled_img_path.rename(output_file_path)
+    output_file_path = output_dir / img_name
+    results[0].save(output_file_path)
     logger.debug(f"Saved processed image: '{output_file_path}'")
     
     selected_label, selected_area = find_largest_or_central_bbox(bboxes,signal)
@@ -194,16 +192,6 @@ def predict_image_t2(logger, model, modelv2, image_path, output_dir, signal):
         verbose=True
     )
     logger.debug(f"predict speed (ms): {results[0].speed}")
-    # Save YOLO-labeled image
-    labeled_img_path = Path(results[0].save_dir) / image_path.name 
-    output_file_path = output_dir / img_name
-
-    os.makedirs(output_dir, exist_ok=True)
-    if labeled_img_path.exists():
-        labeled_img_path.rename(output_file_path)
-        logger.debug(f"Saved processed image: '{labeled_img_path}'")
-    else:
-        logger.debug(f"Warning: Labeled image not found at '{labeled_img_path}'")
 
     # Extract bounding boxes
     bboxes = []
@@ -221,6 +209,13 @@ def predict_image_t2(logger, model, modelv2, image_path, output_dir, signal):
                     bboxes.append({"label": label, "xywh": xywh, "bbox_area": bbox_area, "confidence": confidence})
 
     logger.debug(f"Bounding boxes: '{bboxes}")
+
+    # Save YOLO-labeled image
+    os.makedirs(output_dir, exist_ok=True)
+    output_file_path = output_dir / img_name
+    results[0].save(output_file_path)
+    logger.debug(f"Saved processed image: '{output_file_path}'")
+
     # Select the largest bounding box
     selected_label, selected_area = find_largest_or_central_bbox(bboxes, signal)
 
