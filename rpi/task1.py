@@ -271,8 +271,8 @@ class TaskOne(RaspberryPi):
             filename=filename,
             filename_send=filename_send,
             url=url,
-            # auto_callibrate=False,
         )
+        logger.info(results)
         self.movement_lock.release()
         self.android_queue.put(AndroidMessage(Category.IMAGE_REC.value, value=results))
         
