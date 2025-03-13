@@ -10,5 +10,5 @@ else
     done
 fi
 
-sudo systemctl start rfcomm
-sudo rfcomm listen /dev/rfcomm0 1
+# sudo systemctl start rfcomm
+# sudo rfcomm listen /dev/rfcomm0 1
