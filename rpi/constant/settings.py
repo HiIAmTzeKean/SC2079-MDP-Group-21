@@ -3,7 +3,7 @@ SERIAL_PORT = "/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Cont
 BAUD_RATE = 115200
 
 # API DETAILS
-API_IP = "192.168.21.37"  # IP address of laptop
+API_IP = "192.168.21.32"  # IP address of laptop
 API_PORT = 5000
 URL = f"http://{API_IP}:{API_PORT}"
 API_TIMEOUT = 90
