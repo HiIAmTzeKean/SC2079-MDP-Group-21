@@ -144,6 +144,8 @@ public class CanvasActivity extends AppCompatActivity {
     }
 
     private void startRobot() {
+        BluetoothMessage msg = BluetoothMessage.ofRobotStartMessage();
+        myApp.btConnection().sendMessage(msg.getAsJsonMessage().getAsJson());
         if (mediaPlayer != null) {
             mediaPlayer.stop();
             mediaPlayer.release();
@@ -154,8 +156,6 @@ public class CanvasActivity extends AppCompatActivity {
             obstacle.setTarget(null);
         }
         canvasView.invalidate();
-        BluetoothMessage msg = BluetoothMessage.ofRobotStartMessage();
-        myApp.btConnection().sendMessage(msg.getAsJsonMessage().getAsJson());
     }
 
     private void showConfirmationDialog() {
@@ -250,13 +250,13 @@ public class CanvasActivity extends AppCompatActivity {
     private void initializeRobot(int x, int y, Facing facing) {
         myApp.robot().updatePosition(x, y);
         myApp.robot().updateFacing(facing);
+        robotView.invalidate();
         if (mediaPlayer != null) {
             mediaPlayer.stop();
             mediaPlayer.release();
         }
         mediaPlayer = MediaPlayer.create(this, R.raw.hee_hee);
         mediaPlayer.start();
-        robotView.invalidate();
     }
 
     private Facing convertFacing(String facing) {
