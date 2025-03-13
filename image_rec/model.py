@@ -78,18 +78,18 @@ def find_largest_or_central_bbox(bboxes, signal):
 
     # Find the largest bounding box area
     max_area = max(bbox["bbox_area"] for bbox in valid_bboxes)
-    threshold = 0.3  # bbox is of similar size if it is within 30% range of largest bbox area
+    threshold = 0.1  # bbox is of similar size if it is within 10% range of largest bbox area
     # Get all bounding boxes with similar size to the largest bbox
     largest_bboxes = [
         bbox for bbox in valid_bboxes if bbox["bbox_area"] >= (1-threshold) * max_area]
 
     # Tie-breaking logic using signal
-    if signal == 'L':
-        # Pick the rightmost object (higher x-coordinate)
-        chosen_bbox = max(largest_bboxes, key=lambda x: x["xywh"][0])
-    elif signal == 'R':
-        # Pick the leftmost object (lower x-coordinate)
+    if signal == 'L':  # Obstacle is left of robot
+        # Pick the leftmost object (lowest x-coordinate)
         chosen_bbox = min(largest_bboxes, key=lambda x: x["xywh"][0])
+    elif signal == 'R':  # Obstacle is right of robot
+        # Pick the rightmost object (highest x-coordinate)
+        chosen_bbox = max(largest_bboxes, key=lambda x: x["xywh"][0])
     else:
         # Default: Pick the largest bbox in the list
         chosen_bbox = max(largest_bboxes, key=lambda x: x["bbox_area"])
@@ -99,7 +99,7 @@ def find_largest_or_central_bbox(bboxes, signal):
 # Heuristics for predict_imgage 
 # 1. Ignore the bullseyes 
 # 2. Sort by bounding box size ( take the symbol with the largest bounding box size)
-# 3. Filter by Signal from algorithm, If car is on the left singal is Left. If car is on the right, signal on the right. (used to break a tie)
+# 3. Filter by Signal from algorithm. signal = 'L' if obstacle is on the left of robot, signal = 'R' if obstacle is right of robot (used to break a tie)
 
 # Predict and Annotate image 
 def predict_image(logger, model, model_v2, image_path, output_dir, signal):
