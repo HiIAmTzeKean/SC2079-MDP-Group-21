@@ -27,7 +27,6 @@ import com.mdp25.forever21.canvas.CanvasView;
 import com.mdp25.forever21.canvas.GridObstacle;
 import com.mdp25.forever21.canvas.RobotView;
 
-import java.util.Random;
 
 public class CanvasActivity extends AppCompatActivity {
     private TextView receivedMessages;
@@ -44,16 +43,12 @@ public class CanvasActivity extends AppCompatActivity {
     private String selectedFacing = "NORTH"; // Default value
     private Facing facingDirection;
     private final String TAG = "CanvasActivity";
-    private final boolean TEST_CONFIG = true; // change for testing
     private MyApplication myApp;
     private BroadcastReceiver msgReceiver; //receive bluetooth messages
     private CanvasView canvasView;
     private RobotView robotView;
     private CanvasTouchController canvasTouchController;
-    private MediaPlayer yippee;
-    private MediaPlayer smoothCriminal;
-    private MediaPlayer heeHee;
-    private MediaPlayer imGood;
+    private MediaPlayer mediaPlayer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,22 +73,14 @@ public class CanvasActivity extends AppCompatActivity {
 
         msgReceiver = new BluetoothMessageReceiver(BluetoothMessageParser.ofDefault(), this::onMsgReceived);
         getApplicationContext().registerReceiver(msgReceiver, new IntentFilter(BluetoothMessageReceiver.ACTION_MSG_READ), RECEIVER_NOT_EXPORTED);
+    }
 
-        yippee = MediaPlayer.create(this, R.raw.yippee);
-        smoothCriminal = MediaPlayer.create(this, R.raw.smooth_criminal);
-        heeHee = MediaPlayer.create(this, R.raw.hee_hee);
-        imGood = MediaPlayer.create(this, R.raw.im_good);
-
-        if (TEST_CONFIG) {
-            myApp.grid().clear();
-            myApp.grid().addObstacle(GridObstacle.of(1, 13, Facing.SOUTH));
-            myApp.grid().addObstacle(GridObstacle.of(8, 19, Facing.SOUTH));
-            myApp.grid().addObstacle(GridObstacle.of(19, 18, Facing.WEST));
-            myApp.grid().addObstacle(GridObstacle.of(14, 14, Facing.EAST));
-            myApp.grid().addObstacle(GridObstacle.of(13, 7, Facing.SOUTH));
-            myApp.grid().addObstacle(GridObstacle.of(7, 6, Facing.WEST));
-            myApp.grid().addObstacle(GridObstacle.of(8, 2, Facing.EAST));
-            myApp.grid().addObstacle(GridObstacle.of(19, 2, Facing.WEST));
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+            mediaPlayer = null;
         }
     }
 
@@ -157,12 +144,16 @@ public class CanvasActivity extends AppCompatActivity {
     }
 
     private void startRobot() {
-        Random rand = new Random();
-        if (rand.nextFloat() > 0.5f) {
-            smoothCriminal.start(); //play smooth criminal
-        } else {
-            imGood.start();
+        if (mediaPlayer != null) {
+            mediaPlayer.stop();
+            mediaPlayer.release();
         }
+        mediaPlayer = MediaPlayer.create(this, R.raw.tokyo_drift);
+        mediaPlayer.start();
+        for (GridObstacle obstacle : myApp.grid().getObstacleList()) {
+            obstacle.setTarget(null);
+        }
+        canvasView.invalidate();
         BluetoothMessage msg = BluetoothMessage.ofRobotStartMessage();
         myApp.btConnection().sendMessage(msg.getAsJsonMessage().getAsJson());
     }
@@ -185,6 +176,13 @@ public class CanvasActivity extends AppCompatActivity {
                 this.myApp.robot().getFacing(),
                 this.myApp.grid().getObstacleList());
         myApp.btConnection().sendMessage(msg.getAsJsonMessage().getAsJson());
+        Toast.makeText(CanvasActivity.this, "Data sent successfully", Toast.LENGTH_SHORT).show();
+        if (mediaPlayer != null) {
+            mediaPlayer.stop();
+            mediaPlayer.release();
+        }
+        mediaPlayer = MediaPlayer.create(this, R.raw.elevator_music);
+        mediaPlayer.start();
     }
 
     private void applyInputFilter(EditText input) {
@@ -252,7 +250,12 @@ public class CanvasActivity extends AppCompatActivity {
     private void initializeRobot(int x, int y, Facing facing) {
         myApp.robot().updatePosition(x, y);
         myApp.robot().updateFacing(facing);
-        heeHee.start();
+        if (mediaPlayer != null) {
+            mediaPlayer.stop();
+            mediaPlayer.release();
+        }
+        mediaPlayer = MediaPlayer.create(this, R.raw.hee_hee);
+        mediaPlayer.start();
         robotView.invalidate();
     }
 
@@ -276,16 +279,24 @@ public class CanvasActivity extends AppCompatActivity {
             // show on ui
             receivedMessages.append("\n" + m.rawMsg() + "\n");
             if (m.rawMsg().equals("[info] Commands and path received Algo API. Robot is ready to move.")) {
-                heeHee.start();
+                if (mediaPlayer != null) {
+                    mediaPlayer.stop();
+                    mediaPlayer.release();
+                }
+                mediaPlayer = MediaPlayer.create(this, R.raw.yippee);
+                mediaPlayer.start();
             }
         } else if (btMsg instanceof BluetoothMessage.RobotStatusMessage m) {
             // show on ui
             robotStatusDynamic.setText(m.status().toUpperCase());
             receivedMessages.append("\n[status] " + m.rawMsg()+ "\n"); // just print on ui for now
             if (m.status().equals("finished")) {
-                yippee.start();
-                smoothCriminal.stop();
-                imGood.stop();
+                if (mediaPlayer != null) {
+                    mediaPlayer.stop();
+                    mediaPlayer.release();
+                }
+                mediaPlayer = MediaPlayer.create(this, R.raw.yippee);
+                mediaPlayer.start();
             }
         } else if (btMsg instanceof BluetoothMessage.TargetFoundMessage m) {
             // update obstacle's target, then invalidate ui
