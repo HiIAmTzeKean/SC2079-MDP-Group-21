@@ -45,20 +45,54 @@ class TaskTwo(RaspberryPi):
             self.set_actions()
 
             action_list_init = [
-                "frontuntil",
+                "frontuntil"
             ]
 
             self.action_list_first_left = [
-
+                "half_left",
+                "half_right",
+                "frontuntil"
             ]
             self.action_list_first_right = [
-
-            ]
+                "half_right",
+                "half_left",
+                "left_correct",
+                "frontuntil"
+            ]            
             self.action_list_second_left = [
-
+                "W60|0|35",
+                "left", #robot 15cm apart from wall, 20cm turn radius
+                "R60|0|30",
+                "T30|58|183",
+                "r60|0|30", #15cm apart from wall on opposite side
+                "R60|0|30",
+                "right",
+                "T60|0|20",
+                "r60|0|50",
+                "half_right",
+                "R60|0|40",
+                "r60|0|30",
+                "half_left",
+                "left_correct",
+                "W60|0|15"
             ]
             self.action_list_second_right = [
-
+                "W60|0|35",
+                "right",
+                "L60|0|30",
+                "T30|-60.5|183",
+                "l60|0|30",
+                "L60|0|30",
+                "left",
+                "left_correct",
+                "T60|0|20",
+                "l60|0|50",
+                "half_left",
+                "left_correct",
+                "L60|0|40",
+                "l60|0|30",
+                "half_right",
+                "W60|0|15"
             ]
 
             logger.info("Child Processes started")
