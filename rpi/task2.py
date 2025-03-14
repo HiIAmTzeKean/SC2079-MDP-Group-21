@@ -41,29 +41,36 @@ class TaskTwo(RaspberryPi):
             self.proc_recv_stm32.start()
             self.proc_command_follower.start()
             self.proc_rpi_action.start()
-            
-            
+
             self.set_actions()
-            
+
+            action_list_init = [
+                "frontuntil",
+            ]
+
+            self.action_list_first_left = [
+
+            ]
+            self.action_list_first_right = [
+
+            ]
+            self.action_list_second_left = [
+
+            ]
+            self.action_list_second_right = [
+
+            ]
+
             logger.info("Child Processes started")
             # self.proc_android_controller.join()
             self.proc_recv_stm32.join()
-            self.proc_command_follower.join()
+            self.proc_command_follower.joina()
             self.proc_rpi_action.join()
         except KeyboardInterrupt:
             self.stop()
-    
-    def set_actions(self) -> None:
+
+    def set_actions(self, action_list) -> None:
         """Sets the actions for the RPi"""
-        action_list = [
-            "frontuntil",
-            "SNAP2_C",
-            "back",
-            "frontuntil",
-            "SNAP3_C",
-            "front_ir",
-            "FIN",
-        ]
         for action in action_list:
             if action.startswith("SNAP"):
                 self.command_queue.put(action)
@@ -80,7 +87,6 @@ class TaskTwo(RaspberryPi):
                 self.command_queue.put(manual_commands[action][1])
                 continue
             self.command_queue.put(manual_commands[action])
-        
 
     def rpi_action(self) -> None:
         """
@@ -88,31 +94,26 @@ class TaskTwo(RaspberryPi):
         """
         while True:
             action = self.rpi_action_queue.get()
-            logger.debug(f"PiAction retrieved from queue: {action.cat} {action.value}")
+            logger.debug(
+                f"PiAction retrieved from queue: {action.cat} {action.value}")
             if action.cat == Category.SNAP.value:
                 self.ready_snap.wait()
-                results = self.recognize_image(obstacle_id_with_signal=action.value)
-                
+                results = self.recognize_image(
+                    obstacle_id_with_signal=action.value)
+
                 if self.first_obstacle:
                     self.first_obstacle = False
-                    if results["image_id"] == "38": #right
-                        self.outstanding_stm_instructions.set(len(manual_commands["right_arc"]))
-                        for i in manual_commands["right_arc"]:
-                            self.stm_link.send_cmd_raw(i)
+                    if results["image_id"] == "38":  # right
+                        self.set_actions(self.action_list_first_left)
                     else:
-                        self.outstanding_stm_instructions.set(len(manual_commands["left_arc"]))
-                        for i in manual_commands["left_arc"]:
-                            self.stm_link.send_cmd_raw(i)
+                        self.set_actions(self.action_list_first_right)
                 else:
                     # obstacle 2
-                    self.outstanding_stm_instructions.set(2)
                     if results["image_id"] == "38":
-                        self.stm_link.send_cmd_raw(manual_commands["right"])
-                        self.stm_link.send_cmd_raw(manual_commands["front_L_ir"])
+                        self.set_actions(self.action_list_second_right)
                     else:
-                        self.stm_link.send_cmd_raw(manual_commands["left"])
-                        self.stm_link.send_cmd_raw(manual_commands["front_R_ir"])
-                        
+                        self.set_actions(self.action_list_second_right)
+
                 self.ready_snap.clear()
                 self.unpause.set()
             elif action.cat == Category.STITCH.value:
@@ -124,7 +125,7 @@ class TaskTwo(RaspberryPi):
         """
         while True:
             self.unpause.wait()
-            
+
             command: str = self.command_queue.get()
             logger.debug(f"command dequeued: {command}")
 
@@ -132,21 +133,26 @@ class TaskTwo(RaspberryPi):
             if command.startswith(stm32_prefixes):
                 strings = str(command)
                 parts = strings.split("|")
-                self.outstanding_stm_instructions.set(self.outstanding_stm_instructions.get()+1)
-                self.stm_link.send_cmd(parts[0][0], int(parts[0][1:]), float(parts[1]), float(parts[2]))
+                self.outstanding_stm_instructions.set(
+                    self.outstanding_stm_instructions.get()+1)
+                self.stm_link.send_cmd(parts[0][0], int(
+                    parts[0][1:]), float(parts[1]), float(parts[2]))
                 logger.debug(f"Sending to STM32: {command}")
 
             elif command.startswith("SNAP"):
                 obstacle_id_with_signal = command.replace("SNAP", "")
-                self.rpi_action_queue.put(PiAction(cat=Category.SNAP, value=obstacle_id_with_signal))
+                self.rpi_action_queue.put(
+                    PiAction(cat=Category.SNAP, value=obstacle_id_with_signal))
                 self.unpause.clear()
 
             elif command == Category.FIN.value:
-                logger.info(f"At FIN->self.current_location: {self.current_location}")
+                logger.info(
+                    f"At FIN->self.current_location: {self.current_location}")
                 self.unpause.clear()
                 logger.debug("unpause cleared")
                 logger.info("Commands queue finished.")
-                self.rpi_action_queue.put(PiAction(cat=Category.STITCH, value=""))
+                self.rpi_action_queue.put(
+                    PiAction(cat=Category.STITCH, value=""))
                 self.finish_all.wait()
                 self.finish_all.clear()
                 logger.debug("All processes up to stich finished")
@@ -160,7 +166,7 @@ class TaskTwo(RaspberryPi):
         """
         while True:
             message: str = self.stm_link.wait_receive()
-            
+
             try:
                 if message.startswith("f"):
                     logger.debug(f"stm finish {message}")
@@ -168,16 +174,18 @@ class TaskTwo(RaspberryPi):
                     if outstanding_stm_instructions - 1 == 0:
                         self.ready_snap.set()
                         self.unpause.clear()
-                    self.outstanding_stm_instructions.set(outstanding_stm_instructions - 1)
+                    self.outstanding_stm_instructions.set(
+                        outstanding_stm_instructions - 1)
                     logger.debug(f"stm finish {message}")
                     logger.info("Releasing movement lock.")
                 elif message.startswith("r"):
                     logger.debug(f"stm ack {message}")
                 else:
-                    logger.warning(f"Ignored unknown message from STM: {message}")
+                    logger.warning(
+                        f"Ignored unknown message from STM: {message}")
             except Exception as e:
                 logger.error(f"Error in recv_stm: {e}")
-                 
+
     def recognize_image(self, obstacle_id_with_signal: str) -> str:
         """
         RPi snaps an image and calls the API for image-rec.
