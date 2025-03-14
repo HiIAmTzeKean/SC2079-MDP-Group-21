@@ -19,6 +19,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -29,7 +30,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.material.textfield.TextInputEditText;
 import com.mdp25.forever21.bluetooth.BluetoothConnection;
 import com.mdp25.forever21.bluetooth.BluetoothDeviceAdapter;
 import com.mdp25.forever21.bluetooth.BluetoothInfoReceiver;
@@ -56,6 +56,9 @@ public class BluetoothActivity extends AppCompatActivity {
     private TextView receivedMsgView;
     private LinearLayout connectedPanel;
     private TextView connectedText;
+
+    // for some sound effects
+    private MediaPlayer btConnectedSfx = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,7 +115,11 @@ public class BluetoothActivity extends AppCompatActivity {
         boolean isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
         if (!isGpsEnabled) {
             Log.d(TAG, "GPS / Location is not on, won't be able to discover non-paired devices.");
-            Toast.makeText(this,"Turn on Location to Scan for devices.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Turn on Location to Scan for devices.", Toast.LENGTH_SHORT).show();
+        }
+
+        if (btConnectedSfx == null) {
+            btConnectedSfx = MediaPlayer.create(this, R.raw.chinese_bluetooth);
         }
     }
 
@@ -147,6 +154,8 @@ public class BluetoothActivity extends AppCompatActivity {
         super.onDestroy();
         getApplicationContext().unregisterReceiver(infoReceiver);
         getApplicationContext().unregisterReceiver(msgReceiver);
+
+        btConnectedSfx.release();
     }
 
     @Override
@@ -238,10 +247,14 @@ public class BluetoothActivity extends AppCompatActivity {
                     // and also initiate reconnection
                     Toast.makeText(this, "Reconnecting to " + device.getName(), Toast.LENGTH_SHORT).show();
                     myApp.btInterface().connectAsClient(device);
+                } else {
+                    // connection successful
+                    if (!btConnectedSfx.isPlaying()) {
+                        btConnectedSfx.start();
+                    }
+                    connectedText.setText("Connected to " + device.getName());
                 }
                 connectedPanel.setVisibility(connected ? View.VISIBLE : View.INVISIBLE);
-                connectedText.setText("Connected to " + device.getName());
-
                 // refresh the device list
                 refreshDeviceList();
             }

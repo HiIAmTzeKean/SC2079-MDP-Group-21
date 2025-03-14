@@ -190,17 +190,30 @@ def snap_using_picamera2(
     filename_send: str,
     url: str,
 ) -> str:
-    picam2 = Picamera2()
-    config = picam2.create_still_configuration()
-    picam2.configure(config)
-    picam2.start()
-    picam2.capture_file(filename)
-    picam2.close()
-    response = requests.post(url, files={"file": (filename_send, open(filename, "rb"))})
 
-    if response.status_code != 200:
-        raise OSError("API Error")
+    retry_count = 0
+    max_retries = 3
+    timeout_seconds = 20
 
-    results = json.loads(response.content)
-    logger.debug(results)
-    return results
+    while retry_count < max_retries:
+        retry_count += 1
+
+        picam2 = Picamera2()
+        config = picam2.create_still_configuration()
+        picam2.configure(config)
+        picam2.start()
+        picam2.capture_file(filename)
+        picam2.close()
+        logger.info("Image captured. Sending to image-rec API...")
+        
+        try:
+            response = requests.post(url, files={"file": (filename_send, open(filename, "rb"))}, timeout=timeout_seconds)
+            if response.status_code != 200:
+                logger.error("Error from image-rec API.")
+                raise OSError("API Error")
+            results = json.loads(response.content)
+            return results
+        except Exception as e:
+            logger.warning(f"Request timed out. Retrying {retry_count}/{max_retries}...")
+            if retry_count == max_retries:
+                raise OSError("API request timed out after multiple attempts")

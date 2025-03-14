@@ -18,7 +18,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from algo.algorithms.algo import MazeSolver  # nopep8
 from algo.tools.commands import CommandGenerator  # nopep8
-from image_rec.model import load_model,load_model2, predict_image, stitch_image  # nopep8
+from image_rec.model import load_model, load_model2, predict_image, stitch_image  # nopep8
 
 app = Flask(__name__)
 
@@ -30,12 +30,12 @@ logger = setup_logger()
 CORS(app)
 
 # load model for image recognition
-model = load_model() #Default model
-modelv2 = load_model2() #Backup model 
+model = load_model()  # Default model
+modelv2 = load_model2()  # Backup model
 
 # poll wi-fi SSID to check that RPI can connect to API server
 # TODO remove if this causes any performance issues or bugs
-threading.Thread(target=network_monitor, args=(logger,), daemon=True).start()
+# threading.Thread(target=network_monitor, args=(logger,), daemon=True).start()
 
 
 @api.route('/status')
@@ -115,6 +115,8 @@ class PathFinding(Resource):
             command_generator = CommandGenerator()
             commands = command_generator.generate_commands(
                 motions, obstacle_id_with_signals, scanned_obstacles, optimal_path)
+            logger.debug(
+                f"Number of obstacles scanned: {len(scanned_obstacles)} / {len(obstacles)}")
 
             # Get the starting location and add it to path_results
             path_results = []
@@ -192,6 +194,8 @@ class SimulatorPathFinding(Resource):
                 command_generator = CommandGenerator()
                 commands = command_generator.generate_commands(
                     motions, obstacle_id_with_signals, scanned_obstacles, optimal_path)
+                logger.debug(
+                    f"Number of obstacles scanned: {len(scanned_obstacles)} / {len(obstacles)}")
 
             # Get the starting location and add it to path_results
             path_results = []
@@ -242,19 +246,23 @@ class ImagePredict(Resource):
 
             # RPI sends image file in format eg. "1739516818_1_C.jpg"
             _, obstacle_id, signal = file.filename.strip(".jpg").split("_")
+            logger.debug(
+                f"Received image: '{filename}', obstacle_id: {obstacle_id}, signal: {signal}")
 
             # Store image sent from RPI into uploads folder
             upload_dir = Path("image_rec_files/uploads")
             upload_dir.mkdir(parents=True, exist_ok=True)
             file_path = upload_dir / filename
             file.save(file_path)
+            logger.debug(f"Saved raw image into folder: '{upload_dir}'")
 
             # Call the predict_image function
             # Store processed image with bounding box into output folder
             output_dir = Path("image_rec_files/output/fullsize")
             os.makedirs(output_dir, exist_ok=True)
 
-            image_id = predict_image(model, modelv2, file_path, output_dir, signal)
+            image_id = predict_image(
+                logger, model, modelv2, file_path, output_dir, signal)
             return marshal(
                 {
                     "obstacle_id": obstacle_id,
@@ -284,7 +292,7 @@ class Stitch(Resource):
             fullsize_dir = Path("image_rec_files/output/fullsize")
             os.makedirs(fullsize_dir, exist_ok=True)
 
-            img = stitch_image(output_dir, fullsize_dir)
+            img = stitch_image(logger, output_dir, fullsize_dir)
             img.show()
             return marshal(
                 {

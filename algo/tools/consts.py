@@ -9,7 +9,7 @@ ARENA_HEIGHT: int = 20
 OBSTACLE_SIZE: int = 1
 
 # no. of iterations to run algorithm for to find the most accurate shortest path
-ITERATIONS: int = 2000
+ITERATIONS: int = 5000
 
 # Cost for the chance that the robot touches an obstacle.
 # The higher the value, the less likely the robot moves too close to an obstacle.
@@ -28,7 +28,7 @@ TURN_FACTOR: int = 5
 # Cost of half-turning the robot.
 # The higher the value, the less likely the robot is to make half-turns.
 # weighted by 2 since it makes 2 half-turns in an offset motion
-HALF_TURN_FACTOR: int = 4 * 2
+HALF_TURN_FACTOR: int = 4 * 200
 
 # Cost of reversing the robot.
 # The higher the value, the less likely the robot is to reverse.
@@ -46,7 +46,7 @@ X ←----┐  .  .
 0: long axis, 1: short axis
 """
 # TODO: tune to 10cm interval
-TURN_DISPLACEMENT: tuple[int, int] = [3, 2]
+TURN_DISPLACEMENT: tuple[int, int] = [2, 1]
 
 # offset due to position of robot's center / how many cells more the robot occupies from its center cell
 OFFSET: int = 1
