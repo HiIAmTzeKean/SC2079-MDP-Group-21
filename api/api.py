@@ -35,7 +35,7 @@ modelv2 = load_model2()  # Backup model
 
 # poll wi-fi SSID to check that RPI can connect to API server
 # TODO remove if this causes any performance issues or bugs
-threading.Thread(target=network_monitor, args=(logger,), daemon=True).start()
+# threading.Thread(target=network_monitor, args=(logger,), daemon=True).start()
 
 
 @api.route('/status')

@@ -9,7 +9,7 @@ ARENA_HEIGHT: int = 20
 OBSTACLE_SIZE: int = 1
 
 # no. of iterations to run algorithm for to find the most accurate shortest path
-ITERATIONS: int = 2000
+ITERATIONS: int = 5000
 
 # Cost for the chance that the robot touches an obstacle.
 # The higher the value, the less likely the robot moves too close to an obstacle.

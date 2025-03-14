@@ -104,7 +104,7 @@ class CommandGenerator:
         elif motion == Motion.FORWARD_LEFT_TURN:
             return [
                 f"T{30}|{-50}|{46}",
-                f"t{25}|{0}|{18}",
+                f"t{25}|{0}|{23}",
                 f"T{30}|{-50}|{45.5}",
                 # turn right on the spot to re-align servo after left turn
                 f"T{25}|{10}|{0.1}",
@@ -113,25 +113,25 @@ class CommandGenerator:
         elif motion == Motion.FORWARD_RIGHT_TURN:
             return [
                 f"T{30}|{50}|{46}",
-                f"t{25}|{0}|{16}",
+                f"t{25}|{0}|{20}",
                 f"T{30}|{50}|{45.7}",
                 f"t{25}|{0}|{4}",
             ]
         elif motion == Motion.REVERSE_LEFT_TURN:
             return [
-                f"T{25}|{0}|{5}",
+                f"T{25}|{0}|{3}",
                 f"t{30}|{-50}|{46}",
-                f"T{25}|{0}|{14}",
-                f"t{30}|{-50}|{46}",
+                f"T{25}|{0}|{22}", 
+                f"t{30}|{-50}|{46.5}",
                 # turn right on the spot to re-align servo after left turn
                 f"T{25}|{10}|{0.1}"
             ]
         elif motion == Motion.REVERSE_RIGHT_TURN:
             return [
-                f"T{25}|{0}|{5}",
-                f"t{30}|{48}|{46}",
-                f"T{25}|{0}|{13}",
-                f"t{30}|{48}|{46}"
+                f"T{25}|{0}|{6}",
+                f"t{30}|{48}|{45.4}",
+                f"T{25}|{0}|{14}",
+                f"t{30}|{48}|{45.5}"
             ]
         # TODO tune & add forward/reverse straight line distances to make end in middle of the cell
         elif motion == Motion.FORWARD_OFFSET_LEFT:
