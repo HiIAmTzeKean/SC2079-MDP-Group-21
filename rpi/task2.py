@@ -10,19 +10,67 @@ import requests
 from .base_rpi import RaspberryPi
 from .communication.camera import snap_using_libcamera, snap_using_picamera2
 from .communication.pi_action import PiAction
-from .constant.consts import Category, manual_commands, stm32_prefixes
+from .constant.consts import Category, manual_commands, stm32_prefixes, FORWARD_SPEED
 from .constant.settings import URL
 
 
 logger = logging.getLogger(__name__)
 
+action_list_init = [
+    "frontuntil",
+]
+
+action_list_first_left = [
+    "half_left",
+    "half_right",
+    "frontuntil",
+]
+action_list_first_right = [
+    "half_right",
+    "half_left",
+    "left_correct",
+    "frontuntil",
+]            
+action_list_second_left = [
+    f"W{FORWARD_SPEED}|0|35",
+    "left", #robot 15cm apart from wall, 20cm turn radius
+    f"R{FORWARD_SPEED}|0|30",
+    "T30|58|183",
+    f"r{FORWARD_SPEED}|0|30", #15cm apart from wall on opposite side
+    f"R{FORWARD_SPEED}|0|30",
+    "right",
+    f"T{FORWARD_SPEED}|0|20",
+    f"r{FORWARD_SPEED}|0|50",
+    "half_right",
+    f"R{FORWARD_SPEED}|0|40",
+    f"r{FORWARD_SPEED}|0|30",
+    "half_left",
+    "left_correct",
+    f"W{FORWARD_SPEED}|0|15",
+]
+action_list_second_right = [
+    f"W{FORWARD_SPEED}|0|35",
+    "right",
+    f"L{FORWARD_SPEED}|0|30",
+    "T30|-60.5|183",
+    f"l{FORWARD_SPEED}|0|30",
+    f"L{FORWARD_SPEED}|0|30",
+    "left",
+    "left_correct",
+    f"T{FORWARD_SPEED}|0|20",
+    f"l{FORWARD_SPEED}|0|50",
+    "half_left",
+    "left_correct",
+    f"L{FORWARD_SPEED}|0|40",
+    f"l{FORWARD_SPEED}|0|30",
+    "half_right",
+    f"W{FORWARD_SPEED}|0|15",
+]
 
 class TaskTwo(RaspberryPi):
     def __init__(self) -> None:
         super().__init__()
         del self.path_queue
-        del self.android_queue
-        del self.android_link
         self.first_obstacle = True
         self.ready_snap = self.manager.Event()
         """Event to indicate that ready to snap"""
@@ -42,63 +90,12 @@ class TaskTwo(RaspberryPi):
             self.proc_command_follower.start()
             self.proc_rpi_action.start()
 
-            self.set_actions()
-
-            action_list_init = [
-                "frontuntil"
-            ]
-
-            self.action_list_first_left = [
-                "half_left",
-                "half_right",
-                "frontuntil"
-            ]
-            self.action_list_first_right = [
-                "half_right",
-                "half_left",
-                "left_correct",
-                "frontuntil"
-            ]            
-            self.action_list_second_left = [
-                "W60|0|35",
-                "left", #robot 15cm apart from wall, 20cm turn radius
-                "R60|0|30",
-                "T30|58|183",
-                "r60|0|30", #15cm apart from wall on opposite side
-                "R60|0|30",
-                "right",
-                "T60|0|20",
-                "r60|0|50",
-                "half_right",
-                "R60|0|40",
-                "r60|0|30",
-                "half_left",
-                "left_correct",
-                "W60|0|15"
-            ]
-            self.action_list_second_right = [
-                "W60|0|35",
-                "right",
-                "L60|0|30",
-                "T30|-60.5|183",
-                "l60|0|30",
-                "L60|0|30",
-                "left",
-                "left_correct",
-                "T60|0|20",
-                "l60|0|50",
-                "half_left",
-                "left_correct",
-                "L60|0|40",
-                "l60|0|30",
-                "half_right",
-                "W60|0|15"
-            ]
+            self.set_actions(action_list_init)
 
             logger.info("Child Processes started")
             # self.proc_android_controller.join()
             self.proc_recv_stm32.join()
-            self.proc_command_follower.joina()
+            self.proc_command_follower.join()
             self.proc_rpi_action.join()
         except KeyboardInterrupt:
             self.stop()
@@ -138,15 +135,15 @@ class TaskTwo(RaspberryPi):
                 if self.first_obstacle:
                     self.first_obstacle = False
                     if results["image_id"] == "38":  # right
-                        self.set_actions(self.action_list_first_left)
+                        self.set_actions(action_list_first_left)
                     else:
-                        self.set_actions(self.action_list_first_right)
+                        self.set_actions(action_list_first_right)
                 else:
                     # obstacle 2
                     if results["image_id"] == "38":
-                        self.set_actions(self.action_list_second_right)
+                        self.set_actions(action_list_second_right)
                     else:
-                        self.set_actions(self.action_list_second_right)
+                        self.set_actions(action_list_second_right)
 
                 self.ready_snap.clear()
                 self.unpause.set()

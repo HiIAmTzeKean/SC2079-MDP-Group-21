@@ -52,9 +52,12 @@ class Category(Enum):
     STITCH = 'stitch'
     FIN = 'FIN'
 
+
+FORWARD_SPEED = 60
+
 manual_commands: dict[str, Union[tuple[Any, ...], str]] = {
-    "front": "T50|0|10",
-    "frontuntil": "W60|0|40",
+    "front": f"T{FORWARD_SPEED}|0|10",
+    "frontuntil": f"W{FORWARD_SPEED}|0|40",
     "front_R_ir": "R30|0|30",
     "front_L_ir": "L30|0|30",
     "back": "t50|0|10",
