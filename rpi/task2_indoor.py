@@ -37,32 +37,32 @@ action_list_first_right = [
 action_list_second_left = [
     "frontuntil",
     "left",  # robot 15cm apart from wall, 20cm turn radius
-    f"R{FORWARD_SPEED_INDOOR}|0|30",
+    "R_ir",
     "u_turn_right"
-    f"r{FORWARD_SPEED_INDOOR}|0|30",  # 15cm apart from wall on opposite side
-    f"R{FORWARD_SPEED_INDOOR}|0|30",
+    "r_ir",  # 15cm apart from wall on opposite side
+    "R_ir",
     "right",
     f"T{FORWARD_SPEED_INDOOR}|0|20",
     f"r{FORWARD_SPEED_INDOOR}|0|50",
     "half_right",
     f"R{FORWARD_SPEED_INDOOR}|0|40",
-    f"r{FORWARD_SPEED_INDOOR}|0|30",
+    "r_ir",
     "half_left",
     f"W{FORWARD_SPEED_INDOOR}|0|15",
 ]
 action_list_second_right = [
     "frontuntil",
     "right",
-    f"L{FORWARD_SPEED_INDOOR}|0|30",
+    "L_ir",
     "u_turn_left",
-    f"l{FORWARD_SPEED_INDOOR}|0|30",
-    f"L{FORWARD_SPEED_INDOOR}|0|30",
+    "l_ir",
+    "L_ir",
     "left",
     f"T{FORWARD_SPEED_INDOOR}|0|20",
     f"l{FORWARD_SPEED_INDOOR}|0|50",
     "half_left",
     f"L{FORWARD_SPEED_INDOOR}|0|40",
-    f"l{FORWARD_SPEED_INDOOR}|0|30",
+    "l_ir",
     "half_right",
     f"W{FORWARD_SPEED_INDOOR}|0|15",
 ]

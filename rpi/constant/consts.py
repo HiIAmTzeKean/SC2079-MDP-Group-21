@@ -59,8 +59,10 @@ TRACKING_SPEED_INDOOR = 50
 manual_commands: dict[str, Union[tuple[Any, ...], str]] = {
     "front": f"T{FORWARD_SPEED_INDOOR}|0|10",
     "frontuntil": f"W{FORWARD_SPEED_INDOOR}|0|30",
-    "front_R_ir": "R30|0|30",
-    "front_L_ir": "L30|0|30",
+    "R_ir": f"R{FORWARD_SPEED_OUTDOOR}|0|30",
+    "L_ir": f"L{FORWARD_SPEED_INDOOR}|0|30",
+    "r_ir": f"R{FORWARD_SPEED_OUTDOOR}|0|30",
+    "l_ir": f"L{FORWARD_SPEED_INDOOR}|0|30",
     "back": "t50|0|10",
     
     "left": ("T50|-60|89.5", "T25|10|0.1"), #24 cm turn radius
@@ -77,6 +79,32 @@ manual_commands["left_arc"] = (manual_commands["half_left"], manual_commands["ha
 manual_commands["right_arc"] = (manual_commands["half_right"], manual_commands["half_left"], manual_commands["slight_back"], manual_commands["half_left"], manual_commands["half_right"])
 manual_commands["u_turn_right"] = (manual_commands["right"], manual_commands["right"])
 manual_commands["u_turn_left"] = (manual_commands["left"], manual_commands["left"])
+
+
+FORWARD_SPEED_OUTDOOR = 50
+TRACKING_SPEED_OUTDOOR = 50
+
+manual_commands_outdoor: dict[str, Union[tuple[Any, ...], str]] = {
+    "front": f"T{FORWARD_SPEED_OUTDOOR}|0|10",
+    "frontuntil": f"W{FORWARD_SPEED_OUTDOOR}|0|30",
+    "front_R_ir": "R30|0|30",
+    "front_L_ir": "L30|0|30",
+    "back": "t50|0|10",
+    
+    "left": ("T50|-60|89.5", "T25|10|0.1"), #24 cm turn radius
+    "right": "T60|35|89.5", #24 cm turn radius
+    
+    "half_left": ("T50|-60|44.5", "T25|10|0.1"),
+    "half_right": "T50|60|44.5",
+    
+    "slight_back": "t20|0|1",
+    "left_correct": "T25|10|0.1"
+}
+             
+manual_commands_outdoor["left_arc"] = (manual_commands_outdoor["half_left"], manual_commands_outdoor["half_right"], manual_commands_outdoor["slight_back"],  manual_commands_outdoor["half_right"], manual_commands_outdoor["half_left"])
+manual_commands_outdoor["right_arc"] = (manual_commands_outdoor["half_right"], manual_commands_outdoor["half_left"], manual_commands_outdoor["slight_back"], manual_commands_outdoor["half_left"], manual_commands_outdoor["half_right"])
+manual_commands_outdoor["u_turn_right"] = (manual_commands_outdoor["right"], manual_commands_outdoor["right"])
+manual_commands_outdoor["u_turn_left"] = (manual_commands_outdoor["left"], manual_commands_outdoor["left"])
 
 
 stm32_prefixes = ("T", "t", "w", "W", "D", "d","P","L","R",'l','r')
