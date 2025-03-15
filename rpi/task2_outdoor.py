@@ -11,58 +11,60 @@ from .base_rpi import RaspberryPi
 from .communication.android import AndroidMessage
 from .communication.camera import snap_using_picamera2
 from .communication.pi_action import PiAction
-from .constant.consts import FORWARD_SPEED_OUTDOOR, Category, manual_commands_outdoor, stm32_prefixes
+from .constant.consts import FORWARD_SPEED_OUTDOOR, Category, manual_commands, stm32_prefixes
 from .constant.settings import URL, API_TIMEOUT
 
 
 logger = logging.getLogger(__name__)
 
 action_list_init = [
-    "frontuntil",
+    "frontuntil_first",
     "SNAP1_C",
 ]
 
 action_list_first_left = [
     "half_left",
+    "front",
     "half_right",
-    "frontuntil",
     "SNAP2_C",
 ]
 action_list_first_right = [
     "half_right",
+    "front",
     "half_left",
-    "frontuntil",
     "SNAP2_C",
 ]
 action_list_second_left = [
     "frontuntil",
     "left",  # robot 15cm apart from wall, 20cm turn radius
-    f"R{FORWARD_SPEED_OUTDOOR}|0|30",
-    "u_turn_right"
-    f"r{FORWARD_SPEED_OUTDOOR}|0|30",  # 15cm apart from wall on opposite side
-    f"R{FORWARD_SPEED_OUTDOOR}|0|30",
+    "R_ir",
+    "u_turn_right",
+    "stall",
+    "r_ir",  # 15cm apart from wall on opposite side
+    "R_ir",
     "right",
     f"T{FORWARD_SPEED_OUTDOOR}|0|20",
     f"r{FORWARD_SPEED_OUTDOOR}|0|50",
-    "half_right",
-    f"R{FORWARD_SPEED_OUTDOOR}|0|40",
-    f"r{FORWARD_SPEED_OUTDOOR}|0|30",
-    "half_left",
-    f"W{FORWARD_SPEED_OUTDOOR}|0|15",
+    "T30|0|20",
+    "right",
+    "r_ir",
+    "left",
+    # f"W{FORWARD_SPEED_OUTDOOR}|0|15",
 ]
 action_list_second_right = [
     "frontuntil",
     "right",
-    f"L{FORWARD_SPEED_OUTDOOR}|0|30",
+    "L_ir",
     "u_turn_left",
-    f"l{FORWARD_SPEED_OUTDOOR}|0|30",
-    f"L{FORWARD_SPEED_OUTDOOR}|0|30",
+    "stall",
+    "l_ir",
+    "L_ir",
     "left",
     f"T{FORWARD_SPEED_OUTDOOR}|0|20",
     f"l{FORWARD_SPEED_OUTDOOR}|0|50",
     "half_left",
     f"L{FORWARD_SPEED_OUTDOOR}|0|40",
-    f"l{FORWARD_SPEED_OUTDOOR}|0|30",
+    "l_ir",
     "half_right",
     f"W{FORWARD_SPEED_OUTDOOR}|0|15",
 ]
@@ -75,6 +77,8 @@ class TaskTwo(RaspberryPi):
         self.first_obstacle = True
         self.ready_snap = self.manager.Event()
         """Event to indicate that ready to snap"""
+        self.snap_pending = self.manager.Value("i", 1)
+        """locks the movement"""
 
     def start(self) -> None:
         """Starts the RPi orchestrator"""
@@ -119,6 +123,7 @@ class TaskTwo(RaspberryPi):
     def set_actions(self, action_list) -> None:
         """Sets the actions for the RPi"""
         for action in action_list:
+            logger.debug(f"putting action {action} in queue")
             if action.startswith("SNAP"):
                 self.command_queue.put(action)
                 continue
@@ -130,8 +135,8 @@ class TaskTwo(RaspberryPi):
                 self.command_queue.put(Category.FIN.value)
                 continue
             elif type(manual_commands[action]) == tuple:
-                self.command_queue.put(manual_commands[action][0])
-                self.command_queue.put(manual_commands[action][1])
+                for item in manual_commands[action]:
+                    self.command_queue.put(item)
                 continue
             self.command_queue.put(manual_commands[action])
 
@@ -147,18 +152,19 @@ class TaskTwo(RaspberryPi):
                 results = self.recognize_image(obstacle_id_with_signal=action.value)
 
                 if self.first_obstacle:
+                    self.snap_pending.set(1)
                     self.first_obstacle = False
                     if results["image_id"] == "38":  # right
                         self.set_actions(action_list_first_right)
                     else:
-                        self.set_actions(action_list_first_right)
+                        self.set_actions(action_list_first_left)
                 else:
                     # obstacle 2
+                    self.snap_pending.set(0)
                     if results["image_id"] == "38":
                         self.set_actions(action_list_second_right)
                     else:
-                        self.set_actions(action_list_second_right)
-
+                        self.set_actions(action_list_second_left)
                 self.ready_snap.clear()
                 self.unpause.set()
             elif action.cat == Category.STITCH.value:
@@ -274,6 +280,13 @@ class TaskTwo(RaspberryPi):
                 obstacle_id_with_signal = command.replace("SNAP", "")
                 self.rpi_action_queue.put(PiAction(cat=Category.SNAP, value=obstacle_id_with_signal))
                 self.unpause.clear()
+            
+            elif command == "stall":
+                logger.info("stalling robot")
+                while self.outstanding_stm_instructions.get() != 0:
+                    pass
+                logger.info("stall complete")
+                self.unpause.set()
 
             elif command == Category.FIN.value:
                 logger.info(f"At FIN->self.current_location: {self.current_location}")
@@ -300,11 +313,11 @@ class TaskTwo(RaspberryPi):
                     logger.debug(f"stm finish {message}")
                     outstanding_stm_instructions = self.outstanding_stm_instructions.get()
                     self.outstanding_stm_instructions.set(outstanding_stm_instructions - 1)
-                    if outstanding_stm_instructions - 1 == 0:
+                    if outstanding_stm_instructions - 1 == 0 and self.snap_pending.get() == 1:
                         self.ready_snap.set()
                         self.unpause.clear()
-                    logger.debug(f"stm finish {message}")
-                    logger.info("Releasing movement lock.")
+                    logger.debug(f"stm finish {message}, outstanding is {outstanding_stm_instructions - 1}")
+                    
                 elif message.startswith("r"):
                     logger.debug(f"stm ack {message}")
                 else:
@@ -330,6 +343,7 @@ class TaskTwo(RaspberryPi):
             filename_send=filename_send,
             url=url,
         )
+        logger.info(results)
         return results
 
     def request_stitch(self) -> None:

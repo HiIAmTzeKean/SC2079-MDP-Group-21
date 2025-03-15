@@ -54,19 +54,20 @@ class Category(Enum):
 
 
 FORWARD_SPEED_INDOOR = 50
-TRACKING_SPEED_INDOOR = 50
+TRACKING_SPEED_INDOOR = 30
 
 manual_commands: dict[str, Union[tuple[Any, ...], str]] = {
     "front": f"T{FORWARD_SPEED_INDOOR}|0|10",
-    "frontuntil": f"W{FORWARD_SPEED_INDOOR}|0|30",
-    "R_ir": f"R{FORWARD_SPEED_OUTDOOR}|0|30",
-    "L_ir": f"L{FORWARD_SPEED_INDOOR}|0|30",
-    "r_ir": f"R{FORWARD_SPEED_OUTDOOR}|0|30",
-    "l_ir": f"L{FORWARD_SPEED_INDOOR}|0|30",
+    "frontuntil_first": f"W{TRACKING_SPEED_INDOOR}|0|20",
+    "frontuntil": f"W{TRACKING_SPEED_INDOOR}|0|30",
+    "R_ir": f"R{TRACKING_SPEED_INDOOR}|0|30",
+    "L_ir": f"L{TRACKING_SPEED_INDOOR}|0|30",
+    "r_ir": f"R{TRACKING_SPEED_INDOOR}|0|30",
+    "l_ir": f"L{TRACKING_SPEED_INDOOR}|0|30",
     "back": "t50|0|10",
     
-    "left": ("T50|-60|89.5", "T25|10|0.1"), #24 cm turn radius
-    "right": "T60|35|89.5", #24 cm turn radius
+    "left": ("T40|-60|89.7", "T25|10|0.1"), #24 cm turn radius
+    "right": "T40|35|89.7", #24 cm turn radius
     
     "half_left": ("T50|-60|44.5", "T25|10|0.1"),
     "half_right": "T50|60|44.5",
@@ -86,13 +87,16 @@ TRACKING_SPEED_OUTDOOR = 50
 
 manual_commands_outdoor: dict[str, Union[tuple[Any, ...], str]] = {
     "front": f"T{FORWARD_SPEED_OUTDOOR}|0|10",
-    "frontuntil": f"W{FORWARD_SPEED_OUTDOOR}|0|30",
-    "front_R_ir": "R30|0|30",
-    "front_L_ir": "L30|0|30",
+    "frontuntil_first": f"W{TRACKING_SPEED_OUTDOOR}|0|20",
+    "frontuntil": f"W{TRACKING_SPEED_OUTDOOR}|0|30",
+    "R_ir": f"R{TRACKING_SPEED_OUTDOOR}|0|30",
+    "L_ir": f"L{TRACKING_SPEED_OUTDOOR}|0|30",
+    "r_ir": f"R{TRACKING_SPEED_OUTDOOR}|0|30",
+    "l_ir": f"L{TRACKING_SPEED_OUTDOOR}|0|30",
     "back": "t50|0|10",
     
-    "left": ("T50|-60|89.5", "T25|10|0.1"), #24 cm turn radius
-    "right": "T60|35|89.5", #24 cm turn radius
+    "left": ("T40|-60|89.7", "T25|10|0.1"), #24 cm turn radius
+    "right": "T40|35|89.7", #24 cm turn radius
     
     "half_left": ("T50|-60|44.5", "T25|10|0.1"),
     "half_right": "T50|60|44.5",
