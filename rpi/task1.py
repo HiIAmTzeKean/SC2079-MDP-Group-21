@@ -266,8 +266,6 @@ class TaskOne(RaspberryPi):
         filename = f"/home/rpi21/cam/{int(time.time())}_{obstacle_id}_{signal}.jpg"
         filename_send = f"{int(time.time())}_{obstacle_id}_{signal}.jpg"
         results = snap_using_picamera2(
-            obstacle_id=obstacle_id,
-            signal=signal,
             filename=filename,
             filename_send=filename_send,
             url=url,
