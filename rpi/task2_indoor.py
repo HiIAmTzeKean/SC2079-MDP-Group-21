@@ -11,7 +11,7 @@ from .base_rpi import RaspberryPi
 from .communication.android import AndroidMessage
 from .communication.camera import snap_using_picamera2
 from .communication.pi_action import PiAction
-from .constant.consts import FORWARD_SPEED, Category, manual_commands, stm32_prefixes
+from .constant.consts import FORWARD_SPEED_INDOOR, Category, manual_commands, stm32_prefixes
 from .constant.settings import URL, API_TIMEOUT
 
 
@@ -19,53 +19,52 @@ logger = logging.getLogger(__name__)
 
 action_list_init = [
     "frontuntil",
+    "SNAP1_C",
 ]
 
 action_list_first_left = [
     "half_left",
     "half_right",
     "frontuntil",
+    "SNAP2_C",
 ]
 action_list_first_right = [
     "half_right",
     "half_left",
-    "left_correct",
     "frontuntil",
+    "SNAP2_C",
 ]
 action_list_second_left = [
-    f"W{FORWARD_SPEED}|0|35",
+    "frontuntil",
     "left",  # robot 15cm apart from wall, 20cm turn radius
-    f"R{FORWARD_SPEED}|0|30",
-    "T30|58|183",
-    f"r{FORWARD_SPEED}|0|30",  # 15cm apart from wall on opposite side
-    f"R{FORWARD_SPEED}|0|30",
+    f"R{FORWARD_SPEED_INDOOR}|0|30",
+    "u_turn_right"
+    f"r{FORWARD_SPEED_INDOOR}|0|30",  # 15cm apart from wall on opposite side
+    f"R{FORWARD_SPEED_INDOOR}|0|30",
     "right",
-    f"T{FORWARD_SPEED}|0|20",
-    f"r{FORWARD_SPEED}|0|50",
+    f"T{FORWARD_SPEED_INDOOR}|0|20",
+    f"r{FORWARD_SPEED_INDOOR}|0|50",
     "half_right",
-    f"R{FORWARD_SPEED}|0|40",
-    f"r{FORWARD_SPEED}|0|30",
+    f"R{FORWARD_SPEED_INDOOR}|0|40",
+    f"r{FORWARD_SPEED_INDOOR}|0|30",
     "half_left",
-    "left_correct",
-    f"W{FORWARD_SPEED}|0|15",
+    f"W{FORWARD_SPEED_INDOOR}|0|15",
 ]
 action_list_second_right = [
-    f"W{FORWARD_SPEED}|0|35",
+    "frontuntil",
     "right",
-    f"L{FORWARD_SPEED}|0|30",
-    "T30|-60.5|183",
-    f"l{FORWARD_SPEED}|0|30",
-    f"L{FORWARD_SPEED}|0|30",
+    f"L{FORWARD_SPEED_INDOOR}|0|30",
+    "u_turn_left",
+    f"l{FORWARD_SPEED_INDOOR}|0|30",
+    f"L{FORWARD_SPEED_INDOOR}|0|30",
     "left",
-    "left_correct",
-    f"T{FORWARD_SPEED}|0|20",
-    f"l{FORWARD_SPEED}|0|50",
+    f"T{FORWARD_SPEED_INDOOR}|0|20",
+    f"l{FORWARD_SPEED_INDOOR}|0|50",
     "half_left",
-    "left_correct",
-    f"L{FORWARD_SPEED}|0|40",
-    f"l{FORWARD_SPEED}|0|30",
+    f"L{FORWARD_SPEED_INDOOR}|0|40",
+    f"l{FORWARD_SPEED_INDOOR}|0|30",
     "half_right",
-    f"W{FORWARD_SPEED}|0|15",
+    f"W{FORWARD_SPEED_INDOOR}|0|15",
 ]
 
 
@@ -93,8 +92,8 @@ class TaskTwo(RaspberryPi):
             self.proc_recv_stm32.start()
             self.proc_command_follower.start()
             self.proc_rpi_action.start()
-            self.proc_android_controller.start()
-            self.proc_recv_android.start()
+            # self.proc_android_controller.start()
+            # self.proc_recv_android.start()
 
             self.set_actions(action_list_init)
             self.unpause.set()
@@ -105,7 +104,8 @@ class TaskTwo(RaspberryPi):
             # self.proc_recv_stm32.join()
             # self.proc_rpi_action.join()
             # self.proc_command_follower.join()
-            
+            self.finish_all.wait()
+            self.stop()
             processes = [getattr(self, attr) for attr in dir(self) if attr.startswith("proc_")]
             for process in processes:
                 try:
@@ -149,7 +149,7 @@ class TaskTwo(RaspberryPi):
                 if self.first_obstacle:
                     self.first_obstacle = False
                     if results["image_id"] == "38":  # right
-                        self.set_actions(action_list_first_left)
+                        self.set_actions(action_list_first_right)
                     else:
                         self.set_actions(action_list_first_right)
                 else:
@@ -284,7 +284,7 @@ class TaskTwo(RaspberryPi):
                 self.finish_all.wait()
                 self.finish_all.clear()
                 logger.debug("All processes up to stich finished")
-                self.stop()
+                break
             else:
                 raise Exception(f"Unknown command: {command}")
 
