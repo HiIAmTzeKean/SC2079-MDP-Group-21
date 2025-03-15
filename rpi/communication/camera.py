@@ -143,23 +143,8 @@ def snap_using_libcamera(
 
         results = json.loads(response.content)
         return results
-    
-        # # Higher brightness retry
-        # break
-        # if results["image_id"] != "NA" or retry_count > 6:
-        #     break
-        # elif retry_count > 3:
-        #     self.logger.info(f"Image recognition results: {results}")
-        #     self.logger.info("Recapturing with lower shutter speed...")
-        #     speed -= 1
-        # elif retry_count <= 3:
-        #     self.logger.info(f"Image recognition results: {results}")
-        #     self.logger.info("Recapturing with higher shutter speed...")
-        #     speed += 1
 
 def snap_using_picamera(
-    obstacle_id: str,
-    signal: str,
     filename: str,
     filename_send: str,
     url: str,
@@ -184,8 +169,6 @@ def snap_using_picamera(
     return results
 
 def snap_using_picamera2(
-    obstacle_id: str,
-    signal: str,
     filename: str,
     filename_send: str,
     url: str,
@@ -213,7 +196,7 @@ def snap_using_picamera2(
                 raise OSError("API Error")
             results = json.loads(response.content)
             return results
-        except Exception as e:
+        except Exception:
             logger.warning(f"Request timed out. Retrying {retry_count}/{max_retries}...")
             if retry_count == max_retries:
                 raise OSError("API request timed out after multiple attempts")
