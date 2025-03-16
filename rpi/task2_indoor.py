@@ -17,6 +17,8 @@ from .constant.settings import URL, API_TIMEOUT
 
 logger = logging.getLogger(__name__)
 
+ANDRIOD_CONTROLLER = False
+
 action_list_init = [
     "frontuntil_first",
     "SNAP1_C",
@@ -84,6 +86,8 @@ class TaskTwo(RaspberryPi):
         """Starts the RPi orchestrator"""
         logger.info("starting the start function")
         try:
+            if ANDRIOD_CONTROLLER:
+                self.android_link.connect()
             self.stm_link.connect()
             self.check_api()
 
@@ -93,14 +97,17 @@ class TaskTwo(RaspberryPi):
             self.proc_android_controller = Process(target=self.android_controller)
             self.proc_recv_android = Process(target=self.recv_android)
             
+            self.set_actions(action_list_init)
+            self.unpause.set()
+            
             self.proc_recv_stm32.start()
             self.proc_command_follower.start()
             self.proc_rpi_action.start()
-            # self.proc_android_controller.start()
-            # self.proc_recv_android.start()
+            if ANDRIOD_CONTROLLER:
+                self.proc_android_controller.start()
+                self.proc_recv_android.start()
+                self.unpause.clear()
 
-            self.set_actions(action_list_init)
-            self.unpause.set()
 
             logger.info("Child Processes started")
             # self.proc_android_controller.join()
