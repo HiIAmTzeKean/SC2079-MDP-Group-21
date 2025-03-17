@@ -14,15 +14,13 @@ action_list_init = [
 ]
 
 action_list_first_left = [
-    "half_left",
-    "front",
-    "half_right",
+    "left_arc",
+    "frontuntil",
     "SNAP2_C",
 ]
 action_list_first_right = [
-    "half_right",
-    "front",
-    "half_left",
+    "right_arc",
+    "frontuntil",
     "SNAP2_C",
 ]
 action_list_second_left = [
@@ -48,16 +46,14 @@ action_list_second_right = [
     "L_ir",
     "u_turn_left",
     "stall",
-    "l_ir",
+    "l50|0|50",
     "L_ir",
     "left",
-    f"T{FORWARD_SPEED_INDOOR}|0|20",
-    f"l{FORWARD_SPEED_INDOOR}|0|50",
-    "half_left",
-    f"L{FORWARD_SPEED_INDOOR}|0|40",
-    "l_ir",
-    "half_right",
-    f"W{FORWARD_SPEED_INDOOR}|0|15",
+    "T50|0|60",
+    "l50|0|50",
+    "left",
+    "right",
+    "W50|0|20",
 ]
 
 TaskTwoIndoor = TaskTwo(ANDRIOD_CONTROLLER, action_list_init, action_list_first_left, action_list_first_right, action_list_second_left, action_list_second_right)
