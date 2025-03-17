@@ -53,60 +53,62 @@ class Category(Enum):
     FIN = 'FIN'
 
 
-FORWARD_SPEED_INDOOR = 50
-TRACKING_SPEED_INDOOR = 30
+FORWARD_SPEED_INDOOR = 80
+TRACKING_SPEED_INDOOR = 80
 
 manual_commands: dict[str, Union[tuple[Any, ...], str]] = {
     "front": f"T{FORWARD_SPEED_INDOOR}|0|10",
     "frontuntil_first": f"W{TRACKING_SPEED_INDOOR}|0|20",
-    "frontuntil": f"W{TRACKING_SPEED_INDOOR}|0|30",
+    "frontuntil_end": f"W{TRACKING_SPEED_INDOOR}|0|10",
+    "frontuntil": f"W{TRACKING_SPEED_INDOOR}|0|27",
+    "backuntil": f"w{TRACKING_SPEED_INDOOR}|0|27",
+    "slight_back": f"t{FORWARD_SPEED_INDOOR}|0|10",
+    "slight_back_2nd_right": f"t{FORWARD_SPEED_INDOOR}|0|15",
+    
     "R_ir": f"R{TRACKING_SPEED_INDOOR}|0|30",
     "L_ir": f"L{TRACKING_SPEED_INDOOR}|0|30",
-    "r_ir": f"R{TRACKING_SPEED_INDOOR}|0|30",
-    "l_ir": f"L{TRACKING_SPEED_INDOOR}|0|30",
-    "back": "t50|0|10",
+    "r_ir": f"r{TRACKING_SPEED_INDOOR}|0|55",
+    "l_ir": f"l{TRACKING_SPEED_INDOOR}|0|55",
     
-    "left": "T40|-60|89.7", #24 cm turn radius
-    "right": "T40|60|90.3", #24 cm turn radius
+    "left": "T40|-50|90.2", #24 cm turn radius
+    "right": "T40|50|90.3", #24 cm turn radius
     
-    "half_left": "T50|-60|44.5",
-    "half_right": "T50|60|44.5",
-    
-    "slight_back": "t20|0|1",
-    "left_correct": "T25|10|0.1"
+    "half_left": "T50|-60|45",
+    "half_right": "T50|60|45",
 }
              
-manual_commands["left_arc"] = (manual_commands["half_left"], manual_commands["half_right"], manual_commands["slight_back"],  manual_commands["half_right"], manual_commands["half_left"])
-manual_commands["right_arc"] = (manual_commands["half_right"],  manual_commands["front"],  manual_commands["half_left"], manual_commands["half_left"], manual_commands["half_right"])
+manual_commands["left_arc"] = (manual_commands["half_left"], manual_commands["front"], manual_commands["half_right"], manual_commands["half_right"], manual_commands["half_left"])
+manual_commands["right_arc"] = (manual_commands["half_right"], manual_commands["front"], manual_commands["half_left"], manual_commands["half_left"], manual_commands["half_right"])
 manual_commands["u_turn_right"] = (manual_commands["right"], manual_commands["right"])
 manual_commands["u_turn_left"] = (manual_commands["left"], manual_commands["left"])
 
 
 FORWARD_SPEED_OUTDOOR = 50
-TRACKING_SPEED_OUTDOOR = 30
+TRACKING_SPEED_OUTDOOR = 50
 
 manual_commands_outdoor: dict[str, Union[tuple[Any, ...], str]] = {
     "front": f"T{FORWARD_SPEED_OUTDOOR}|0|10",
     "frontuntil_first": f"W{TRACKING_SPEED_OUTDOOR}|0|20",
-    "frontuntil": f"W{TRACKING_SPEED_OUTDOOR}|0|30",
+    "frontuntil_end": f"W{TRACKING_SPEED_OUTDOOR}|0|10",
+    "frontuntil": f"W{TRACKING_SPEED_OUTDOOR}|0|27",
+    "backuntil": f"w{TRACKING_SPEED_OUTDOOR}|0|27",
+    "slight_back": f"t{FORWARD_SPEED_OUTDOOR}|0|10",
+    "slight_back_2nd_right": f"t{FORWARD_SPEED_OUTDOOR}|0|15",
+    
     "R_ir": f"R{TRACKING_SPEED_OUTDOOR}|0|30",
     "L_ir": f"L{TRACKING_SPEED_OUTDOOR}|0|30",
-    "r_ir": f"R{TRACKING_SPEED_OUTDOOR}|0|30",
-    "l_ir": f"L{TRACKING_SPEED_OUTDOOR}|0|30",
-    "back": "t50|0|10",
+    "r_ir": f"r{TRACKING_SPEED_OUTDOOR}|0|55",
+    "l_ir": f"l{TRACKING_SPEED_OUTDOOR}|0|55",
     
-    "left": "T40|-60|89.7", #24 cm turn radius
-    "right": "T40|60|90.3", #24 cm turn radius
+    "left": "T40|-50|90.2", #24 cm turn radius
+    "right": "T40|50|90.3", #24 cm turn radius
     
-    "half_left": "T50|-60|44.5",
-    "half_right": "T50|60|44.5",
-    
-    "slight_back": "t20|0|1",
-    "left_correct": "T25|10|0.1"
+    "half_left": "T50|-60|45",
+    "half_right": "T50|60|45",
 }
              
 manual_commands_outdoor["left_arc"] = (manual_commands_outdoor["half_left"], manual_commands_outdoor["front"], manual_commands_outdoor["half_right"], manual_commands_outdoor["half_right"], manual_commands_outdoor["half_left"])
-manual_commands_outdoor["right_arc"] = (manual_commands_outdoor["half_right"], manual_commands_outdoor["front"],  manual_commands_outdoor["half_left"], manual_commands_outdoor["half_left"], manual_commands_outdoor["half_right"])
+manual_commands_outdoor["right_arc"] = (manual_commands_outdoor["half_right"], manual_commands_outdoor["front"], manual_commands_outdoor["half_left"], manual_commands_outdoor["half_left"], manual_commands_outdoor["half_right"])
 manual_commands_outdoor["u_turn_right"] = (manual_commands_outdoor["right"], manual_commands_outdoor["right"])
 manual_commands_outdoor["u_turn_left"] = (manual_commands_outdoor["left"], manual_commands_outdoor["left"])
 
