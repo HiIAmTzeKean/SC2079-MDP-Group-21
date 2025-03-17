@@ -509,7 +509,7 @@ export const AlgorithmCore = () => {
 			</div>
 
 			{/* TODO: Algo input parameters Retrying*/}
-			<div className="flex gap-8 items-center justify-center mb-4">
+			{/* <div className="flex gap-8 items-center justify-center mb-4">
 				<div
 					className="flex gap-2 items-center justify-center cursor-pointer"
 					onClick={() => {
@@ -519,7 +519,7 @@ export const AlgorithmCore = () => {
 					{isRetrying ? <FaCheckSquare /> : <FaSquare />}
 					Retrying (WIP, currently does nothing)
 				</div>
-			</div>
+			</div> */}
 
 			{/* Modified: Added Test All button alongside Run Algorithm button */}
 			<div className="mb-4 flex justify-center items-center gap-8">
@@ -693,13 +693,13 @@ export const AlgorithmCore = () => {
 			)}
 
 			{/* Current Command */}
-			{currentStep && currentCommands.length > 0 ? (
+			{/* {currentStep && currentCommands.length > 0 ? (
 				<div className="mt-2 mb-4 flex flex-col justify-center items-center">
 					<span className="font-bold">Command (Motion):</span>
 					<span>{currentCommands[currentStep]}</span>
 				</div>
 			) : null
-			}
+			} */}
 
 			{/* Navigation Grid */}
 			<NavigationGrid
@@ -710,8 +710,8 @@ export const AlgorithmCore = () => {
 				setSelectedTest={setSelectedTest}
 			/>
 
-			<div className="flex justify-between gap-8">
-				<div className="flex flex-col gap-2">
+			<div className="flex justify-center gap-8">
+				{/* <div className="flex flex-col gap-2">
 					<span>Input /path response:</span>
 					<textarea
 						className="w-[400px] h-[200px]"
@@ -722,7 +722,7 @@ export const AlgorithmCore = () => {
 						Display Path
 					</Button>
 					<pre>{commandsOutput}</pre>
-				</div>
+				</div> */}
 
 				{robotCommands && (
 					<div className="text-center">

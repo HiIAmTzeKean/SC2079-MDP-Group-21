@@ -213,50 +213,60 @@ export const NavigationGrid = (props: NavigationGridProps) => {
       />
 
       {/* Draw the path taken so far by the robot */}
-      {robotPath &&
-        robotPath.map((position, index) => {
-          if (index === 0) return null;
-          const { x: x1, y: y1 } = getSVGCoords(robotPath[index - 1]);
-          const { x: x2, y: y2 } = getSVGCoords(robotPath[index]);
+      {robotPath && robotPath.map((position, index) => {
+        if (index === 0) return null;
 
-          // TODO: draw curves based on motion
-          return (
-            <>
-              {/* Draw position where robot snaps image of obstacle */}
-              {position.s &&
-                <circle
-                  key={`snap-${index}`}
-                  cx={x2}
-                  cy={y2}
-                  r={cellSize / 2}
-                  fill="lime"
-                  fillOpacity={0.5}
-                />}
+        const prevPos = robotPath[index - 1];
+        const currentPos = position;
+        const { x: x1, y: y1 } = getSVGCoords(prevPos);
+        const { x: x2, y: y2 } = getSVGCoords(currentPos);
 
-              <line
-                key={index}
-                x1={x1}
-                y1={y1}
-                x2={x2}
-                y2={y2}
+        // Detect direction change by comparing 'd' values
+        const directionChanged = prevPos.d !== currentPos.d;
+
+        // Calculate control point for the curve
+        // Place it at the corner where the straight lines would meet
+        const controlX = directionChanged ? x1 : (x1 + x2) / 2;
+        const controlY = directionChanged ? y2 : (y1 + y2) / 2;
+
+        // Create curved path using quadratic Bezier curve
+        const pathData = `M ${x1} ${y1} Q ${controlX} ${controlY}, ${x2} ${y2}`;
+
+        return (
+          <>
+            {/* Draw position where robot snaps image of obstacle */}
+            {position.s &&
+              <circle
+                key={`snap-${index}`}
+                cx={x2}
+                cy={y2}
+                r={cellSize / 2}
+                fill="lime"
+                fillOpacity={0.5}
+              />
+            }
+            <g key={`path-${index}`}>
+              {/* Main visible path */}
+              <path
+                d={pathData}
                 stroke="blue"
                 strokeWidth="3"
+                fill="none"
                 strokeOpacity={0.5}
               />
 
-              <line
-                key={`footprint-${index}`}
-                x1={x1}
-                y1={y1}
-                x2={x2}
-                y2={y2}
+              {/* Footprint path with low opacity */}
+              <path
+                d={pathData}
                 stroke="blue"
                 strokeWidth={ROBOT_ACTUAL_GRID_WIDTH * cellSize}
+                fill="none"
                 strokeOpacity={0.05}
               />
-            </>
-          );
-        })}
+            </g>
+          </>
+        );
+      })}
     </svg>
   );
 };
