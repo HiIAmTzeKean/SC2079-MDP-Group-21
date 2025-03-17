@@ -1,18 +1,7 @@
-import json
 import logging
-import queue
-import time
-from multiprocessing import Process
-from typing import Any, Optional
-
-import requests
 
 from .base_t2 import TaskTwo
-from .communication.android import AndroidMessage
-from .communication.camera import snap_using_picamera2
-from .communication.pi_action import PiAction
-from .constant.consts import FORWARD_SPEED_OUTDOOR, Category, manual_commands, stm32_prefixes
-from .constant.settings import URL, API_TIMEOUT
+from .constant.consts import FORWARD_SPEED_OUTDOOR
 
 
 logger = logging.getLogger(__name__)
