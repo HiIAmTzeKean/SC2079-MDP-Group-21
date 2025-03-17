@@ -11,14 +11,14 @@ from .base_rpi import RaspberryPi
 from .communication.android import AndroidMessage
 from .communication.camera import snap_using_picamera2
 from .communication.pi_action import PiAction
-from .constant.consts import Category, manual_commands, stm32_prefixes
+from .constant.consts import Category, stm32_prefixes
 from .constant.settings import API_TIMEOUT, URL
 
 
 logger = logging.getLogger(__name__)
 
 class TaskTwo(RaspberryPi):
-    def __init__(self, android_controller, action_list_init, action_list_first_left, action_list_first_right, action_list_second_left, action_list_second_right) -> None:
+    def __init__(self, android_controller, action_list_init, action_list_first_left, action_list_first_right, action_list_second_left, action_list_second_right, manual_commands) -> None:
         super().__init__()
         del self.path_queue
         self.first_obstacle = True
@@ -32,6 +32,7 @@ class TaskTwo(RaspberryPi):
         self.action_list_first_right = action_list_first_right
         self.action_list_second_left = action_list_second_left
         self.action_list_second_right = action_list_second_right
+        self.manual_commands = manual_commands
 
     def start(self) -> None:
         """Starts the RPi orchestrator"""
@@ -80,18 +81,18 @@ class TaskTwo(RaspberryPi):
             if action.startswith("SNAP"):
                 self.command_queue.put(action)
                 continue
-            elif manual_commands.get(action) is None:
+            elif self.manual_commands.get(action) is None:
                 # specify custom
                 self.command_queue.put(action)
                 continue
             elif action == "FIN":
                 self.command_queue.put(Category.FIN.value)
                 continue
-            elif type(manual_commands[action]) == tuple:
-                for item in manual_commands[action]:
+            elif type(self.manual_commands[action]) == tuple:
+                for item in self.manual_commands[action]:
                     self.command_queue.put(item)
                 continue
-            self.command_queue.put(manual_commands[action])
+            self.command_queue.put(self.manual_commands[action])
 
     def rpi_action(self) -> None:
         """
@@ -269,7 +270,7 @@ class TaskTwo(RaspberryPi):
                     if outstanding_stm_instructions - 1 == 0 and self.snap_pending.get() == 1:
                         logger.info("clear unpause")
                         self.ready_snap.set()
-                        self.unpause.clear()
+                        # self.unpause.clear()
                     logger.debug(f"stm finish {message}, outstanding is {outstanding_stm_instructions - 1}")
                     
                 elif message.startswith("r"):

@@ -1,7 +1,7 @@
 import logging
 
 from .base_t2 import TaskTwo
-from .constant.consts import FORWARD_SPEED_INDOOR
+from .constant.consts import FORWARD_SPEED_INDOOR, manual_commands
 
 
 logger = logging.getLogger(__name__)
@@ -16,11 +16,13 @@ action_list_init = [
 action_list_first_left = [
     "left_arc",
     "frontuntil",
+    "backuntil",
     "SNAP2_C",
 ]
 action_list_first_right = [
     "right_arc",
     "frontuntil",
+    "backuntil",
     "SNAP2_C",
 ]
 action_list_second_left = [
@@ -29,16 +31,20 @@ action_list_second_left = [
     "R_ir",
     "u_turn_right",
     "stall",
+    
     "r_ir",  # 15cm apart from wall on opposite side
     "R_ir",
+    "stall",
+    
     "right",
     f"T{FORWARD_SPEED_INDOOR}|0|20",
     f"r{FORWARD_SPEED_INDOOR}|0|50",
-    "T30|0|20",
+    f"T{FORWARD_SPEED_INDOOR}|0|20",
     "right",
     "r_ir",
+    "slight_back",
     "left",
-    # f"W{FORWARD_SPEED_INDOOR}|0|15",
+    "frontuntil_end",
 ]
 action_list_second_right = [
     "frontuntil",
@@ -46,14 +52,27 @@ action_list_second_right = [
     "L_ir",
     "u_turn_left",
     "stall",
-    "l50|0|50",
+    
+    "l_ir",
     "L_ir",
+    "stall",
+    
     "left",
-    "T50|0|60",
-    "l50|0|50",
+    f"T{FORWARD_SPEED_INDOOR}|0|20",
+    f"l{FORWARD_SPEED_INDOOR}|0|50",
+    f"T{FORWARD_SPEED_INDOOR}|0|20",
     "left",
+    "l_ir",
+    "slight_back_2nd_right",
     "right",
-    "W50|0|20",
+    "frontuntil_end",
 ]
 
-TaskTwoIndoor = TaskTwo(ANDRIOD_CONTROLLER, action_list_init, action_list_first_left, action_list_first_right, action_list_second_left, action_list_second_right)
+TaskTwoIndoor = TaskTwo(ANDRIOD_CONTROLLER,
+                        action_list_init,
+                        action_list_first_left,
+                        action_list_first_right,
+                        action_list_second_left,
+                        action_list_second_right,
+                        manual_commands,
+                    )
