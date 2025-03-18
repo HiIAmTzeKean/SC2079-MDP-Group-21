@@ -36,6 +36,9 @@
             android:name=".BluetoothActivity"
             android:exported="false" />
         <activity
+            android:name=".RedButtonActivity"
+            android:exported="false" />
+        <activity
             android:name=".InitActivity"
             android:exported="true"
             android:theme="@style/Theme.MDPGrp21Controller">

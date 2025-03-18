@@ -9,6 +9,7 @@
     <string name="scan">Scan Devices</string>
     <string name="discoverable">Discoverable</string>
     <string name="canvas">To Canvas</string>
+    <string name="bigRedButton">To Big Red Button</string>
     <string name="connected">Connected</string>
 
 
@@ -28,6 +29,8 @@
     <string name="robot_status">[STATUS]</string>
     <string name="robot_status_waiting">WAITING</string>
     <string name="send_data">Send Data</string>
+
+    <string name="red_button_desc">Nuclear Detonation</string>
 
 
     <string-array name="robot_facing_options">
