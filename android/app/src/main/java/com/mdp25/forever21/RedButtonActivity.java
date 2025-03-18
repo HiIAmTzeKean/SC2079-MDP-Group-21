@@ -4,18 +4,29 @@ import android.content.BroadcastReceiver;
 import android.content.IntentFilter;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.Switch;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
 
+import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.mdp25.forever21.bluetooth.BluetoothMessage;
 import com.mdp25.forever21.bluetooth.BluetoothMessageParser;
 import com.mdp25.forever21.bluetooth.BluetoothMessageReceiver;
 
-
+/**
+ * Provides a big red button for task 2.
+ * Equivalent to pressing "start" on {@link CanvasActivity}.
+ */
 public class RedButtonActivity extends AppCompatActivity {
     private MyApplication myApp;
     private BroadcastReceiver msgReceiver;
     private MediaPlayer mediaPlayer;
+    private ImageButton bigRedBtn;
+    private ImageView buttonCover;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -26,7 +37,9 @@ public class RedButtonActivity extends AppCompatActivity {
         msgReceiver = new BluetoothMessageReceiver(BluetoothMessageParser.ofDefault(), this::onMsgReceived);
         getApplicationContext().registerReceiver(msgReceiver, new IntentFilter(BluetoothMessageReceiver.ACTION_MSG_READ), RECEIVER_NOT_EXPORTED);
 
-        findViewById(R.id.bigRedBtn).setOnClickListener(view -> {
+        bigRedBtn = (ImageButton) findViewById(R.id.bigRedBtn);
+        bigRedBtn.setEnabled(false); // need 2FA for pressing :)
+        bigRedBtn.setOnClickListener(view -> {
             if (myApp.btConnection() != null){
                 BluetoothMessage msg = BluetoothMessage.ofRobotStartMessage();
                 myApp.btConnection().sendMessage(msg.getAsJsonMessage().getAsJson());
@@ -38,6 +51,15 @@ public class RedButtonActivity extends AppCompatActivity {
                 mediaPlayer.start();
             }
         });
+
+        buttonCover = (ImageView) findViewById(R.id.buttonCover);
+
+        SwitchMaterial buttonSwitch = (SwitchMaterial) findViewById(R.id.switch2fa);
+        buttonSwitch.setOnCheckedChangeListener((b, checked) -> {
+            bigRedBtn.setEnabled(checked);
+            buttonCover.setVisibility(checked ? View.GONE : View.VISIBLE);
+        });
+
     }
 
     private void onMsgReceived(BluetoothMessage btMsg) {
