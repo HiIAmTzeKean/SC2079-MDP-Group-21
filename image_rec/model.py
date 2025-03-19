@@ -185,7 +185,6 @@ def predict_image_t2(logger, model, modelv2, image_path, output_dir, signal):
     # Perform inference
     results = model.predict(
         source=image_path,
-        save=True,
         conf=MODEL_CONFIG["conf"],
         imgsz=640,
         device=device,
@@ -274,20 +273,20 @@ def stitch_image(logger, output_dir, fullsize_dir):
     output_path = output_dir / output_filename
 
     try:
-        logger.debug(f"Resizing images in folder: '{fullsize_dir}'")
+        # logger.debug(f"Resizing images in folder: '{fullsize_dir}'")
         # Resize all images before proceeding
-        resize_all_images(logger, output_dir, fullsize_dir)
-        logger.debug(f"Saved resized images to folder: '{output_dir}'")
+        # resize_all_images(logger, output_dir, fullsize_dir)
+        # logger.debug(f"Saved resized images to folder: '{output_dir}'")
 
         # Get all image files
         image_files = [
-            path for path in output_dir.iterdir()
+            path for path in fullsize_dir.iterdir()
             if path.is_file()
             and path.suffix.lower() in ('.png', '.jpg', '.jpeg')
             and path.name.lower() != output_filename  # Exclude stitched image
         ]
         if not image_files:
-            logger.debug(f"No image files found in '{output_dir}'.")
+            logger.debug(f"No image files found in '{fullsize_dir}'.")
             return
 
         images = []
