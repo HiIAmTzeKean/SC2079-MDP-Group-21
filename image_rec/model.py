@@ -177,9 +177,9 @@ def predict_image_t2(logger, model, modelv2, image_path, output_dir, signal):
     img_name = f"processed_{formatted_time}.jpg"
 
     id_map = {
-        "38":38,
-        "39":39,
-        "10":10
+        "38": 38,  # Right Arrow
+        "39": 39,  # Left Arrow
+        "10": 10  # Bullseye
     }
 
     # Perform inference
@@ -189,7 +189,7 @@ def predict_image_t2(logger, model, modelv2, image_path, output_dir, signal):
         conf=MODEL_CONFIG["conf"],
         imgsz=640,
         device=device,
-        verbose=True
+        verbose=False
     )
     logger.debug(f"predict speed (ms): {results[0].speed}")
 
@@ -205,7 +205,7 @@ def predict_image_t2(logger, model, modelv2, image_path, output_dir, signal):
                 confidence = box.conf.tolist()[0]
 
                 # Only consider 'left' and 'right' with confidence > 0.3
-                if label in ["38","39","left", "right"] and confidence > 0.3:
+                if label in ["38", "39"] and confidence > 0.3:
                     bboxes.append({"label": label, "xywh": xywh, "bbox_area": bbox_area, "confidence": confidence})
 
     logger.debug(f"Bounding boxes: '{bboxes}")
@@ -220,14 +220,19 @@ def predict_image_t2(logger, model, modelv2, image_path, output_dir, signal):
     selected_label, selected_area = find_largest_or_central_bbox(bboxes, signal)
 
     # If no valid detection, default to "left" (39)
-
-    if selected_label != "38" or selected_label != "39" or selected_label != "left" or selected_label != "right":
+    if selected_label == "38":
+        image_id = 38
+        logger.debug(
+            f"Image '{image_path.name}': Detected '{selected_label}' with bbox area {selected_area:.2f} (ID: {image_id})")
+    elif selected_label == "39":
         image_id = 39
+        logger.debug(
+            f"Image '{image_path.name}': Detected '{selected_label}' with bbox area {selected_area:.2f} (ID: {image_id})")
     else:
-        image_id = id_map.get(selected_label, 39)  # Default to left if key is missing
-
-    logger.debug(
-        f"Image '{image_path.name}': Detected '{selected_label}' with bbox area {selected_area:.2f} (ID: {image_id})")
+        # Default to left if key is missing
+        image_id = id_map.get(selected_label, 39)
+        logger.debug(
+            f"Image '{image_path.name}': Detected '{selected_label}' with bbox area {selected_area:.2f} (ID: Defaulting to {image_id})")
 
     return image_id
 

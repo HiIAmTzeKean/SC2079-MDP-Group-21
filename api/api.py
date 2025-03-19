@@ -18,7 +18,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from algo.algorithms.algo import MazeSolver  # nopep8
 from algo.tools.commands import CommandGenerator  # nopep8
-from image_rec.model import load_model, load_model2, predict_image, stitch_image  # nopep8
+from image_rec.model import load_model, load_model2, predict_image, predict_image_t2, stitch_image  # nopep8
 
 app = Flask(__name__)
 
@@ -261,7 +261,12 @@ class ImagePredict(Resource):
             output_dir = Path("image_rec_files/output/fullsize")
             os.makedirs(output_dir, exist_ok=True)
 
-            image_id = predict_image(
+            # # Week 8 (Task 1)
+            # image_id = predict_image(
+            #     logger, model, modelv2, file_path, output_dir, signal)
+            
+            # Week 9 (Task 2)
+            image_id = predict_image_t2(
                 logger, model, modelv2, file_path, output_dir, signal)
             return marshal(
                 {
