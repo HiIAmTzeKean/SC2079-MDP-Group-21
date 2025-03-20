@@ -6,6 +6,7 @@ from multiprocessing import Process
 from typing import Optional
 
 import requests
+from picamera2 import Picamera2, Preview
 
 from .base_rpi import RaspberryPi
 from .communication.android import AndroidMessage
@@ -59,10 +60,12 @@ class TaskTwo(RaspberryPi):
             self.proc_recv_stm32.start()
             self.proc_command_follower.start()
             self.proc_rpi_action.start()
-
+            if self.ANDRIOD_CONTROLLER:
+                self.reconnect_android()
 
             logger.info("Child Processes started")
             self.finish_all.wait()
+            # self.picam2.close()
             self.stop()
             processes = [getattr(self, attr) for attr in dir(self) if attr.startswith("proc_")]
             for process in processes:
@@ -87,6 +90,9 @@ class TaskTwo(RaspberryPi):
                 continue
             elif action == "FIN":
                 self.command_queue.put(Category.FIN.value)
+                continue
+            elif action == "front_past_2nd_obstacle":
+                self.command_queue.put(f"T50|0|{self.second_obstacle_dist.get()+31+60}")
                 continue
             elif type(self.manual_commands[action]) == tuple:
                 for item in self.manual_commands[action]:
@@ -128,7 +134,7 @@ class TaskTwo(RaspberryPi):
         """Handles the reconnection to Android in the event of a lost connection."""
         logger.info("Reconnection handler is watching...")
 
-        while True:
+        while True and not self.completed:
             # Wait for android connection to drop
             self.android_dropped.wait()
 
@@ -239,11 +245,15 @@ class TaskTwo(RaspberryPi):
                 logger.info("stalling robot")
                 while self.outstanding_stm_instructions.get() != 0:
                     pass
+                time.sleep(0.1)
                 logger.info("stall complete")
                 self.unpause.set()
 
             elif command == Category.FIN.value:
                 logger.info(f"At FIN->self.current_location: {self.current_location}")
+                self.completed = True
+                if self.ANDRIOD_CONTROLLER:
+                    self.android_queue.put(AndroidMessage(Category.STATUS.value, "finished"))
                 self.unpause.clear()
                 logger.debug("unpause cleared")
                 logger.info("Commands queue finished.")
@@ -275,8 +285,17 @@ class TaskTwo(RaspberryPi):
                     
                 elif message.startswith("r"):
                     logger.debug(f"stm ack {message}")
+                elif message.startswith ("D"):
+                    logger.debug(f"stm reporting dist {message}")
+                    outstanding_stm_instructions = self.outstanding_stm_instructions.get()
+                    self.outstanding_stm_instructions.set(outstanding_stm_instructions - 1)
+                    logger.debug(f"stm message split {message.split('D')}")
+                    self.second_obstacle_dist.set(int(eval(message.split("D")[1].lstrip().split("\n")[0])))
+                    logger.debug(f"we eating D at {self.second_obstacle_dist.get()}")
                 else:
                     logger.warning(f"Ignored unknown message from STM: {message}")
+                    outstanding_stm_instructions = self.outstanding_stm_instructions.get()
+                    self.outstanding_stm_instructions.set(outstanding_stm_instructions - 1)
             except Exception as e:
                 logger.error(f"Error in recv_stm: {e}")
 
@@ -297,6 +316,7 @@ class TaskTwo(RaspberryPi):
             filename=filename,
             filename_send=filename_send,
             url=url,
+            # picam2=self.picam2,
         )
         logger.info(results)
         return results

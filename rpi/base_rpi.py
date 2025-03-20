@@ -54,12 +54,14 @@ class RaspberryPi(ABC):
         self.proc_rpi_action: Process
         """proc action"""
 
+        self.second_obstacle_dist = self.manager.Value("i", 0)
         self.outstanding_stm_instructions = self.manager.Value("i", 0)
         """Number of outstanding instructions for STM32"""
         self.obstacles = self.manager.Value("i", 0)
         """Number of obstacles left to detect by the robot"""
 
         self.current_location = self.manager.dict()
+        self.completed = False
 
         self.failed_attempt = False
 

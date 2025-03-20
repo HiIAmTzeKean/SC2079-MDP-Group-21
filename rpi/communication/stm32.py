@@ -69,8 +69,11 @@ class STMLink(Link):
     def wait_receive(self) -> str:
         while self.serial_link.in_waiting <= 0:
             pass
-        message = str(self.serial_link.read_all(), "utf-8")
-        logger.debug(f"wait recv stm: {message}")
+        try:
+            message = str(self.serial_link.read_all(), "utf-8")
+            logger.debug(f"wait recv stm: {message}")
+        except UnicodeDecodeError:
+            return ""
         return message
     
     def send_cmd_raw(self, cmd: str) -> None:
