@@ -32,6 +32,7 @@ action_list_first_right = [
 ]
 action_list_second_left = [
     "left",  # robot 15cm apart from wall, 20cm turn radius
+    "t100|0|20",
     "R_ir",
     "u_turn_right",
     "offset_right",
@@ -46,14 +47,16 @@ action_list_second_left = [
     "front_past_2nd_obstacle",
     "right",
     "slight_back",
-    "r20|0|40",
-    "T50|-60|100",
+    "r20|0|25",
+    "t100|0|10",
+    "T50|-80|100",
     "frontuntil_end",
     "FIN",
 ]
 action_list_second_right = [
     "right",
     "offset_right",
+    "t100|0|20",
     "L_ir",
     "u_turn_left",
     
@@ -66,8 +69,9 @@ action_list_second_right = [
     "front_past_2nd_obstacle",
     "left",
     "slight_back",
-    "l20|0|50",
-    "T50|60|100",
+    "l20|0|25",
+    "t100|0|15",
+    "T50|80|100",
     "frontuntil_end",
     "FIN",
 ]

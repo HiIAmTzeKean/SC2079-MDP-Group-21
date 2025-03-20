@@ -33,6 +33,7 @@ action_list_first_right = [
 action_list_second_left = [
     "left",  # robot 15cm apart from wall, 20cm turn radius
     "R_ir",
+    "t30|0|10",
     "u_turn_right",
     "offset_right",
 
@@ -55,6 +56,7 @@ action_list_second_right = [
     "right",
     "offset_right",
     "L_ir",
+    "t30|0|10",
     "u_turn_left",
     
     "l_ir",

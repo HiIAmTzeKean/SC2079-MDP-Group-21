@@ -53,14 +53,16 @@ class Category(Enum):
     FIN = 'FIN'
 
 
-FORWARD_SPEED_INDOOR = 70
-TRACKING_SPEED_INDOOR = 70
+FORWARD_SPEED_INDOOR = 80
+TRACKING_SPEED_INDOOR = 80
 
 manual_commands: dict[str, Union[tuple[Any, ...], str]] = {
     "front": f"T{FORWARD_SPEED_INDOOR}|0|10",
     "frontuntil_first": f"W{TRACKING_SPEED_INDOOR}|0|20",
     "frontuntil_end": f"W{TRACKING_SPEED_INDOOR}|0|20",
     "frontuntil": f"W{TRACKING_SPEED_INDOOR}|0|33",
+    "front_past_2nd_obstacle": f"D",
+    
     "backuntil": f"w{TRACKING_SPEED_INDOOR}|0|33",
     "slight_back": f"t{FORWARD_SPEED_INDOOR}|0|20",
     "slight_back_2nd_right": f"t{FORWARD_SPEED_INDOOR}|0|20",
@@ -73,43 +75,45 @@ manual_commands: dict[str, Union[tuple[Any, ...], str]] = {
     "left": "T40|-35|90", #24 cm turn radius
     "right": "T40|35|90", #24 cm turn radius
     "offset_right": "T25|-10|0.1",
-    "half_left": "T50|-45|45",
-    "half_right": "T50|45|45",
+    "half_left": "T50|-45|47",
+    "half_right": "T50|45|47",
 }
              
-manual_commands["left_arc"] = (manual_commands["half_left"], "T50|45|89", manual_commands["half_left"])
-manual_commands["right_arc"] = (manual_commands["half_right"], "T50|-45|91", manual_commands["half_right"])
+manual_commands["left_arc"] = (manual_commands["half_left"], manual_commands["half_right"], manual_commands["half_right"],  manual_commands["half_left"])
+manual_commands["right_arc"] = (manual_commands["half_right"], manual_commands["half_left"], manual_commands["half_left"], manual_commands["half_right"])
 manual_commands["u_turn_right"] = (manual_commands["right"], manual_commands["right"])
 manual_commands["u_turn_left"] = (manual_commands["left"], manual_commands["left"])
 
 
 FORWARD_SPEED_OUTDOOR = 70
-TRACKING_SPEED_OUTDOOR = 70
+US_SPEED_OUTDOOR = 70
+IR_SPEED_OUTDOOR = 50
 
 manual_commands_outdoor: dict[str, Union[tuple[Any, ...], str]] = {
     "front": f"T{FORWARD_SPEED_OUTDOOR}|0|10",
-    "frontuntil_first": f"W{TRACKING_SPEED_OUTDOOR}|0|20",
-    "frontuntil_end": f"W{TRACKING_SPEED_OUTDOOR}|0|20",
-    "frontuntil": f"W{TRACKING_SPEED_OUTDOOR}|0|33",
+    "frontuntil_first": f"W{US_SPEED_OUTDOOR}|0|20",
+    "frontuntil_end": f"W{US_SPEED_OUTDOOR}|0|20",
+    "frontuntil": f"W{US_SPEED_OUTDOOR}|0|33",
     "front_past_2nd_obstacle": f"D",
-    "backuntil": f"w{TRACKING_SPEED_OUTDOOR}|0|33",
+    
+    "backuntil": f"w{US_SPEED_OUTDOOR}|0|33",
     "slight_back": f"t{FORWARD_SPEED_OUTDOOR}|0|30",
     "slight_back_2nd_right": f"t{FORWARD_SPEED_OUTDOOR}|0|30",
     
-    "R_ir": f"R{TRACKING_SPEED_OUTDOOR}|0|30",
-    "L_ir": f"L{TRACKING_SPEED_OUTDOOR}|0|30",
-    "r_ir": f"r{TRACKING_SPEED_OUTDOOR}|0|50",
-    "l_ir": f"l{TRACKING_SPEED_OUTDOOR}|0|50",
+    "R_ir": f"R{IR_SPEED_OUTDOOR}|0|30",
+    "L_ir": f"L{IR_SPEED_OUTDOOR}|0|30",
+    "r_ir": f"r{IR_SPEED_OUTDOOR}|0|50",
+    "l_ir": f"l{IR_SPEED_OUTDOOR}|0|50",
     
     "left": "T40|-35|90", #24 cm turn radius
     "right": "T40|35|90", #24 cm turn radius
     "offset_right": "T25|-10|0.1",
-    "half_left": "T50|-45|45",
-    "half_right": "T50|45|45",
+    "half_left": "T50|-45|47",
+    "half_right": "T50|45|47",
 }
              
-manual_commands_outdoor["left_arc"] = (manual_commands_outdoor["half_left"], "T50|45|89", manual_commands_outdoor["half_left"])
-manual_commands_outdoor["right_arc"] = (manual_commands_outdoor["half_right"], "T50|-45|91", manual_commands_outdoor["half_right"])
+manual_commands_outdoor["left_arc"] = (manual_commands_outdoor["half_left"], manual_commands_outdoor["half_right"], manual_commands_outdoor["half_right"],  manual_commands_outdoor["half_left"])
+manual_commands_outdoor["right_arc"] = (manual_commands_outdoor["half_right"], manual_commands_outdoor["half_left"], manual_commands_outdoor["half_left"], manual_commands_outdoor["half_right"])
 manual_commands_outdoor["u_turn_right"] = (manual_commands_outdoor["right"], manual_commands_outdoor["right"])
 manual_commands_outdoor["u_turn_left"] = (manual_commands_outdoor["left"], manual_commands_outdoor["left"])
 

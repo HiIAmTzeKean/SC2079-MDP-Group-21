@@ -12,7 +12,7 @@ from .base_rpi import RaspberryPi
 from .communication.android import AndroidMessage
 from .communication.camera import snap_using_picamera2
 from .communication.pi_action import PiAction
-from .constant.consts import Category, stm32_prefixes
+from .constant.consts import Category, stm32_prefixes, FORWARD_SPEED_OUTDOOR
 from .constant.settings import API_TIMEOUT, URL
 
 
@@ -92,7 +92,7 @@ class TaskTwo(RaspberryPi):
                 self.command_queue.put(Category.FIN.value)
                 continue
             elif action == "front_past_2nd_obstacle":
-                self.command_queue.put(f"T50|0|{self.second_obstacle_dist.get()+31+60}")
+                self.command_queue.put(f"T{FORWARD_SPEED_OUTDOOR}|0|{self.second_obstacle_dist.get()+31+60}")
                 continue
             elif type(self.manual_commands[action]) == tuple:
                 for item in self.manual_commands[action]:
@@ -250,6 +250,8 @@ class TaskTwo(RaspberryPi):
                 self.unpause.set()
 
             elif command == Category.FIN.value:
+                while self.outstanding_stm_instructions.get() != 0:
+                    pass
                 logger.info(f"At FIN->self.current_location: {self.current_location}")
                 self.completed = True
                 if self.ANDRIOD_CONTROLLER:
@@ -290,10 +292,13 @@ class TaskTwo(RaspberryPi):
                     outstanding_stm_instructions = self.outstanding_stm_instructions.get()
                     self.outstanding_stm_instructions.set(outstanding_stm_instructions - 1)
                     logger.debug(f"stm message split {message.split('D')}")
-                    self.second_obstacle_dist.set(int(eval(message.split("D")[1].lstrip().split("\n")[0])))
-                    logger.debug(f"we eating D at {self.second_obstacle_dist.get()}")
+                    detected_dist = int(eval(message.split("D")[1].lstrip().split("\n")[0]))
+                    if detected_dist > 0:
+                        detected_dist += 20
+                    self.second_obstacle_dist.set(detected_dist)
+                    logger.info(f"we eating D at {self.second_obstacle_dist.get()}")
                 else:
-                    logger.warning(f"Ignored unknown message from STM: {message}")
+                    logger.error(f"Ignored unknown message from STM: {message}")
                     outstanding_stm_instructions = self.outstanding_stm_instructions.get()
                     self.outstanding_stm_instructions.set(outstanding_stm_instructions - 1)
             except Exception as e:
