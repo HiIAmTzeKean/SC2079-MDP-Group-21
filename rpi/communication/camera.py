@@ -172,6 +172,7 @@ def snap_using_picamera2(
     filename: str,
     filename_send: str,
     url: str,
+    # picam2,
 ) -> str:
 
     retry_count = 0
@@ -187,6 +188,7 @@ def snap_using_picamera2(
         picam2.start()
         picam2.capture_file(filename)
         picam2.close()
+        # picam2.start_and_capture_file(filename)
         logger.info("Image captured. Sending to image-rec API...")
         
         try:
