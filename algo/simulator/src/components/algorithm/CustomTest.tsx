@@ -1,20 +1,20 @@
 import React, { useState } from "react";
-import { Button, ModalContainer } from "../../common";
+import { Button, ModalContainer } from "../common";
 import { FaBox, FaPlus, FaRecycle, FaTrash } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import {
     AlgoTestDataInterface,
-} from "../../../tests/algorithm";
+} from "../../tests";
 import {
     Obstacle,
     Direction,
     DirectionStringMapping,
-} from "../../../schemas/entity";
+} from "../../schemas/entity";
 import toast from "react-hot-toast";
-import { GRID_TOTAL_HEIGHT, GRID_TOTAL_WIDTH, OBSTACLE_GRID_PADDING, ROBOT_GRID_HEIGHT, ROBOT_GRID_WIDTH, ROBOT_INITIAL_POSITION } from "../../../constants";
+import { GRID_TOTAL_HEIGHT, GRID_TOTAL_WIDTH, OBSTACLE_GRID_PADDING, ROBOT_GRID_HEIGHT, ROBOT_GRID_WIDTH, ROBOT_INITIAL_POSITION } from "../../constants";
 
 interface CustomTestProps {
-    selectedTest: AlgoTestDataInterface; // For Managing Custom Obstacles
+    selectedTest: AlgoTestDataInterface;
     setSelectedTest: React.Dispatch<React.SetStateAction<AlgoTestDataInterface>>;
 }
 

@@ -2,8 +2,6 @@ from typing import Union
 import heapq
 import math
 import numpy as np
-from python_tsp.heuristics import solve_tsp_local_search
-from python_tsp.exact import solve_tsp_dynamic_programming
 from python_tsp.heuristics import solve_tsp_lin_kernighan
 from algo.entities.entity import CellState, Obstacle, Grid
 from algo.entities.robot import Robot
@@ -12,10 +10,8 @@ from algo.tools.consts import (
     ITERATIONS,
     SAFE_COST,
     TURN_DISPLACEMENT,
-    HALF_TURNS_DISPLACEMENT,
     REVERSE_FACTOR,
     PADDING,
-    HALF_TURN_FACTOR,
     ARENA_WIDTH,
     ARENA_HEIGHT,
 )
@@ -42,12 +38,13 @@ class MazeSolver:
     ) -> None:
         self.neighbor_cache = {}  # Store precomputed neighbors
         """
-        :param size_x: size of the grid in x direction. Default is 20
-        :param size_y: size of the grid in y direction. Default is 20
-        :param robot: A robot object that contains the robot's path. Preferrentially used over robot_x, robot_y, robot_direction
-        :param robot_x: If no robot object is provided, the x coordinate of the robot. Default is 1
-        :param robot_y: If no robot object is provided, the y coordinate of the robot. Default is 1
-        :param robot_direction: If no robot object is provided, the direction the robot is facing. Default is NORTH
+        Args:
+            size_x: size of the grid in x direction. Default is 20
+            size_y: size of the grid in y direction. Default is 20
+            robot: A robot object that contains the robot's path
+            robot_x: x coordinate of the robot. Default is 1
+            robot_y: y coordinate of the robot. Default is 1
+            robot_direction: direction the robot is facing. Default is NORTH
         """
         self.grid = Grid(size_x, size_y)
 
@@ -64,10 +61,11 @@ class MazeSolver:
         """
         Add an obstacle to the grid
 
-        :param x: x coordinate of the obstacle
-        :param y: y coordinate of the obstacle
-        :param direction: direction that the image on the obstacle is facing
-        :param obstacle_id: id of the obstacle
+        Args:
+        x: x coordinate of the obstacle
+        y: y coordinate of the obstacle
+        direction: direction that the image on the obstacle is facing
+        obstacle_id: id of the obstacle
         """
         self.grid.add_obstacle(Obstacle(x, y, direction, obstacle_id))
 
@@ -79,9 +77,10 @@ class MazeSolver:
 
     def get_optimal_path(self) -> tuple[list[CellState], float]:
         """
-        Get the optimal path from the using dynamic programming
+        Get the optimal path between all possible view states for all obstacles using A* search and solving TSP problem
 
-        :return: An Optimal path, which is a list of all the CellStates involved and cost of the path
+        Returns: 
+            tuple[list[CellState], float]: an optimal path which is a list of all the CellStates involved, and cost of the path
         """
         min_dist = 1e9
         optimal_path = []
@@ -151,12 +150,8 @@ class MazeSolver:
                 cost_matrix[:, 0] = 0
 
                 # find Hamiltonian path with least cost for the selected combination of view states
-                # TODO: experiment with different solvers
+                # solve_tsp_lin_kernighan is used instead of solve_tsp_dynamic_programming since it was the empirically fastest solver
                 permutation, distance = solve_tsp_lin_kernighan(cost_matrix)
-                # permutation, distance = solve_tsp_local_search(
-                #    cost_matrix)
-                # permutation, distance = solve_tsp_dynamic_programming(
-                #     cost_matrix)
 
                 # if the distance is more than the minimum distance, the path is irrelevant
                 if distance + cost >= min_dist:
@@ -205,7 +200,7 @@ class MazeSolver:
 
     def _generate_paths(self, states: list[CellState]) -> None:
         """
-        Generate and store the path between all states in a list of states using astar search
+        Generate and store the path between all combinations of all view states
         """
         for i in range(len(states) - 1):
             for j in range(i + 1, len(states)):
@@ -286,16 +281,14 @@ class MazeSolver:
                         (x, y, direction, new_x, new_y, new_direction)
                     ] = motion
 
-                # calculate the cost of robot rotation
-                rotation_cost = TURN_FACTOR * Direction.rotation_cost(
+                # calculate the cost of robot turning
+                turn_cost = TURN_FACTOR * Direction.turn_cost(
                     direction, new_direction
                 )
                 # calculate the cost of robot reversing
                 reverse_cost = REVERSE_FACTOR * motion.reverse_cost()
-                # calculate the cost of robot half-turning
-                half_turn_cost = HALF_TURN_FACTOR * motion.half_turn_cost()
 
-                motion_cost = rotation_cost + reverse_cost + half_turn_cost + safe_cost
+                motion_cost = turn_cost + reverse_cost + safe_cost
 
                 # check if there is a screenshot penalty
                 if end.is_eq(new_x, new_y, new_direction):
@@ -330,22 +323,18 @@ class MazeSolver:
 
     def _get_neighboring_states(
             self, x: int, y: int, direction: Direction
-    ) -> list[tuple[int, int, Direction, int, Motion]]:  # TODO: see the behavior of the robot and adjust...
+    ) -> list[tuple[int, int, Direction, int, Motion]]:
         """
-        Return a list of tuples with format:
-        newX, newY, new_direction
-
-        # Get list of possible valid cell states the robot can reach from its current position
-        # Neighbors have the following format: {newX, newY, movement direction, safe cost, motion}
+        Returns list of possible valid cell states the robot can reach from its current position
+        Neighbors have the following format: (newX, newY, movement direction, safe cost, motion)
         """
-        # cell state already visited. significantly reduces algo runtime
+        # cell state already visited. caching significantly reduces algo runtime
         if (x, y, direction) in self.neighbor_cache:
             return self.neighbor_cache[(x, y, direction)]
         neighbors = []
 
-        # Assume that after following this direction, the car direction is EXACTLY md
         for dx, dy, md in MOVE_DIRECTION:
-            if md == direction:  # if the new direction == md
+            if md == direction:  # if the new direction == md means straight-line motion
                 # FORWARD
                 if self.grid.reachable(x + dx, y + dy):  # go forward;
                     # Get safe cost of destination
@@ -360,74 +349,7 @@ class MazeSolver:
                     motion = Motion.REVERSE
                     neighbors.append((x - dx, y - dy, md, safe_cost, motion))
 
-                # half turns
-                delta_x, delta_y = self._get_half_turn_displacement(direction)
-                if direction == Direction.NORTH or direction == Direction.SOUTH:
-                    # FORWARD_OFFSET_RIGHT
-                    if self.grid.half_turn_reachable(x, y, x + delta_x, y + delta_y):
-                        safe_cost = self._calculate_safe_cost(
-                            x + delta_x, y + delta_y)
-                        motion = Motion.FORWARD_OFFSET_RIGHT
-                        neighbors.append(
-                            (x + delta_x, y + delta_y, md, safe_cost, motion))
-                    # FORWARD_OFFSET_LEFT
-                    if self.grid.half_turn_reachable(x, y, x - delta_x, y + delta_y):
-                        safe_cost = self._calculate_safe_cost(
-                            x - delta_x, y + delta_y)
-                        motion = Motion.FORWARD_OFFSET_LEFT
-                        neighbors.append(
-                            (x - delta_x, y + delta_y, md, safe_cost, motion))
-                    # REVERSE_OFFSET_RIGHT
-                    if self.grid.half_turn_reachable(x, y, x + delta_x, y - delta_y):
-                        safe_cost = self._calculate_safe_cost(
-                            x + delta_x, y - delta_y)
-                        motion = Motion.REVERSE_OFFSET_RIGHT
-                        neighbors.append(
-                            (x + delta_x, y - delta_y, md, safe_cost, motion))
-                    # REVERSE_OFFSET_LEFT
-                    if self.grid.half_turn_reachable(x, y, x - delta_x, y - delta_y):
-                        safe_cost = self._calculate_safe_cost(
-                            x - delta_x, y - delta_y)
-                        motion = Motion.REVERSE_OFFSET_LEFT
-                        neighbors.append(
-                            (x - delta_x, y - delta_y, md, safe_cost, motion))
-                else:
-                    # EAST or WEST
-                    # FORWARD_OFFSET_RIGHT
-                    if self.grid.half_turn_reachable(x, y, x + delta_x, y - delta_y):
-                        safe_cost = self._calculate_safe_cost(
-                            x + delta_x, y - delta_y)
-                        motion = Motion.FORWARD_OFFSET_RIGHT
-                        neighbors.append(
-                            (x + delta_x, y - delta_y, md, safe_cost, motion))
-
-                    # FORWARD_OFFSET_LEFT
-                    if self.grid.half_turn_reachable(x, y, x + delta_x, y + delta_y):
-                        safe_cost = self._calculate_safe_cost(
-                            x + delta_x, y + delta_y)
-                        motion = Motion.FORWARD_OFFSET_LEFT
-                        neighbors.append(
-                            (x + delta_x, y + delta_y, md, safe_cost, motion))
-
-                    # REVERSE_OFFSET_RIGHT
-                    if self.grid.half_turn_reachable(x, y, x - delta_x, y - delta_y):
-                        safe_cost = self._calculate_safe_cost(
-                            x - delta_x, y - delta_y)
-                        motion = Motion.REVERSE_OFFSET_RIGHT
-                        neighbors.append(
-                            (x - delta_x, y - delta_y, md, safe_cost, motion))
-
-                    # REVERSE_OFFSET_LEFT
-                    if self.grid.half_turn_reachable(x, y, x - delta_x, y + delta_y):
-                        safe_cost = self._calculate_safe_cost(
-                            x - delta_x, y + delta_y)
-                        motion = Motion.REVERSE_OFFSET_LEFT
-                        neighbors.append(
-                            (x - delta_x, y + delta_y, md, safe_cost, motion))
-
-            else:  # consider 8 cases
-
-                # Turning displacement
+            else:  # Turns
                 delta_big = TURN_DISPLACEMENT[0]
                 delta_small = TURN_DISPLACEMENT[1]
 
@@ -755,33 +677,12 @@ class MazeSolver:
         return result
 
     @staticmethod
-    def _get_half_turn_displacement(direction: Direction) -> tuple[int, int]:
-        # calculate delta small and delta big based on the direction
-        if direction == Direction.NORTH:
-            dx = HALF_TURNS_DISPLACEMENT[1]
-            dy = HALF_TURNS_DISPLACEMENT[0]
-
-        elif direction == Direction.SOUTH:
-            dx = -HALF_TURNS_DISPLACEMENT[1]
-            dy = -HALF_TURNS_DISPLACEMENT[0]
-
-        elif direction == Direction.EAST:
-            dx = HALF_TURNS_DISPLACEMENT[0]
-            dy = HALF_TURNS_DISPLACEMENT[1]
-        elif direction == Direction.WEST:
-            dx = -HALF_TURNS_DISPLACEMENT[0]
-            dy = -HALF_TURNS_DISPLACEMENT[1]
-        else:
-            raise ValueError(
-                f"Invalid direction {direction}. This should never happen.")
-        return dx, dy
-
-    @staticmethod
     def _get_capture_relative_position(
         cell_state: CellState, obstacle: Obstacle
     ) -> str:
         """
         Determines the relative position of the obstacle (L, R, or C) with respect to the robot's orientation.
+        This is used in image recognition heuristic when it detects multiple bounding boxes that are relatively the same size
         """
         x, y, direction = cell_state.x, cell_state.y, cell_state.direction
         x_obs, y_obs = obstacle.x, obstacle.y

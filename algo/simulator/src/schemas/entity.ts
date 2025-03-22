@@ -8,18 +8,18 @@ export enum Direction {
 }
 
 export interface Position {
-  s: string | null; // screenshot: obstacleid_L/C/R
+  s: string | null; // screenshot: "obstacleid_L/C/R"
   x: number;
   y: number;
   d: Direction;
 }
 
-/** Obstacle with it's (x, y) co-ordinates, image face direction, and id */
+/** Obstacle with its id, (x, y) coordinates, obstacle image direction */
 export interface Obstacle {
-  id: number; // obstacle_id
-  x: number; // grid format
-  y: number; // grid format
-  d: Direction; // obstacle face direction
+  id: number;
+  x: number;
+  y: number;
+  d: Direction;
 }
 
 export const DirectionStringMapping = {

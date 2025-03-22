@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { NavigationGrid } from "./NavigationGrid";
-import { CoreContainter } from "../CoreContainter";
-import { Direction, Position } from "../../../schemas/entity";
+import { Direction, Position } from "../../schemas/entity";
 import {
 	GRID_ANIMATION_SPEED,
 	GRID_TOTAL_WIDTH,
 	ROBOT_INITIAL_POSITION,
-} from "../../../constants";
+} from "../../constants";
 import {
 	FaCheckSquare,
 	FaChevronLeft,
@@ -23,13 +22,13 @@ import {
 	AlgoTestEnum,
 	AlgoTestEnumMapper,
 	AlgoTestEnumsList, // List of all test enum values for iterating
-} from "../../../tests/algorithm";
-import { Button } from "../../common";
+} from "../../tests";
+import { Button } from "../common";
 import toast from "react-hot-toast";
 import { TestSelector } from "./TestSelector";
 import { ServerStatus } from "./ServerStatus";
-import useFetch from "../../../hooks/useFetch";
-import { AlgoInput, AlgoOutput } from "../../../schemas/request";
+import useFetch from "../../hooks/useFetch";
+import { AlgoInput, AlgoOutput } from "../../schemas/request";
 
 // Intraface to store test results for each test case
 interface TestResult {
@@ -41,7 +40,7 @@ interface TestResult {
 	totalObstacles: number;
 }
 
-export const AlgorithmCore = () => {
+export const AlgorithmMenu = () => {
 	const fetch = useFetch();
 
 	// Robot's Positions
@@ -191,13 +190,13 @@ export const AlgorithmCore = () => {
 
 		// Iterate through all test cases
 		for (const testEnum of AlgoTestEnumsList) {
-			// Skip the Custom test as it might not have consistent obstacles
+			// Skip Custom test
 			if (testEnum === AlgoTestEnum.Misc_Custom) {
 				completedTests++;
 				continue;
 			}
 
-			// Show loading toast for current test case
+			// Show loading for current test case
 			toast.loading(`Testing ${testEnum} (${completedTests + 1}/${totalTests})...`,
 				{ id: `test-${testEnum}` });
 
@@ -274,10 +273,7 @@ export const AlgorithmCore = () => {
 	const [isManualAnimation, setIsManualAnimation] = useState(false);
 	const [startAnimation, setStartAnimation] = useState(false);
 	const [currentStep, setCurrentStep] = useState(-1);
-	const [currentRobotPosition, setCurrentRobotPosition] =
-		useState<Position>();
-
-	// Animation
+	const [currentRobotPosition, setCurrentRobotPosition] = useState<Position>();
 	useEffect(() => {
 		if (robotPositions && startAnimation && currentStep + 1 < totalSteps) {
 			const timer = setTimeout(() => {
@@ -298,12 +294,11 @@ export const AlgorithmCore = () => {
 				}
 			}, GRID_ANIMATION_SPEED);
 			return () => clearTimeout(timer);
-		} else if (
+		} else if ( // User manually click through the steps
 			robotPositions &&
 			isManualAnimation &&
 			currentStep < totalSteps
 		) {
-			// User manually click through the steps
 			// Handle Scan Animation
 			if (robotPositions[currentStep].s)
 				toast.success(
@@ -325,132 +320,8 @@ export const AlgorithmCore = () => {
 		setAlgoCost(null);
 	};
 
-	// TODO: FOR DEBUGGING, remove when done. to display /path response output on grid
-	const [commandsInput, setCommandsInput] = useState<string>("");
-	const [commandsOutput, setCommandsOutput] = useState<string>("");
-	const convertToGrid = () => {
-		if (commandsInput === "") {
-			setCommandsOutput("");
-			return;
-		}
-
-		const algoOutput: AlgoOutput = JSON.parse(commandsInput.replaceAll("'", "\"").replaceAll("None", "null"));
-		setRobotPositions(algoOutput.data.path);
-		setRobotCommands(algoOutput.data.commands);
-		setRobotMotions(algoOutput.data.motions);
-		setCurrentStep(0);
-
-		setAlgoRuntime(algoOutput.data.runtime);
-		setAlgoCost(algoOutput.data.distance);
-	};
-
-	// TODO: REFACTOR!!! cleanup this magic spaghetti
-	const [currentCommands, setCurrentCommands] = useState<string[]>([]);
-	useEffect(() => {
-		if (!robotCommands || !robotMotions) return;
-
-		let mergedCommands: string[] = [];
-		let currentGroup: string[] = [];
-		// merge commands for the same motion
-		robotCommands.forEach((command) => {
-			if (command.startsWith('W') || command.startsWith('w') || command.startsWith('SNAP') || command === 'FIN') {
-				// If it starts with W, w, SNAP or is FIN, group it
-				currentGroup.push(command);
-			} else {
-				// If there is an ongoing group, merge it and push to the final result
-				if (currentGroup.length > 0) {
-					mergedCommands.push(currentGroup.join(' '));
-					currentGroup = [];  // Reset the group
-				}
-				mergedCommands.push(command);  // Add the non-group command
-			}
-		});
-		// If there's any remaining group, add it to the result
-		if (currentGroup.length > 0) {
-			mergedCommands.push(currentGroup.join(' '));
-		}
-		console.log(mergedCommands);
-
-
-		// TODO: refactor to switch statement for ALL possible motions for easy change when there are extra commands for a motion after tuning
-		let result: string[] = [
-			"", // no motion at first robot position
-			`${mergedCommands[0]} (${robotMotions[0]})` // first motion
-		];
-		let cmdPtr = 0;
-		let prevMotion = robotMotions[0];
-
-		for (let i = 1; i < robotMotions.length; i++) {
-			const motion = robotMotions[i];
-			const nextMotion = robotMotions[i + 1];
-
-			if (motion == "CAPTURE") {
-				prevMotion = motion;
-				continue;
-			}
-
-			// continue with same FORWARD/REVERSE motion
-			if (
-				["FORWARD", "REVERSE"].includes(motion) &&
-				motion === prevMotion
-			) {
-				if (nextMotion === "CAPTURE") {
-					result.push(`${mergedCommands[cmdPtr]} (${motion}), ${mergedCommands[cmdPtr + 1]} (${nextMotion})`);
-					cmdPtr += 1; // skip over CAPTURE commands
-				}
-				else {
-					result.push(`${mergedCommands[cmdPtr]} (${motion})`);
-				}
-				prevMotion = motion;
-				continue;
-			}
-
-			if (nextMotion === "CAPTURE") {
-				cmdPtr += 1; // new command
-				if (motion.includes("OFFSET")) {
-					// OFFSET comes in 2 commands
-					result.push(`${mergedCommands[cmdPtr]} ${mergedCommands[cmdPtr + 1]} (${motion}), ${mergedCommands[cmdPtr + 2]} (${nextMotion})`);
-					cmdPtr += 2 // skip over extra OFFSET command & CAPTURE commands
-				}
-				else if (motion.includes("TURN")) {
-					result.push(`${mergedCommands[cmdPtr]} ${mergedCommands[cmdPtr + 1]} (${motion}), ${mergedCommands[cmdPtr + 2]} (${nextMotion})`);
-					cmdPtr += 2 // skip over extra tuning command & CAPTURE commands
-				}
-				else {
-					result.push(`${mergedCommands[cmdPtr]} (${motion}), ${mergedCommands[cmdPtr + 1]} (${nextMotion})`);
-					cmdPtr += 1 // skip over CAPTURE commands
-				}
-				prevMotion = motion;
-				continue;
-			}
-
-			if (motion.includes("OFFSET")) {
-				cmdPtr += 1; // new command
-				// OFFSET comes in 2 commands
-				result.push(`${mergedCommands[cmdPtr]} ${mergedCommands[cmdPtr + 1]} (${motion})`);
-				cmdPtr += 1; // skip over extra OFFSET command
-				prevMotion = motion;
-				continue;
-			}
-
-			if (motion.includes("TURN")) {
-				cmdPtr += 1;
-				result.push(`${mergedCommands[cmdPtr]} ${mergedCommands[cmdPtr + 1]} (${motion})`);
-				cmdPtr += 1 // skip over extra tuning command
-				prevMotion = motion;
-				continue;
-			}
-
-			// handle other motions
-			cmdPtr += 1; // new command
-			result.push(`${mergedCommands[cmdPtr]} (${motion})`);
-			prevMotion = motion;
-		}
-		setCurrentCommands(result);
-	}, [robotMotions]);
-
 	return (
-		<CoreContainter title="Algorithm Simulator">
+		<div className="flex flex-col justify-center items-center my-2">
 			{/* Server Status */}
 			<ServerStatus />
 
@@ -521,7 +392,6 @@ export const AlgorithmCore = () => {
 				</div>
 			</div> */}
 
-			{/* Modified: Added Test All button alongside Run Algorithm button */}
 			<div className="mb-4 flex justify-center items-center gap-8">
 				<Button onClick={handleRunAlgorithm}>
 					<span>Run Algorithm</span>
@@ -545,7 +415,6 @@ export const AlgorithmCore = () => {
 					/>
 					<label>times</label>
 				</div>
-				{/* Test All button */}
 				<Button
 					onClick={isTestingAll || isAlgorithmLoading ? undefined : handleTestAll}
 				>
@@ -566,7 +435,7 @@ export const AlgorithmCore = () => {
 				)}
 			</div>
 
-			{/* Section to display test results in a table */}
+			{/* Test results table */}
 			{showTestResults && testAllResults.length > 0 && (
 				<div className="mb-4 p-4 border rounded">
 					<h3 className="text-center font-bold text-lg mb-2">Test Results</h3>
@@ -692,15 +561,6 @@ export const AlgorithmCore = () => {
 				</div>
 			)}
 
-			{/* Current Command */}
-			{/* {currentStep && currentCommands.length > 0 ? (
-				<div className="mt-2 mb-4 flex flex-col justify-center items-center">
-					<span className="font-bold">Command (Motion):</span>
-					<span>{currentCommands[currentStep]}</span>
-				</div>
-			) : null
-			} */}
-
 			{/* Navigation Grid */}
 			<NavigationGrid
 				robotPosition={currentRobotPosition ?? robotStartPosition}
@@ -711,19 +571,6 @@ export const AlgorithmCore = () => {
 			/>
 
 			<div className="flex justify-center gap-8">
-				{/* <div className="flex flex-col gap-2">
-					<span>Input /path response:</span>
-					<textarea
-						className="w-[400px] h-[200px]"
-						value={commandsInput}
-						onChange={(e) => setCommandsInput(e.target.value)}
-					/>
-					<Button onClick={() => convertToGrid()}>
-						Display Path
-					</Button>
-					<pre>{commandsOutput}</pre>
-				</div> */}
-
 				{robotCommands && (
 					<div className="text-center">
 						<span className="font-bold">Commands:</span>
@@ -735,6 +582,6 @@ export const AlgorithmCore = () => {
 					</div>
 				)}
 			</div>
-		</CoreContainter >
+		</div>
 	);
 };
