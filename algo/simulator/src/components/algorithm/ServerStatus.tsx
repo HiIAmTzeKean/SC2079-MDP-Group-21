@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { Button } from "../../common";
+import { useEffect, useState } from "react";
+import { Button } from "../common";
 import { HiOutlineStatusOnline, HiOutlineStatusOffline } from "react-icons/hi";
 import toast from "react-hot-toast";
-import useFetch from "../../../hooks/useFetch";
+import useFetch from "../../hooks/useFetch";
 
 export const ServerStatus = () => {
   const [isServerOnline, setIsServerOnline] = useState(false);

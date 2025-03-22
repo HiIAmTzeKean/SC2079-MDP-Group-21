@@ -25,11 +25,6 @@ DISTANCE_COST: int = 1000
 # The higher the value, the less likely the robot is to turn.
 TURN_FACTOR: int = 5
 
-# Cost of half-turning the robot.
-# The higher the value, the less likely the robot is to make half-turns.
-# weighted by 2 since it makes 2 half-turns in an offset motion
-HALF_TURN_FACTOR: int = 4 * 200
-
 # Cost of reversing the robot.
 # The higher the value, the less likely the robot is to reverse.
 REVERSE_FACTOR: int = 0
@@ -45,7 +40,8 @@ X ←----┐  .  .
 
 0: long axis, 1: short axis
 """
-# TODO: tune to 10cm interval
+# TODO STM should tune turns to 10cm intervals, then this variable should be set to the robot's actual turn displacement
+# 20cm x 10cm turn displacement measured from center of robot
 TURN_DISPLACEMENT: tuple[int, int] = [2, 1]
 
 # offset due to position of robot's center / how many cells more the robot occupies from its center cell
@@ -58,19 +54,5 @@ PADDING: int = (OFFSET + 1) * EXPANDED_CELL
 # minimum number of cells away front of robot should be from obstacle in view state generation
 MIN_CLEARANCE: int = 1  # front of robot at least 10cm away
 
-"""
-The number of grid squares the robot moves for TWO half turns on each axis. This must be tuned based on real robot movement.
-eg. Motion.FORWARD_OFFSET_LEFT: TWO half turns to end up diagonally in the specified direction
-.  . X .  .  .
-.  . ↑ .  .  .   
-.  . └o┐  .  .  
-.  .   |  .  .   
-.  .   X  .  .
-
-0: long axis, 1: short axis
-"""
-# TODO: tune to 10cm interval
-HALF_TURNS_DISPLACEMENT: tuple[int, int] = [3, 1]
-
-# TODO: remove when done testing
-W_COMMAND_FLAG = 0  # 0: disable w/W commands, 1: enable w/W cmoomands
+# Use ultrasonic sensor for straight-line motions, to reset movement error build-up
+W_COMMAND_FLAG = 0  # 0: disable w/W commands, 1: enable w/W commands

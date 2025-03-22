@@ -7,7 +7,7 @@ def setup_logger(log_level=logging.DEBUG):
     logger.setLevel(log_level)
 
     file_path = os.path.abspath(os.path.join(
-        os.path.dirname(__file__), "debug.log"))
+        os.path.dirname(__file__), "api_debug.log"))
     file_handler = logging.FileHandler(file_path)
     file_handler.setLevel(log_level)
 

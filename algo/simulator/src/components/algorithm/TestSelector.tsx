@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button, ModalContainer } from "../../common";
+import { Button, ModalContainer } from "../common";
 import { SiSpeedtest } from "react-icons/si";
 import {
   FaCheckSquare,
@@ -9,14 +9,14 @@ import {
   AlgoTestDataInterface,
   AlgoTestEnum,
   AlgoTestEnumsList,
-} from "../../../tests/algorithm";
+} from "../../tests";
 import { CustomTest } from "./CustomTest";
 
 interface TestSelectorProps {
   selectedTestEnum: AlgoTestEnum;
   setSelectedTestEnum: React.Dispatch<React.SetStateAction<AlgoTestEnum>>;
-  selectedTest: AlgoTestDataInterface; // For Managing Custom Obstacles
-  setSelectedTest: React.Dispatch<React.SetStateAction<AlgoTestDataInterface>>; // For Managing Custom Obstacles
+  selectedTest: AlgoTestDataInterface;
+  setSelectedTest: React.Dispatch<React.SetStateAction<AlgoTestDataInterface>>;
 }
 
 export const TestSelector = (props: TestSelectorProps) => {
@@ -31,7 +31,7 @@ export const TestSelector = (props: TestSelectorProps) => {
 
   return (
     <div className="mt-2 mb-4 flex justify-center items-center gap-2">
-      {/* Button */}
+      {/* Test Selection Button */}
       <Button onClick={() => setIsTestModalOpen(true)}>
         <span>Select Test - {selectedTestEnum}</span>
         <SiSpeedtest className="w-[18px] h-[18px]" />

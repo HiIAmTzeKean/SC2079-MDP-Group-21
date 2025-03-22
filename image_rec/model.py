@@ -1,8 +1,6 @@
 import cv2
-import random
 import torch
 import os
-import time
 import string
 import numpy as np
 import glob
@@ -11,64 +9,63 @@ from ultralytics import YOLO
 from pathlib import Path
 from datetime import datetime
 
-# confidence threshold for the YOLO model during inderence and file path to weights.
-MODEL_CONFIG = {"conf": 0.3, "path": Path(__file__).parent / "best_JH.pt"}
-MODEL_CONFIG_V2 = {"conf": 0.3, "path": Path(__file__).parent / "best_JH.pt"}
+# confidence threshold for the YOLO model during inference and file path to weights
+MODEL_CONFIG = {"conf": 0.3, "path": Path(__file__).parent
+                / "best_JH.pt"}  # model trained on 50k images
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 id_map = {
-    # Id Map 2
-    "10": 10, # Bullseye 
-    "11": 11, # 1 
-    "12": 12, # 2
-    "13": 13, # 3 
-    "14": 14, # 4
-    "15": 15, # 5
-    "16": 16, # 6 
-    "17": 17, # 7 
-    "18": 18, # 8
-    "19": 19, # 9
-    "20": 20, # a 
-    "21": 21, # b
-    "22": 22, # c
-    "23": 23, # d 
-    "24": 24, # e
-    "25": 25, # f
-    "26": 26, # g
-    "27": 27, # h
-    "28": 28, # s
-    "29": 29, # t 
-    "30": 30, # u
-    "31": 31, # v
-    "32": 32, # w
-    "33": 33, # x 
-    "34": 34, # y
-    "35": 35, # z 
-    "36": 36, # Up Arrow  
-    "37": 37, # Down Arrow
-    "38": 38, # Right Arrow 
-    "39": 39, # Left Arrow 
-    "40": 40  # target 
+    "10": 10,  # Bullseye
+    "11": 11,  # 1
+    "12": 12,  # 2
+    "13": 13,  # 3
+    "14": 14,  # 4
+    "15": 15,  # 5
+    "16": 16,  # 6
+    "17": 17,  # 7
+    "18": 18,  # 8
+    "19": 19,  # 9
+    "20": 20,  # a
+    "21": 21,  # b
+    "22": 22,  # c
+    "23": 23,  # d
+    "24": 24,  # e
+    "25": 25,  # f
+    "26": 26,  # g
+    "27": 27,  # h
+    "28": 28,  # s
+    "29": 29,  # t
+    "30": 30,  # u
+    "31": 31,  # v
+    "32": 32,  # w
+    "33": 33,  # x
+    "34": 34,  # y
+    "35": 35,  # z
+    "36": 36,  # Up Arrow
+    "37": 37,  # Down Arrow
+    "38": 38,  # Right Arrow
+    "39": 39,  # Left Arrow
+    "40": 40  # target
 }
+
 
 def load_model():
     model = YOLO(MODEL_CONFIG["path"])
     model.to(device)
     return model
 
-def load_model2(): 
-    model = YOLO(MODEL_CONFIG_V2["path"])
-    model.to(device)
-    return model
 
-# Filter and select the best bounding box based on selection mode
 def find_largest_or_central_bbox(bboxes, signal):
+    """
+    Filter and select the best bounding box based on selection mode
+    """
     if not bboxes:
         return "NA", 0.0
 
     # Exclude 'end' class
-    valid_bboxes = [bbox for bbox in bboxes if bbox["label"] != "10"  and bbox["confidence"] > 0.3]
+    valid_bboxes = [bbox for bbox in bboxes if bbox["label"]
+                    != "10" and bbox["confidence"] > 0.3]
     if not valid_bboxes:
         return "NA", 0.0
 
@@ -78,6 +75,7 @@ def find_largest_or_central_bbox(bboxes, signal):
 
     # Find the largest bounding box area
     max_area = max(bbox["bbox_area"] for bbox in valid_bboxes)
+    # TODO test and tune the threshold accordingly
     threshold = 0.1  # bbox is of similar size if it is within 10% range of largest bbox area
     # Get all bounding boxes with similar size to the largest bbox
     largest_bboxes = [
@@ -95,18 +93,22 @@ def find_largest_or_central_bbox(bboxes, signal):
         chosen_bbox = max(largest_bboxes, key=lambda x: x["bbox_area"])
 
     return chosen_bbox["label"], chosen_bbox["bbox_area"]
-    
-# Heuristics for predict_imgage 
-# 1. Ignore the bullseyes 
-# 2. Sort by bounding box size ( take the symbol with the largest bounding box size)
-# 3. Filter by Signal from algorithm. signal = 'L' if obstacle is on the left of robot, signal = 'R' if obstacle is right of robot (used to break a tie)
 
-# Predict and Annotate image 
-def predict_image(logger, model, model_v2, image_path, output_dir, signal):
-    """Predict and annotate image."""
+
+def predict_image(logger, model, image_path, output_dir, signal):
+    """
+    FOR TASK 1: Predict and annotate image.
+
+    Heuristics for predict_image
+    1. Ignore the bullseyes
+    2. Sort by bounding box size ( take the symbol with the largest bounding box size)
+    3. Filter by Signal from algorithm. signal = 'L' if obstacle is on the left of robot, signal = 'R' if obstacle is right of robot (used to break a tie)
+
+    Code can be further modified to use a fallback model if necessary.
+    """
     formatted_time = datetime.now().strftime('%d-%m_%H-%M-%S.%f')[:-3]
     img_name = f"processed_{formatted_time}.jpg"
-        
+
     # Perform inference
     results = model.predict(
         source=image_path,
@@ -126,29 +128,8 @@ def predict_image(logger, model, model_v2, image_path, output_dir, signal):
                 xywh = box.xywh.tolist()[0]
                 bbox_area = xywh[2] * xywh[3]
                 confidence = box.conf.tolist()[0]  # Extract confidence
-                bboxes.append({"label": label, "xywh": xywh, "bbox_area": bbox_area, "confidence": confidence})
-    # LOGIC FOR FALLBACK MODEL 
-    # else:
-    #     # No detections from model, fallback to best.pt
-    #     logger.debug("No output from bestv2.pt, falling back to best.pt")
-    #     results = model_v2.predict(
-    #         source=image_path,
-    #         save=True,
-    #         conf=MODEL_CONFIG_V2["conf"],
-    #         imgsz=640,
-    #         device=device
-    #     )
-
-    #     if results[0].boxes:
-    #         for result in results:
-    #             for box in result.boxes:
-    #                 cls_index = int(box.cls.tolist()[0])
-    #                 label = result.names[cls_index]
-    #                 xywh = box.xywh.tolist()[0]
-    #                 bbox_area = xywh[2] * xywh[3]
-    #                 confidence = box.conf.tolist()[0]
-    #                 bboxes.append({"label": label, "xywh": xywh, "bbox_area": bbox_area, "confidence": confidence})
-   
+                bboxes.append({"label": label, "xywh": xywh,
+                              "bbox_area": bbox_area, "confidence": confidence})
     logger.debug(f"Bounding boxes: '{bboxes}")
 
     # Save YOLO-labeled image
@@ -156,8 +137,9 @@ def predict_image(logger, model, model_v2, image_path, output_dir, signal):
     output_file_path = output_dir / img_name
     results[0].save(output_file_path)
     logger.debug(f"Saved processed image: '{output_file_path}'")
-    
-    selected_label, selected_area = find_largest_or_central_bbox(bboxes,signal)
+
+    selected_label, selected_area = find_largest_or_central_bbox(
+        bboxes, signal)
     image_id = id_map.get(selected_label, "NA")
 
     if selected_label != "NA":
@@ -168,18 +150,18 @@ def predict_image(logger, model, model_v2, image_path, output_dir, signal):
 
     return image_id
 
-## Task 2
-def predict_image_t2(logger, model, modelv2, image_path, output_dir, signal):
-    """Predict and annotate image, identifying only 'left' or 'right'.
+
+def predict_image_t2(logger, model, image_path, output_dir, signal):
+    """FOR TASK 2: Predict and annotate image, identifying only 'left' or 'right'.
        Defaults to 'left' (39) if no valid detection is found.
     """
     formatted_time = datetime.now().strftime('%d-%m_%H-%M-%S.%f')[:-3]
     img_name = f"processed_{formatted_time}.jpg"
 
     id_map = {
-        "38": 38,  # Right Arrow
-        "39": 39,  # Left Arrow
-        "10": 10  # Bullseye
+        "38": 38,   # Right Arrow
+        "39": 39,   # Left Arrow
+        "10": 10    # Bullseye
     }
 
     # Perform inference
@@ -205,7 +187,8 @@ def predict_image_t2(logger, model, modelv2, image_path, output_dir, signal):
 
                 # Only consider 'left' and 'right' with confidence > 0.3
                 if label in ["38", "39"] and confidence > 0.3:
-                    bboxes.append({"label": label, "xywh": xywh, "bbox_area": bbox_area, "confidence": confidence})
+                    bboxes.append(
+                        {"label": label, "xywh": xywh, "bbox_area": bbox_area, "confidence": confidence})
 
     logger.debug(f"Bounding boxes: '{bboxes}")
 
@@ -216,7 +199,8 @@ def predict_image_t2(logger, model, modelv2, image_path, output_dir, signal):
     logger.debug(f"Saved processed image: '{output_file_path}'")
 
     # Select the largest bounding box
-    selected_label, selected_area = find_largest_or_central_bbox(bboxes, signal)
+    selected_label, selected_area = find_largest_or_central_bbox(
+        bboxes, signal)
 
     # If no valid detection, default to "left" (39)
     if selected_label == "38":
@@ -238,7 +222,7 @@ def predict_image_t2(logger, model, modelv2, image_path, output_dir, signal):
 
 def resize_image(logger, image_path, output_dir):
     """
-    Resize the image at the given path to 640x640 pixels and overwrite the original image.
+    Resize the 3280px x 2464px image at the given path to 640px x 480px.
     Args:
         image_path (str or Path): Path to the image file.
     """
@@ -247,10 +231,11 @@ def resize_image(logger, image_path, output_dir):
         img = Image.open(image_path)
         # Original image size is 640x480 (picamera1) or 3280x2464 (picamera2)
         # Resize the image while maintaining aspect ratio
-        ratio = 0.1952 # scale 3280x2464 to 640x480
+        ratio = 0.1952  # scale 3280x2464 to 640x480
         resized_img = img.resize([int(ratio * s)
                                  for s in img.size], Image.LANCZOS)
-        output_path = output_dir / image_path.name.replace("processed", "resized")
+        output_path = output_dir / \
+            image_path.name.replace("processed", "resized")
         resized_img.save(output_path)
 
     except Exception as e:
@@ -259,7 +244,7 @@ def resize_image(logger, image_path, output_dir):
 
 def resize_all_images(logger, output_dir, fullsize_dir):
     """
-    Resize all images in the given directory before stitching.
+    Resize all images in the given directory while maintaining aspect ratio before stitching.
     Args:
         output_dir (Path): Directory containing images.
     """
@@ -274,7 +259,7 @@ def stitch_image(logger, output_dir, fullsize_dir):
 
     try:
         logger.debug(f"Resizing images in folder: '{fullsize_dir}'")
-        # Resize all images before proceeding
+        # Resize all images (while maintaining aspect ratio) before concatenation, since large images take longer to process
         resize_all_images(logger, output_dir, fullsize_dir)
         logger.debug(f"Saved resized images to folder: '{output_dir}'")
 
@@ -309,7 +294,7 @@ def stitch_image(logger, output_dir, fullsize_dir):
         max_height = max(heights)
 
         # Create new blank image
-        new_img = Image.new('RGB', (total_width, max_height))  
+        new_img = Image.new('RGB', (total_width, max_height))
 
         # Stitch images side by side
         x_offset = 0

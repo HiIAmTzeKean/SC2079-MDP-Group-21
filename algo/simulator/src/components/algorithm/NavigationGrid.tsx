@@ -1,6 +1,6 @@
-import { Position, Obstacle, Direction } from "../../../schemas/entity";
-import { GRID_TOTAL_HEIGHT, GRID_TOTAL_WIDTH, ROBOT_ACTUAL_GRID_HEIGHT, ROBOT_ACTUAL_GRID_WIDTH, ROBOT_GRID_HEIGHT, ROBOT_GRID_WIDTH } from "../../../constants";
-import { AlgoTestDataInterface } from "../../../tests/algorithm";
+import { Position, Obstacle, Direction } from "../../schemas/entity";
+import { GRID_TOTAL_HEIGHT, GRID_TOTAL_WIDTH, ROBOT_ACTUAL_GRID_HEIGHT, ROBOT_ACTUAL_GRID_WIDTH, ROBOT_GRID_HEIGHT, ROBOT_GRID_WIDTH } from "../../constants";
+import { AlgoTestDataInterface } from "../../tests";
 import { useEffect, useState } from "react";
 
 interface NavigationGridProps {
@@ -221,15 +221,14 @@ export const NavigationGrid = (props: NavigationGridProps) => {
         const { x: x1, y: y1 } = getSVGCoords(prevPos);
         const { x: x2, y: y2 } = getSVGCoords(currentPos);
 
-        // Detect direction change by comparing 'd' values
+        // detect direction change
         const directionChanged = prevPos.d !== currentPos.d;
 
-        // Calculate control point for the curve
-        // Place it at the corner where the straight lines would meet
+        // calculate control point for the curve & place it at intersection corner of straight lines
         const controlX = directionChanged ? x1 : (x1 + x2) / 2;
         const controlY = directionChanged ? y2 : (y1 + y2) / 2;
 
-        // Create curved path using quadratic Bezier curve
+        // create curved path using quadratic Bezier curve
         const pathData = `M ${x1} ${y1} Q ${controlX} ${controlY}, ${x2} ${y2}`;
 
         return (

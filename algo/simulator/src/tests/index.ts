@@ -1,4 +1,4 @@
-import { Obstacle } from "../../schemas/entity";
+import { Obstacle } from "../schemas/entity";
 import {
 	Basic_Mock,
 	Basic_Corners,

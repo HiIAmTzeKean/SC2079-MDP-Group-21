@@ -18,7 +18,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from algo.algorithms.algo import MazeSolver  # nopep8
 from algo.tools.commands import CommandGenerator  # nopep8
-from image_rec.model import load_model, load_model2, predict_image, predict_image_t2, stitch_image  # nopep8
+from image_rec.model import load_model, predict_image, predict_image_t2, stitch_image  # nopep8
 
 app = Flask(__name__)
 
@@ -31,7 +31,6 @@ CORS(app)
 
 # load model for image recognition
 model = load_model()  # Default model
-modelv2 = load_model2()  # Backup model
 
 # poll wi-fi SSID to check that RPI can connect to API server
 # TODO remove if this causes any performance issues or bugs
@@ -43,8 +42,7 @@ class Status(Resource):
     @api.response(model=restx_models["Ok"], code=200, description="Success")
     def get(self):
         """
-        This is a health check endpoint to check if the server is running
-        :return: a json object with a key "result" and value "ok"
+        To check if the server is running
         """
         return marshal(
             {
@@ -74,8 +72,7 @@ class PathFinding(Resource):
     @api.response(model=restx_models["Error"], code=500, description="Internal Server Error")
     def post(self):
         """
-        This is the main endpoint for the path finding algorithm
-        :return: a json object with a key "data" and value a dictionary with keys "distance", "path", and "commands"
+        For RPI to request pathfinding algorithm
         """
         try:
             # Get the json data from the request
@@ -151,7 +148,6 @@ class SimulatorPathFinding(Resource):
     def post(self):
         """
         FOR SIMULATOR TESTING ONLY. RPI SHOULD NOT BE USING THIS ENDPOINT
-        :return: a json object with a key "data" and value a dictionary with keys "distance", "path", and "commands"
         """
         try:
             # Get the json data from the request
@@ -238,8 +234,7 @@ class ImagePredict(Resource):
     def post(self):
         try:
             """
-            This is the main endpoint for the image prediction algorithm
-            :return: a json object of a dictionary with keys "obstacle_id" and "image_id"
+            For image recognition. Uncomment code for Task 1 / Task 2 respectively
             """
             file = request.files['file']
             filename = file.filename
@@ -263,11 +258,11 @@ class ImagePredict(Resource):
 
             # # Week 8 (Task 1)
             # image_id = predict_image(
-            #     logger, model, modelv2, file_path, output_dir, signal)
-            
-            # Week 9 (Task 2)
+            #     logger, model, file_path, output_dir, signal)
+
+            # Week 9 (Task 2: only detects arrows & bullseyes)
             image_id = predict_image_t2(
-                logger, model, modelv2, file_path, output_dir, signal)
+                logger, model, file_path, output_dir, signal)
             return marshal(
                 {
                     "obstacle_id": obstacle_id,
@@ -288,7 +283,7 @@ class Stitch(Resource):
     @api.response(model=restx_models["Error"], code=500, description="Internal Server Error")
     def get(self):
         """
-        This is the main endpoint for the stitching command. Stitches the images using two different functions, in effect creating two stitches, just for redundancy purposes
+        Concatenates snapped images from RPI, to be shown as proof to examiners
         """
         try:
             output_dir = Path("image_rec_files/output")

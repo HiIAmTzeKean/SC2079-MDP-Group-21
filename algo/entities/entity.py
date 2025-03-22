@@ -1,5 +1,5 @@
 from typing import Union
-from algo.tools.consts import SCREENSHOT_COST, DISTANCE_COST, PADDING, MID_TURN_PADDING, TURN_PADDING, ARENA_HEIGHT, ARENA_WIDTH, OFFSET, MIN_CLEARANCE, OBSTACLE_SIZE
+from algo.tools.consts import SCREENSHOT_COST, DISTANCE_COST, PADDING, TURN_PADDING, MID_TURN_PADDING, ARENA_HEIGHT, ARENA_WIDTH, OFFSET, MIN_CLEARANCE, OBSTACLE_SIZE
 from algo.tools.movement import Direction
 from math import sqrt
 
@@ -15,28 +15,9 @@ class CellState:
         self.screenshot_id: Union[int, None] = screenshot_id
         self.penalty: int = penalty  # Penalty for the view point of taking picture
 
-    def cmp_position(self, x: int, y: int) -> bool:
-        """Compare given (x,y) position with cell state's position
-
-        Args:
-            x (int): x coordinate
-            y (int): y coordinate
-
-        Returns:
-            bool: True if same, False otherwise
-        """
-        return self.x == x and self.y == y
-
     def is_eq(self, x: int, y: int, direction: Direction) -> bool:
-        """Compare given x, y, direction with cell state's position and direction
-
-        Args:
-            x (int): x coordinate
-            y (int): y coordinate
-            direction (Direction): direction of cell
-
-        Returns:
-            bool: True if same, False otherwise
+        """
+        Compare given x, y, direction with this cell state's position and direction
         """
         return self.x == x and self.y == y and self.direction == direction
 
@@ -45,18 +26,11 @@ class CellState:
         return "Cellstate(x: {}, y: {}, direction: {}, screenshot: {})".format(self.x, self.y, Direction(self.direction), self.screenshot_id)
 
     def set_screenshot(self, screenshot_id: int) -> None:
-        """Set screenshot id for cell
-
-        Args:
-            screenshot_id (int): screenshot id of cell
-        """
         self.screenshot_id = screenshot_id
 
     def get_dict(self) -> dict[str, Union[int, None]]:
-        """Returns a dictionary representation of the cell
-
-        Returns:
-            dict: {x,y,direction,screeshot_id}
+        """
+        Returns a dictionary representation of the cell
         """
         return {'x': self.x, 'y': self.y, 'd': self.direction, 's': self.screenshot_id}
 
@@ -69,13 +43,8 @@ class Obstacle(CellState):
         self.obstacle_id: int = obstacle_id
 
     def __eq__(self, other: object) -> bool:
-        """Checks if this obstacle is the same as input in terms of x, y, and direction
-
-        Args:
-            other (Obstacle): input obstacle to compare to
-
-        Returns:
-            bool: True if same, False otherwise
+        """
+        Checks if this obstacle is the same as input obstacle in terms of x, y, and direction
         """
         return self.x == other.x and self.y == other.y and self.direction == other.direction
 
@@ -83,7 +52,7 @@ class Obstacle(CellState):
         """
         Constructs the list of CellStates from which the robot can view the image on the obstacle properly.
         Currently checks a T shape of grids in front of the image
-        "TODO: tune the grid values based on testing
+        TODO: Tune the possible view states based on testing. More view states means a longer algo runtime
 
         Returns:
             list[CellState]: Valid cell states where robot can be positioned to view the symbol on the obstacle
@@ -105,8 +74,8 @@ class Obstacle(CellState):
             costs = [
                 SCREENSHOT_COST + DISTANCE_COST,        # robot camera is left of obstacle
                 SCREENSHOT_COST + DISTANCE_COST,        # robot camera is right of obstacle
-                0,                      # robot camera is positioned just nice
-                DISTANCE_COST,          # robot camera is close to obstacle
+                0,                                      # robot camera is positioned just nice
+                DISTANCE_COST,                          # robot camera is close to obstacle
             ]
 
             for idx, pos in enumerate(positions):
@@ -183,22 +152,15 @@ class Obstacle(CellState):
                     )
         return cells
 
-    def get_obstacle_id(self) -> int:
-        return self.obstacle_id
-
-    def is_valid_position(self, center_x: int, center_y: int) -> bool:
-        """Checks if given position is within bounds
-
-        Inputs
-        ------
-        center_x (int): x-coordinate
-        center_y (int): y-coordinate
-
-        Returns
-        -------
-        bool: True if valid, False otherwise
+    def is_valid_position(self, x: int, y: int) -> bool:
         """
-        return 0 < center_x < ARENA_WIDTH - 1 and 0 < center_y < ARENA_HEIGHT - 1
+        Checks if given position of robot is within bounds
+
+        Args:
+            x (int): x-coordinate of robot (wrt center)
+            y (int): y-coordinate of robot (wrt center)
+        """
+        return 0 < x < ARENA_WIDTH - 1 and 0 < y < ARENA_HEIGHT - 1
 
 
 class Grid:
@@ -222,8 +184,7 @@ class Grid:
         Ensures that list of Obstacles is always sorted so that the same optimal path is returned for the same obstacles in different orders.
 
         NOTE: Sorting is just a band-aid fix to to ensure consistency. 
-        There may be issues in the pathfinding algorithm or the A* heuristic may not be admissible 
-        which is causing different paths to be returned for same obstacles in different orders
+        There may be issues in the pathfinding algorithm or the A* heuristic may not be admissible which is causing different paths to be returned for same obstacles in different orders
 
         Args:
             obstacle (Obstacle): Obstacle to be added
@@ -231,18 +192,6 @@ class Grid:
         if obstacle not in self.obstacles:
             self.obstacles.append(obstacle)
             self.obstacles.sort(key=lambda ob: (ob.x, ob.y))
-
-    def reset_obstacles(self) -> None:
-        """
-        Resets the obstacles in the grid
-        """
-        self.obstacles = []
-
-    def get_obstacles(self) -> list[Obstacle]:
-        """
-        Returns the list of obstacles in the grid
-        """
-        return self.obstacles
 
     def reachable(self, x: int, y: int) -> bool:
         """Checks whether the given x,y coordinate is reachable/safe for the robot from a straight movement.
@@ -273,9 +222,8 @@ class Grid:
             1. pre-turn: if the obstacle is within the padding distance from the starting point
             2. post-turn: if the obstacle is within the padding distance from the end point
             3. turn:
-                    Finds 3 points near the curve followed by the robot during the turn
-                    For each point, checks if the obstacle is within the padding distance
-        (For more details regarding the 3 points, refer to the _get_turn_checking_points function)
+                Finds 3 points near the curve followed by the robot during the turn
+                For each point, checks if the obstacle is within the padding distance
         """
 
         points = self._get_turn_checking_points(x, y, new_x, new_y, direction)
@@ -310,58 +258,21 @@ class Grid:
 
         return True
 
-    def half_turn_reachable(self, x: int, y: int, new_x: int, new_y: int) -> bool:
-        """
-        Checks if the robot can make 2 half-turns from x, y to new_x, new_y
-        Logic:
-            find the longer axis for the movement, and add padding to the shorter axis.
-            Check if the obstacle is within the padded area
-        """
-        # create a path with padding from x, y to new_x, new_y and check if it is reachable
-        if not self.is_valid_coord(x, y) or not self.is_valid_coord(new_x, new_y):
-            return False
-
-        # ensure that new_x > x so we can compare to obstacle coordinates later
-        if new_x < x:
-            new_x, x = x, new_x
-        if new_y < y:
-            new_y, y = y, new_y
-
-        for obs in self.obstacles:
-            if abs(x-new_x) > abs(y-new_y):
-                # x is the longer axis
-                # Use padding for the shorter y-axis to account for small vertical deviations when robot is moving mostly horizontally
-                if x <= obs.x <= new_x and y - PADDING <= obs.y <= new_y + PADDING:
-                    return False
-            else:
-                # y is the longer axis
-                # Use padding for the shorter x-axis to account for small horizontal deviations when robot is moving mostly vertically
-                if x - PADDING <= obs.x <= new_x + PADDING and y <= obs.y <= new_y:
-                    return False
-        return True
-
     def is_valid_coord(self, x: int, y: int) -> bool:
         """
         Checks if given position is within bounds
         """
         return 0 < x < self.size_x - 1 and 0 < y < self.size_y - 1
 
-    def is_valid_cell_state(self, state: CellState) -> bool:
-        """
-        Checks if given state is within bounds
-        """
-        return self.is_valid_coord(state.x, state.y)
-
     def get_view_obstacle_positions(self) -> list[list[CellState]]:
         """
         This function return a list of desired states for the robot to achieve based on the obstacle position and direction.
         The state is the position that the robot can see the image of the obstacle and is safe to reach without collision
-        :return: [[CellState]]
         """
 
         optimal_positions = []
         for obstacle in self.obstacles:
-            # skip objects that have SKIP as their direction
+            # skip obstacles with no direction
             if obstacle.direction == Direction.SKIP:
                 continue
             else:
