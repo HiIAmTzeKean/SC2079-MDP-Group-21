@@ -269,24 +269,24 @@ def resize_all_images(logger, output_dir, fullsize_dir):
 
 
 def stitch_image(logger, output_dir, fullsize_dir):
-    output_filename = "concatenated.jpg"
-    output_path = output_dir / output_filename
+    output_filename = "concatenated"
+    output_path = output_dir / f"{output_filename}.jpg"
 
     try:
-        # logger.debug(f"Resizing images in folder: '{fullsize_dir}'")
+        logger.debug(f"Resizing images in folder: '{fullsize_dir}'")
         # Resize all images before proceeding
-        # resize_all_images(logger, output_dir, fullsize_dir)
-        # logger.debug(f"Saved resized images to folder: '{output_dir}'")
+        resize_all_images(logger, output_dir, fullsize_dir)
+        logger.debug(f"Saved resized images to folder: '{output_dir}'")
 
         # Get all image files
         image_files = [
-            path for path in fullsize_dir.iterdir()
+            path for path in output_dir.iterdir()
             if path.is_file()
             and path.suffix.lower() in ('.png', '.jpg', '.jpeg')
-            and path.name.lower() != output_filename  # Exclude stitched image
+            and output_filename not in path.name.lower()  # Exclude stitched image
         ]
         if not image_files:
-            logger.debug(f"No image files found in '{fullsize_dir}'.")
+            logger.debug(f"No image files found in '{output_dir}'.")
             return
 
         images = []
