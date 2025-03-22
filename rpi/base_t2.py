@@ -6,13 +6,12 @@ from multiprocessing import Process
 from typing import Optional
 
 import requests
-from picamera2 import Picamera2, Preview
 
 from .base_rpi import RaspberryPi
 from .communication.android import AndroidMessage
 from .communication.camera import snap_using_picamera2
 from .communication.pi_action import PiAction
-from .constant.consts import Category, stm32_prefixes, FORWARD_SPEED_OUTDOOR
+from .constant.consts import FORWARD_SPEED_OUTDOOR, STALL_TIME, Category, stm32_prefixes
 from .constant.settings import API_TIMEOUT, URL
 
 
@@ -65,7 +64,6 @@ class TaskTwo(RaspberryPi):
 
             logger.info("Child Processes started")
             self.finish_all.wait()
-            # self.picam2.close()
             self.stop()
             processes = [getattr(self, attr) for attr in dir(self) if attr.startswith("proc_")]
             for process in processes:
@@ -77,7 +75,7 @@ class TaskTwo(RaspberryPi):
         except KeyboardInterrupt:
             self.stop()
 
-    def set_actions(self, action_list) -> None:
+    def set_actions(self, action_list: list) -> None:
         """Sets the actions for the RPi"""
         for action in action_list:
             logger.debug(f"putting action {action} in queue")
@@ -245,7 +243,7 @@ class TaskTwo(RaspberryPi):
                 logger.info("stalling robot")
                 while self.outstanding_stm_instructions.get() != 0:
                     pass
-                time.sleep(0.1)
+                time.sleep(STALL_TIME)
                 logger.info("stall complete")
                 self.unpause.set()
 
@@ -321,7 +319,6 @@ class TaskTwo(RaspberryPi):
             filename=filename,
             filename_send=filename_send,
             url=url,
-            # picam2=self.picam2,
         )
         logger.info(results)
         return results

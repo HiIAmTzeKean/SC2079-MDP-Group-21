@@ -52,6 +52,7 @@ class Category(Enum):
     STITCH = 'stitch'
     FIN = 'FIN'
 
+STALL_TIME = 0.1
 
 FORWARD_SPEED_INDOOR = 80
 TRACKING_SPEED_INDOOR = 80

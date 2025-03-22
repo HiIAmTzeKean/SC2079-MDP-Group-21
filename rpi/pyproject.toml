@@ -1,14 +1,15 @@
 [project]
 name = "rpi"
 version = "0.1.0"
-description = "Add your description here"
+description = "rpi-team stuff (swag)"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = "==3.9"
 dependencies = [
     "colorzero>=2.0",
     "pybluez",
     "pyserial>=3.5",
     "requests>=2.32.3",
+    "picamera2",
 ]
 
 [dependency-groups]
