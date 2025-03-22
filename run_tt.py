@@ -1,5 +1,7 @@
 # change the import to the code you want to run
-from rpi.task2_outdoor import TaskTwoOutdoor
+from rpi.task1 import TaskOne
+
 
 if __name__ == "__main__":
-    TaskTwoOutdoor.start()
+    bot = TaskOne()
+    bot.start()

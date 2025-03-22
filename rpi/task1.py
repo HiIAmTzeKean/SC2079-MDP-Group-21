@@ -3,16 +3,16 @@ import logging
 import queue
 import time
 from multiprocessing import Process
-from typing import Any, Optional
+from typing import Optional
 
 import requests
 
 from .base_rpi import RaspberryPi
 from .communication.android import AndroidMessage
-from .communication.camera import snap_using_libcamera, snap_using_picamera2
+from .communication.camera import snap_using_picamera2
 from .communication.pi_action import PiAction
-from .constant.consts import Category, manual_commands, stm32_prefixes
-from .constant.settings import URL, API_TIMEOUT
+from .constant.consts import Category, stm32_prefixes
+from .constant.settings import API_TIMEOUT, URL
 
 
 logger = logging.getLogger(__name__)
