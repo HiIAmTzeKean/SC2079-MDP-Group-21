@@ -3,10 +3,10 @@ import { Direction, Position } from "../schemas/entity";
 export const API_IP = "localhost"; // TODO: replace with your PC's local IPv4 address
 export const PORT = "5000";
 
-// Robot's Environment - Grid Format
+// Robot's Environment in grid cell units
 const WIDTH_CM = 200;
 const HEIGHT_CM = 200;
-export const GRID_BLOCK_SIZE_CM = 10; // *Size of each block in cm
+export const GRID_BLOCK_SIZE_CM = 10; // Size of each block in cm
 
 export const GRID_TOTAL_WIDTH = WIDTH_CM / GRID_BLOCK_SIZE_CM; // 20
 export const GRID_TOTAL_HEIGHT = HEIGHT_CM / GRID_BLOCK_SIZE_CM; // 20
@@ -40,5 +40,5 @@ export const ROBOT_INITIAL_POSITION: Position = {
 export const GRID_ANIMATION_SPEED = 100; // in milli-seconds
 
 if (!API_IP) {
-	throw Error("Update `API_IP` in `algo/simulator/src/constants/index.ts`");
+  throw Error("Update `API_IP` in `algo/simulator/src/constants/index.ts`");
 }

@@ -16,7 +16,6 @@ const handleResponse = async (response: Response) => {
   }
 };
 
-// Custom fetch hook
 const useFetch = () => {
   const get = async (url: string) => {
     const requestOptions: RequestInit = {
@@ -46,7 +45,7 @@ const useFetch = () => {
     return handleResponse(response);
   };
 
-  // prefixed with underscored because delete is a reserved word in javascript
+  // prefixed with "_" since "delete" is a reserved word in javascript
   const _delete = async (url: string) => {
     const requestOptions: RequestInit = {
       method: "DELETE",

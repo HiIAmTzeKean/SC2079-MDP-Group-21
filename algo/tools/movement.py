@@ -13,7 +13,7 @@ class Direction(int, Enum):
         return self.value
 
     @staticmethod
-    def rotation_cost(d1: "Direction", d2: "Direction") -> int:
+    def turn_cost(d1: "Direction", d2: "Direction") -> int:
         """
         Calculate the cost of turning from direction d1 to direction d2
         If the robot does not turn, the cost is 0.
@@ -60,8 +60,8 @@ class Direction(int, Enum):
         return self.name
 
 
-# move direction is a list of the possible moves the robot can make
-MOVE_DIRECTION: list[tuple[int, int, Direction]]= [
+# move direction is a list of the possible moves the robot can make (x, y, direction)
+MOVE_DIRECTION: list[tuple[int, int, Direction]] = [
     (1, 0, Direction.EAST),
     (-1, 0, Direction.WEST),
     (0, 1, Direction.NORTH),
@@ -72,27 +72,15 @@ MOVE_DIRECTION: list[tuple[int, int, Direction]]= [
 class Motion(int, Enum):
     """
     Enum class for the motion of the robot between two cells
-
-    For OFFSET, make two half turns to end up diagonally in the specified direction
-    eg. FORWARD_OFFSET_LEFT 
-    .  . X .  .  .
-    .  . ↑ .  .  .   
-    .  . └o┐  .  .  
-    .  .   |  .  .   
-    .  .   X  .  .
     """
     # the robot can move in 10 different ways from one cell to another
     # designed so that 10 - motion = opposite motion
     FORWARD_LEFT_TURN: int = 0
-    FORWARD_OFFSET_LEFT: int = 1
     FORWARD: int = 2
-    FORWARD_OFFSET_RIGHT: int = 3
     FORWARD_RIGHT_TURN: int = 4
 
     REVERSE_LEFT_TURN: int = 10
-    REVERSE_OFFSET_RIGHT: int = 9
     REVERSE: int = 8
-    REVERSE_OFFSET_LEFT: int = 7
     REVERSE_RIGHT_TURN: int = 6
 
     CAPTURE: int = 1000
@@ -131,27 +119,9 @@ class Motion(int, Enum):
         if self == Motion.CAPTURE:
             raise ValueError("Capture motion does not have a reverse cost")
         elif self in [
-            Motion.REVERSE_OFFSET_LEFT,
-            Motion.REVERSE_OFFSET_RIGHT,
             Motion.REVERSE_LEFT_TURN,
             Motion.REVERSE_RIGHT_TURN,
             Motion.REVERSE
-        ]:
-            return 1
-        else:
-            return 0
-
-    def half_turn_cost(self) -> int:
-        """
-        If the motion is a half turn motion, return the cost of the motion.
-        Returns:
-            int:
-        """
-        if self in [
-            Motion.FORWARD_OFFSET_LEFT,
-            Motion.FORWARD_OFFSET_RIGHT,
-            Motion.REVERSE_OFFSET_LEFT,
-            Motion.REVERSE_OFFSET_RIGHT,
         ]:
             return 1
         else:

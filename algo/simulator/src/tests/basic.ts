@@ -1,5 +1,5 @@
 import { AlgoTestDataInterface } from ".";
-import { Direction } from "../../schemas/entity";
+import { Direction } from "../schemas/entity";
 
 export const Basic_Mock: AlgoTestDataInterface = {
   obstacles: [

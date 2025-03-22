@@ -1,12 +1,12 @@
 import { Layout } from "./components/misc";
-import { AlgorithmCore } from "./components/core/algorithm";
+import { AlgorithmMenu } from "./components/algorithm";
 
 function App() {
 
   return (
     <div id="app-container">
       <Layout>
-        <AlgorithmCore />
+        <AlgorithmMenu />
       </Layout>
     </div>
   );

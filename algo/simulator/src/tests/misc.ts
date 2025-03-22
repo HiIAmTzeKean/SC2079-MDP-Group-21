@@ -1,5 +1,5 @@
 import { AlgoTestDataInterface } from ".";
-import { Direction } from "../../schemas/entity";
+import { Direction } from "../schemas/entity";
 
 export const Misc_Custom: AlgoTestDataInterface = {
 	obstacles: [],

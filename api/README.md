@@ -38,4 +38,5 @@ Server application and Swagger documentation will be running on http://localhost
 
 Image recognition files will be stored in `/api/image_rec_files`. 
 `/api/image_rec_files/uploads/`: contains the images sent in the POST request to the `/image` API endpoint
-`/api/image_rec_files/output/`: contains the processed images with bounding boxes
+`/api/image_rec_files/output/fullsize`: contains the full-size processed images with bounding boxes
+`/api/image_rec_files/output/`: contains the resized processed images with bounding boxes and output concatenated image
