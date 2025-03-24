@@ -140,6 +140,10 @@ public class BluetoothActivity extends AppCompatActivity {
         canvasButton.setOnClickListener(view -> {
             startActivity(new Intent(this, CanvasActivity.class));
         });
+        Button redBtnButton = findViewById(R.id.btnBigRed);
+        redBtnButton.setOnClickListener(view -> {
+            startActivity(new Intent(this, RedButtonActivity.class));
+        });
 
         connectedPanel = findViewById(R.id.connectedLayout);
         if (myApp.btConnection() == null)
