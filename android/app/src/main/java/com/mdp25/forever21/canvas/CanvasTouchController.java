@@ -45,7 +45,7 @@ public class CanvasTouchController implements View.OnTouchListener {
         CanvasView canvasView = (CanvasView) v; // do an unchecked cast, should be fine
         int x = (int) ((event.getX() - canvasView.getOffsetX()) / canvasView.getCellSize());
         int y = (int) ((event.getY() - canvasView.getOffsetY()) / canvasView.getCellSize());
-        y = (Grid.GRID_SIZE - 1) - y; // Flip Y to match bottom-left origin
+        y = (Grid.GRID_SIZE - 1) - y; // flip Y to match bottom-left origin
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
@@ -73,30 +73,21 @@ public class CanvasTouchController implements View.OnTouchListener {
                     int oldY = obstacle.getPosition().getYInt();
                     Log.d(TAG, downX + " " + downY + " " + upX + " " + upY);
                     if (downX == upX && downY == upY) { // if the finger is lifted on the same cell
-                        // Rotate obstacle clockwise if lifted on the same cell
+                        // rotate obstacle clockwise if lifted on the same cell
                         obstacle.rotateClockwise();
-                        // some fake log to show rotating of obstacles
-//                        if (myApp.btConnection() != null)
-//                            myApp.btConnection().sendMessage("OBST_ROT," + obstacle.getId() + "," + finalX + "," + finalY);
                         Log.d(TAG, "Rotated obstacle clockwise at " + obstacle.getPosition());
-                        canvasView.invalidate(); // Refresh canvas
+                        canvasView.invalidate();
                     } else if (!grid.isInsideGrid(upX, upY)) { // if finger lifted outside of grid
-                        // Remove if lifted outside the grid
+                        // remove if lifted outside the grid
                         grid.removeObstacle(oldX, oldY);
-                        // some fake log to show removing of obstacles
-//                        if (myApp.btConnection() != null)
-//                            myApp.btConnection().sendMessage("OBST_REMOVE," + obstacle.getId() + "," + oldX + "," + oldY);
                         Log.d(TAG, "Removed obstacle at (" + oldX + ", " + oldY + ")");
-                        canvasView.invalidate(); // Refresh canvas
+                        canvasView.invalidate();
                     } else if (!grid.hasObstacle(upX, upY)) { // if finger lifted on empty cell
-                        // Move obstacle only if lifted on an empty cell
+                        // move obstacle only if lifted on an empty cell
                         obstacle.updatePosition(upX, upY);
-                        // some fake log to show moving of obstacles
-//                        if (myApp.btConnection() != null)
-//                            myApp.btConnection().sendMessage("OBST_MOVE,"  + obstacle.getId() + "," + oldX + "," + oldY + "," + finalX + "," + finalY);
                         Log.d(TAG, "Moved obstacle from (" + oldX + ", " + oldY + ") to (" + upX + ", " + upY + ")");
                         Toast.makeText(myApp, "Moved obst to (" + upX + ", " + upY + ")", Toast.LENGTH_SHORT).show();
-                        canvasView.invalidate(); // Refresh canvas
+                        canvasView.invalidate();
                     }
                 } else {
                     // If no obstacle was selected, add a new one

@@ -36,18 +36,18 @@ public class CanvasView extends View {
     }
 
     private void init() {
-        // Grid styling
+        // grid styling
         gridPaint.setColor(Color.BLACK);
         gridPaint.setStrokeWidth(2);
         gridPaint.setStyle(Paint.Style.STROKE);
 
-        // Label text styling
+        // label text styling
         textPaint.setColor(Color.BLACK);
         textPaint.setTextSize(20);  // Adjust for readability
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setFakeBoldText(true);
 
-        // Obstacle styling
+        // obstacle styling
         obstaclePaint.setColor(Color.BLACK);
         obstaclePaint.setStyle(Paint.Style.FILL);
         obstacleSelectedPaint.setColor(Color.GRAY);
@@ -59,19 +59,19 @@ public class CanvasView extends View {
         idPaint.setFakeBoldText(false);
         idPaint.setTextSize(16);
 
-        // Target styling
+        // target styling
         targetPaint.setColor(Color.GREEN);
         targetPaint.setTextAlign(Paint.Align.CENTER);
         targetPaint.setFakeBoldText(true);
         targetPaint.setTextSize(24);
 
-        // Facing indicator styling (Orange Strip)
-        facingPaint.setColor(Color.rgb(255, 165, 0)); // Orange color
+        // facing indicator styling (Orange)
+        facingPaint.setColor(Color.rgb(255, 165, 0));
         facingPaint.setStyle(Paint.Style.FILL);
 
-        // Initialize startRegionPaint
+        // initialize startRegionPaint
         startRegionPaint.setColor(Color.GREEN);
-        startRegionPaint.setStrokeWidth(4);  // Make it slightly thicker
+        startRegionPaint.setStrokeWidth(4);
         startRegionPaint.setStyle(Paint.Style.STROKE);
     }
 
@@ -81,10 +81,10 @@ public class CanvasView extends View {
 
         int gridSize = Grid.GRID_SIZE;
 
-        // Compute cell size dynamically
+        // cell size dynamic computation
         cellSize = Math.min(w, h) / (gridSize + 2); // +2 for axis labels
 
-        // Offset to keep grid centered
+        // offset to center grid
         offsetX = (w - (gridSize * cellSize)) / 2;
         offsetY = (h - (gridSize * cellSize)) / 2;
     }
@@ -113,13 +113,13 @@ public class CanvasView extends View {
         bluePaint.setStrokeWidth(2);
         bluePaint.setStyle(Paint.Style.STROKE);
 
-        // Draw vertical grid lines (alternating colors)
+        // draw vertical grid lines with alternating colors
         for (int i = 0; i <= gridSize; i++) {
             Paint paintToUse = (i % 2 == 0) ? redPaint : bluePaint;
             canvas.drawLine(offsetX + i * cellSize, offsetY, offsetX + i * cellSize, offsetY + gridHeight, paintToUse);
         }
 
-        // Draw horizontal grid lines (alternating colors)
+        // draw horizontal grid lines with alternating colors
         for (int i = 0; i <= gridSize; i++) {
             Paint paintToUse = (i % 2 == 0) ? bluePaint : redPaint;
             canvas.drawLine(offsetX, offsetY + i * cellSize, offsetX + gridWidth, offsetY + i * cellSize, paintToUse);
@@ -129,49 +129,49 @@ public class CanvasView extends View {
     private void drawStartRegion(Canvas canvas) {
         int left = offsetX;
         int right = offsetX + (4 * cellSize);
-        int top = offsetY + ((Grid.GRID_SIZE - 4) * cellSize); // Flip y-axis
+        int top = offsetY + ((Grid.GRID_SIZE - 4) * cellSize); // flip y-axis
         int bottom = offsetY + (Grid.GRID_SIZE * cellSize);
 
-        // Draw the green boundary lines
-        canvas.drawLine(left, bottom, right, bottom, startRegionPaint); // Bottom line (0,0) to (4,0)
-        canvas.drawLine(left, top, right, top, startRegionPaint);       // Top line (0,4) to (4,4)
-        canvas.drawLine(left, top, left, bottom, startRegionPaint);     // Left line (0,0) to (0,4)
-        canvas.drawLine(right, top, right, bottom, startRegionPaint);   // Right line (4,0) to (4,4)
+        // draw the green boundary lines
+        canvas.drawLine(left, bottom, right, bottom, startRegionPaint); // bottom line (0,0) to (4,0)
+        canvas.drawLine(left, top, right, top, startRegionPaint);       // top line (0,4) to (4,4)
+        canvas.drawLine(left, top, left, bottom, startRegionPaint);     // left line (0,0) to (0,4)
+        canvas.drawLine(right, top, right, bottom, startRegionPaint);   // right line (4,0) to (4,4)
     }
 
     private void drawAxisLabels(Canvas canvas) {
         int gridSize = Grid.GRID_SIZE;
 
-        // Adjustments for positioning
-        float yLabelOffsetY = cellSize / 4f;  // Shift down for Y-axis labels
+        // adjustments for positioning
+        float yLabelOffsetY = cellSize / 4f;  // shift down for Y-axis labels
 
-        // Draw X-axis labels (below the grid)
+        // draw X-axis labels
         for (int x = 0; x < gridSize; x++) {
-            if (x == 0) continue; // Skip drawing "0" here to avoid duplication at (0,0)
+            if (x == 0) continue; // skip drawing "0" here to avoid duplication at (0,0)
             canvas.drawText(
                     String.valueOf(x),
-                    offsetX + x * cellSize,  // Align with left vertical grid line
-                    offsetY + (gridSize * cellSize) + 30,    // Shift below grid
+                    offsetX + x * cellSize,  // align with left vertical grid line
+                    offsetY + (gridSize * cellSize) + 30,    // shift below grid
                     textPaint
             );
         }
 
-        // Draw Y-axis labels (left of the grid)
+        // draw Y-axis labels
         for (int y = 0; y < gridSize; y++) {
-            if (y == 0) continue; // Skip drawing "0" here to avoid duplication at (0,0)
+            if (y == 0) continue; // skip drawing "0" here to avoid duplication at (0,0)
             canvas.drawText(
                     String.valueOf(y),
-                    offsetX - 30,  // Shift left of the grid
-                    offsetY + (gridSize - y) * cellSize + yLabelOffsetY,  // Align with bottom horizontal grid line
+                    offsetX - 30,  // shift left of the grid
+                    offsetY + (gridSize - y) * cellSize + yLabelOffsetY,  // align with bottom horizontal grid line
                     textPaint
             );
         }
 
-        // Draw (0,0) label at bottom-left of the grid
+        // draw (0,0)
         canvas.drawText(
                 "0",
-                offsetX - 30,  // Align to left of the grid
-                offsetY + (gridSize * cellSize) + 30,  // Align to bottom of the grid
+                offsetX - 30,  // align to left of the grid
+                offsetY + (gridSize * cellSize) + 30,  // align to bottom of the grid
                 textPaint
         );
     }
@@ -187,26 +187,26 @@ public class CanvasView extends View {
             boolean selected = gridObstacle.isSelected();
             canvas.drawRect(left, top, right, bottom, selected ? obstacleSelectedPaint : obstaclePaint);
 
-            // Compute text position (center of cell)
+            // compute center of cell for text position
             float textX = left + (cellSize / 2);
             float textY = top + (cellSize / 2) - ((idPaint.descent() + idPaint.ascent()) / 2);
 
             if(gridObstacle.getTarget() == null){
-                // Draw ID text (no target yet)
+                // draw ID text where there is no target
                 canvas.drawText(String.valueOf(gridObstacle.getId()), textX, textY, idPaint);
             }
             else {
-                // Draw target text if avail
+                // draw target text where there is a target
                 canvas.drawText(gridObstacle.getTarget().getTargetStr(), textX, textY, targetPaint);
             }
 
-            // Draw facing indicator
+            // draw facing indicator
             drawFacingIndicator(canvas, gridObstacle.getFacing(), left, top, right, bottom);
         }
     }
 
     private void drawFacingIndicator(Canvas canvas, Facing facing, int left, int top, int right, int bottom) {
-        int stripThickness = cellSize / 6; // Adjust strip size relative to the cell size
+        int stripThickness = cellSize / 6; // adjust strip size relative to the cell size
 
         switch (facing) {
             case NORTH:
@@ -238,6 +238,6 @@ public class CanvasView extends View {
 
     public void setGrid(Grid grid) {
         this.grid = grid;
-        invalidate(); // Refresh the view
+        invalidate();
     }
 }

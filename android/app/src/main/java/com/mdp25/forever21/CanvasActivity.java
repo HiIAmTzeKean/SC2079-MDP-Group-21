@@ -85,7 +85,7 @@ public class CanvasActivity extends AppCompatActivity {
     }
 
     private void bindUI() {
-        // Initialize input fields
+        // initialize input fields
         inputX = findViewById(R.id.inputX);
         inputY = findViewById(R.id.inputY);
         applyInputFilter(inputX);
@@ -97,14 +97,14 @@ public class CanvasActivity extends AppCompatActivity {
         receivedMessages = findViewById(R.id.ReceiveMsgTextView);
         robotStatusDynamic = findViewById(R.id.robotStatusDynamic);
 
-        // Initialize scroll view
+        // initialize scroll view
         scrollReceivedMessages = findViewById(R.id.ReceiveMsgScrollView);
 
-        // Initialize spinner
+        // initialize spinner
         spinnerRobotFacing = findViewById(R.id.spinnerRobotFacing);
         setupSpinner();
 
-        // Initialize buttons
+        // initialize buttons
         btnSendData = findViewById(R.id.btnSendData);
         btnSendData.setOnClickListener(view -> sendData());
         btnInitializeRobot = findViewById(R.id.btnInitializeRobot);
@@ -115,32 +115,6 @@ public class CanvasActivity extends AppCompatActivity {
         startbtn.setOnClickListener(view -> {
             if (myApp.btConnection() != null) showConfirmationDialog();
         });
-
-        // Bind movement buttons
-//        findViewById(R.id.btnRobotForward).setOnClickListener(view -> {
-//            if (myApp.btConnection() != null)
-//                myApp.btConnection().sendMessage("f");
-//            myApp.robot().moveForward();
-//            robotView.invalidate();
-//        });
-//        findViewById(R.id.btnRobotBackward).setOnClickListener(view -> {
-//            if (myApp.btConnection() != null)
-//                myApp.btConnection().sendMessage("r");
-//            myApp.robot().moveBackward();
-//            robotView.invalidate();
-//        });
-//        findViewById(R.id.btnRobotRight).setOnClickListener(view -> {
-//            if (myApp.btConnection() != null)
-//                myApp.btConnection().sendMessage("tr");
-//            myApp.robot().turnRight();
-//            robotView.invalidate();
-//        });
-//        findViewById(R.id.btnRobotLeft).setOnClickListener(view -> {
-//            if (myApp.btConnection() != null)
-//                myApp.btConnection().sendMessage("tl");
-//            myApp.robot().turnLeft();
-//            robotView.invalidate();
-//        });
     }
 
     private void startRobot() {
@@ -226,8 +200,8 @@ public class CanvasActivity extends AppCompatActivity {
         String message = chatInputBox.getText().toString().trim();
 
         if (!message.isEmpty()) {
-            myApp.btConnection().sendMessage(message); // Send the message via Bluetooth
-            chatInputBox.setText(""); // Clear the input field after sending
+            myApp.btConnection().sendMessage(message);
+            chatInputBox.setText("");
             Toast.makeText(this, "Message sent: " + message, Toast.LENGTH_SHORT).show();
         } else {
             Toast.makeText(this, "Please enter a message", Toast.LENGTH_SHORT).show();
@@ -276,7 +250,6 @@ public class CanvasActivity extends AppCompatActivity {
 
     private void onMsgReceived(BluetoothMessage btMsg) {
         if (btMsg instanceof BluetoothMessage.PlainStringMessage m) {
-            // show on ui
             receivedMessages.append("\n" + m.rawMsg() + "\n");
             if (m.rawMsg().equals("[info] Commands and path received Algo API. Robot is ready to move.")) {
                 if (mediaPlayer != null) {
@@ -287,7 +260,6 @@ public class CanvasActivity extends AppCompatActivity {
                 mediaPlayer.start();
             }
         } else if (btMsg instanceof BluetoothMessage.RobotStatusMessage m) {
-            // show on ui
             robotStatusDynamic.setText(m.status().toUpperCase());
             receivedMessages.append("\n[status] " + m.rawMsg()+ "\n"); // just print on ui for now
             if (m.status().equals("finished")) {
