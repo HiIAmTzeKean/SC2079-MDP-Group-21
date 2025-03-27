@@ -4,6 +4,12 @@
 #include <oledfont.h>
 #include "stdlib.h"
 
+#define CHAR_WIDTH 8  // Width of each character in pixels
+#define LINE_HEIGHT 16 // Height of each line in pixels
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_WIDTH      128
+#define CHAR_WIDTH      8    // Each character is 8 pixels wide (as used in OLED_ShowString)
 /**************************************************************************
 Function: Send the data/command to the OLED Display controller using SPI bit-banging
 Input   : dat: data/command on SDIN pin  
@@ -165,6 +171,66 @@ void OLED_ShowString(uint8_t x,uint8_t y,const uint8_t *p)
     }  
 }	 
 
+// Display full frame from 1024-byte array
+void OLED_ShowFrame(const uint8_t *frame) {
+    for (uint8_t page = 0; page < 8; page++) {
+        for (uint8_t col = 0; col < 128; col++) {
+            OLED_GRAM[col][page] = frame[page * 128 + col];
+        }
+    }
+    OLED_Refresh_Gram();
+}
+
+
+// Function to compute the pixel width of a word (until next space or string end)
+uint8_t getWordPixelWidth(const char *s) {
+    uint8_t width = 0;
+    while(*s != '\0' && *s != ' ') {
+        width += CHAR_WIDTH;
+        s++;
+    }
+    return width;
+}
+
+// Function to "type" out text one character at a time with word wrapping
+// x0, y0: starting coordinates
+// text: text to display
+// delay_ms: delay in milliseconds between each character
+void OLED_TypeText(uint8_t x0, uint8_t y0, const char *text, uint16_t delay_ms) {
+    uint8_t x = x0;
+    uint8_t y = y0;
+    const char *p = text;
+
+    while (*p != '\0') {
+        // If next character is a space, simply print it
+        if (*p == ' ') {
+            OLED_ShowChar(x, y, *p, 12, 1);
+            x += CHAR_WIDTH;
+            OLED_Refresh_Gram();
+            HAL_Delay(delay_ms);
+            p++;
+            continue;
+        }
+
+        // Otherwise, calculate the pixel width of the next word
+        uint8_t wordWidth = getWordPixelWidth(p);
+
+        // If the word does not fit on the current line, move to next line
+        if (x + wordWidth > OLED_WIDTH) {
+            x = x0;
+            y += LINE_HEIGHT;
+        }
+
+        // Type out the word character by character
+        while (*p != '\0' && *p != ' ') {
+            OLED_ShowChar(x, y, *p, 12, 1);
+            x += CHAR_WIDTH;
+            OLED_Refresh_Gram();
+            HAL_Delay(delay_ms);
+            p++;
+        }
+    }
+}
 void OLED_Init(void)
 {
 	HAL_PWR_EnableBkUpAccess(); //Enable access to the RTC and Backup Register
