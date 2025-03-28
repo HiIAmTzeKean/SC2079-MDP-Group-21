@@ -40,7 +40,9 @@ X ←----┐  .  .
 
 0: long axis, 1: short axis
 """
-# TODO STM should tune turns to 10cm intervals, then this variable should be set to the robot's actual turn displacement
+# TODO STM should tune turns to 10cm intervals, then this variable should be set to the robot's actual turn displacement.
+# If tuning on STM side is not possible, tune by adjusting the actual commands in `commands.py`
+# A smaller turn displacement is more ideal as it is more likely to generate a path to all obstacles.
 # 20cm x 10cm turn displacement measured from center of robot
 TURN_DISPLACEMENT: tuple[int, int] = [2, 1]
 

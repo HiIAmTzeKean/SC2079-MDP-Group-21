@@ -1,5 +1,7 @@
 # mdp-algo
 
+To make the necessary modifications when tuning your robot, refer to the `TODO` sections.
+
 ## Setup 
 
 1. Clone the repository
@@ -51,3 +53,6 @@ To call the algorithm code directly without using the API,
     ```bash
     python main.py
     ```
+
+## Credits
+Thank you to Group 30 from AY24/25 S1 for the algorithm base code. We extended their code by extensive refactoring and optimizing it for a faster runtime.
