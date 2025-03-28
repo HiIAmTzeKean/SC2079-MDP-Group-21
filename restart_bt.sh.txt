@@ -9,6 +9,3 @@ else
         echo "rfcomm process with PID $pid has been killed."
     done
 fi
-
-# sudo systemctl start rfcomm
-# sudo rfcomm listen /dev/rfcomm0 1

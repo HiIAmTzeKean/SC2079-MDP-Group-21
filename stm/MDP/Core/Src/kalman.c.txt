@@ -1,0 +1,48 @@
+#include "kalman.h"
+
+/**
+ * @brief Initializes the Kalman filter parameters.
+ * 
+ * @param params Pointer to the KalmanParams structure.
+ * @param initial_est Initial estimate of the state.
+ * @param s_est Initial estimate uncertainty (process variance).
+ * @param s_mea Measurement uncertainty (measurement variance).
+ */
+void kalman_init(KalmanParams *params, float initial_est, float s_est, float s_mea) {
+    params->last_est = initial_est;
+    params->s_est = s_est;
+    params->s_mea = s_mea;
+}
+
+/**
+ * @brief Updates the Kalman filter with a new measurement.
+ * 
+ * @param params Pointer to the KalmanParams structure.
+ * @param mea New measurement value.
+ */
+void kalman_update(KalmanParams *params, float mea) {
+    // Calculate Kalman gain
+    float G = params->s_est / (params->s_est + params->s_mea);
+
+    // Update the estimate with the new measurement
+    params->last_est = params->last_est + G * (mea - params->last_est);
+
+    // Update the estimate uncertainty
+    params->s_est = (1 - G) * params->s_est;
+}
+
+/**
+ * @brief Updates the process variance and measurement variance dynamically.
+ * 
+ * @param params Pointer to the KalmanParams structure.
+ * @param s_est New process variance (optional, pass -1 to keep unchanged).
+ * @param s_mea New measurement variance (optional, pass -1 to keep unchanged).
+ */
+void kalman_set_variances(KalmanParams *params, float s_est, float s_mea) {
+    if (s_est >= 0) {
+        params->s_est = s_est;
+    }
+    if (s_mea >= 0) {
+        params->s_mea = s_mea;
+    }
+}
