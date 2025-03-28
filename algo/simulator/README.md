@@ -1,10 +1,12 @@
 # Algorithm Simulator (Web)
 
+![Simulator image](https://i.gyazo.com/cc52b61251f930f531db95e0a83af5ba.png)
+
 ## Setup Instructions
 
-\*Please setup api.py by following the `README.md` in `/api` directory to setup backend before attempting to run simulator. You need to start the flask server before proceeding.
+Please setup api.py by following the `README.md` in `/api` directory to setup backend before attempting to run simulator. You need to start the flask server before proceeding.
 
-\*Please also ensure that you have `yarn` installed.
+Please also ensure that you have `yarn` installed.
 
 1. In the `algo/simulator` directory, install the required dependencies.
 
@@ -26,4 +28,7 @@ yarn start
 
 2. Follow the `README.md` instructions in `api/` directory to start the API server.
 
-And you are ready to start using the Algorithm Simulator! Please make sure you are running BOTH the web simulator frontend and API server backend simultaneously in 2 different terminals. The application will be running on http://localhost:3000 or http://{your local IP}:3000. The page will reload when you make changes.
+And you are ready to start using the Algorithm Simulator! Please make sure you are running BOTH the web simulator frontend and API server backend simultaneously in 2 different terminals. The application will be running on `http://localhost:3000` or `http://{your local IP}:3000`. The page will reload when you make changes.
+
+## Credits
+Thank you to Group 11 from AY23/24 S2 for the simulator base code. We extended their code by extensive refactoring and implementing additional tests and debugging features.
