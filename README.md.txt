@@ -39,4 +39,6 @@ We ranked 7/34!
 
 ## Task Two
 
-TBD
+We ranked 11/20. Actual ranking 18/34 as there are multiple groups with same rank.
+
+![victory-pose](image/victory-pose.jpg)
